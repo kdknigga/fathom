@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Calculation Engine** - Domain models, financial calculation logic with Decimal arithmetic, code quality tooling (ruff, ty, pyrefly, prek) (completed 2026-03-10)
 - [x] **Phase 2: Web Layer and Input Forms** - Flask app, form handling, all option types, responsive layout (completed 2026-03-10)
-- [ ] **Phase 3: Results Display and Charts** - Recommendation card, cost breakdown, SVG charts, HTMX live updates
+- [x] **Phase 3: Results Display and Charts** - Recommendation card, cost breakdown, SVG charts, HTMX live updates (completed 2026-03-10)
 - [ ] **Phase 4: Deployment and Polish** - Dockerfile, README, env config, performance verification, open-source license
 
 ## Phase Details
@@ -96,5 +96,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 |-------|----------------|--------|-----------|
 | 1. Calculation Engine | 3/3 | Complete   | 2026-03-10 |
 | 2. Web Layer and Input Forms | 3/3 | Complete   | 2026-03-10 |
-| 3. Results Display and Charts | 0/3 | Not started | - |
+| 3. Results Display and Charts | 3/3 | Complete   | 2026-03-10 |
 | 4. Deployment and Polish | 0/1 | Not started | - |

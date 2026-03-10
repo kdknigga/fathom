@@ -43,8 +43,8 @@
 - [x] **RSLT-04**: User sees cost breakdown table with one column per option showing: total payments, total interest, rebates, opportunity cost, tax savings, inflation adjustment, True Total Cost
 - [x] **RSLT-05**: User sees True Total Cost bar chart comparing all options with winner highlighted
 - [x] **RSLT-06**: User sees cumulative cost over time line chart showing month-by-month out-of-pocket evolution
-- [ ] **RSLT-07**: Results update via HTMX partial page replacement when inputs change
-- [ ] **RSLT-08**: A visible "Calculate" button is always present as fallback
+- [x] **RSLT-07**: Results update via HTMX partial page replacement when inputs change
+- [x] **RSLT-08**: A visible "Calculate" button is always present as fallback
 
 ### Accessibility
 
@@ -152,8 +152,8 @@
 | RSLT-04 | Phase 3 | Complete |
 | RSLT-05 | Phase 3 | Complete |
 | RSLT-06 | Phase 3 | Complete |
-| RSLT-07 | Phase 3 | Pending |
-| RSLT-08 | Phase 3 | Pending |
+| RSLT-07 | Phase 3 | Complete |
+| RSLT-08 | Phase 3 | Complete |
 | A11Y-02 | Phase 3 | Complete |
 | A11Y-03 | Phase 3 | Complete |
 | TECH-05 | Phase 4 | Pending |
