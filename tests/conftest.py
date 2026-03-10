@@ -8,8 +8,25 @@ objects used across all test modules.
 from decimal import Decimal
 
 import pytest
+from flask import Flask
+from flask.testing import FlaskClient
 
+from fathom.app import create_app
 from fathom.models import FinancingOption, GlobalSettings, OptionType
+
+
+@pytest.fixture
+def app() -> Flask:
+    """Create a Flask application configured for testing."""
+    test_app = create_app()
+    test_app.config["TESTING"] = True
+    return test_app
+
+
+@pytest.fixture
+def client(app: Flask) -> FlaskClient:
+    """Create a Flask test client for making requests."""
+    return app.test_client()
 
 
 @pytest.fixture

@@ -3,4 +3,7 @@
 
 def main() -> None:
     """Start the fathom application."""
-    print("Hello from fathom!")
+    from fathom.app import create_app
+
+    app = create_app()
+    app.run(debug=True)
