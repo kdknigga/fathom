@@ -12,7 +12,7 @@ Fathom delivers a financing options analyzer in four phases: first the calculati
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Calculation Engine** - Domain models, financial calculation logic with Decimal arithmetic, code quality tooling (ruff, ty, pyrefly, prek)
+- [x] **Phase 1: Calculation Engine** - Domain models, financial calculation logic with Decimal arithmetic, code quality tooling (ruff, ty, pyrefly, prek) (completed 2026-03-10)
 - [ ] **Phase 2: Web Layer and Input Forms** - Flask app, form handling, all option types, responsive layout
 - [ ] **Phase 3: Results Display and Charts** - Recommendation card, cost breakdown, SVG charts, HTMX live updates
 - [ ] **Phase 4: Deployment and Polish** - Dockerfile, README, env config, performance verification, open-source license
@@ -91,7 +91,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Calculation Engine | 0/3 | Not started | - |
+| 1. Calculation Engine | 3/3 | Complete   | 2026-03-10 |
 | 2. Web Layer and Input Forms | 0/3 | Not started | - |
 | 3. Results Display and Charts | 0/2 | Not started | - |
 | 4. Deployment and Polish | 0/1 | Not started | - |
