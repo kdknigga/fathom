@@ -41,16 +41,16 @@
 - [ ] **RSLT-02**: User sees savings amount compared to next-best option in plain English
 - [ ] **RSLT-03**: User sees caveats flagged on the recommendation (e.g., deferred interest risk)
 - [ ] **RSLT-04**: User sees cost breakdown table with one column per option showing: total payments, total interest, rebates, opportunity cost, tax savings, inflation adjustment, True Total Cost
-- [ ] **RSLT-05**: User sees True Total Cost bar chart comparing all options with winner highlighted
-- [ ] **RSLT-06**: User sees cumulative cost over time line chart showing month-by-month out-of-pocket evolution
+- [x] **RSLT-05**: User sees True Total Cost bar chart comparing all options with winner highlighted
+- [x] **RSLT-06**: User sees cumulative cost over time line chart showing month-by-month out-of-pocket evolution
 - [ ] **RSLT-07**: Results update via HTMX partial page replacement when inputs change
 - [ ] **RSLT-08**: A visible "Calculate" button is always present as fallback
 
 ### Accessibility
 
 - [x] **A11Y-01**: All form inputs have visible labels (WCAG 2.1 AA)
-- [ ] **A11Y-02**: Charts include accessible text alternatives (data tables or ARIA labels)
-- [ ] **A11Y-03**: Color is not the sole differentiator in charts (patterns or labels used as well)
+- [x] **A11Y-02**: Charts include accessible text alternatives (data tables or ARIA labels)
+- [x] **A11Y-03**: Color is not the sole differentiator in charts (patterns or labels used as well)
 
 ### Layout & UX
 
@@ -150,12 +150,12 @@
 | RSLT-02 | Phase 3 | Pending |
 | RSLT-03 | Phase 3 | Pending |
 | RSLT-04 | Phase 3 | Pending |
-| RSLT-05 | Phase 3 | Pending |
-| RSLT-06 | Phase 3 | Pending |
+| RSLT-05 | Phase 3 | Complete |
+| RSLT-06 | Phase 3 | Complete |
 | RSLT-07 | Phase 3 | Pending |
 | RSLT-08 | Phase 3 | Pending |
-| A11Y-02 | Phase 3 | Pending |
-| A11Y-03 | Phase 3 | Pending |
+| A11Y-02 | Phase 3 | Complete |
+| A11Y-03 | Phase 3 | Complete |
 | TECH-05 | Phase 4 | Pending |
 | TECH-06 | Phase 4 | Pending |
 | TECH-07 | Phase 4 | Pending |
