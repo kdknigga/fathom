@@ -7,12 +7,9 @@ pool exhaustion behavior, and freed-cash-after-payoff investing.
 
 from decimal import Decimal
 
-import pytest
-
 from fathom.models import FinancingOption, GlobalSettings, OptionType
 
 
-@pytest.mark.xfail(reason="not yet implemented")
 def test_cash_buyer_opportunity_cost(
     cash_option: FinancingOption,
     default_settings: GlobalSettings,
@@ -29,7 +26,6 @@ def test_cash_buyer_opportunity_cost(
     assert result > Decimal(0)
 
 
-@pytest.mark.xfail(reason="not yet implemented")
 def test_loan_buyer_decreasing_pool(
     standard_loan: FinancingOption,
     default_settings: GlobalSettings,
@@ -46,24 +42,33 @@ def test_loan_buyer_decreasing_pool(
     assert series[0] > series[-1]
 
 
-@pytest.mark.xfail(reason="not yet implemented")
-def test_pool_exhaustion(
-    standard_loan: FinancingOption,
-    default_settings: GlobalSettings,
-) -> None:
-    """Investment pool hits zero and stops generating returns."""
+def test_pool_exhaustion() -> None:
+    """Investment pool hits zero and clamps, stopping returns."""
     from fathom.opportunity import compute_opportunity_cost_series
 
+    # Use a loan with high payments relative to pool and low return
+    # so the pool actually drains to zero during the loan term
+    loan = FinancingOption(
+        option_type=OptionType.TRADITIONAL_LOAN,
+        label="Pool Drain Loan",
+        purchase_price=Decimal(5000),
+        apr=Decimal("0.06"),
+        term_months=36,
+    )
+    settings = GlobalSettings(return_rate=Decimal("0.02"))
     series = compute_opportunity_cost_series(
-        option=standard_loan,
-        settings=default_settings,
+        option=loan,
+        settings=settings,
         comparison_period=36,
     )
-    # At some point the pool should hit zero
+    # Pool should hit zero at some point and clamp
     assert any(balance == Decimal(0) for balance in series)
+    # Once zero, should stay zero (no negative values)
+    first_zero = next(i for i, b in enumerate(series) if b == Decimal(0))
+    for balance in series[first_zero:]:
+        assert balance == Decimal(0)
 
 
-@pytest.mark.xfail(reason="not yet implemented")
 def test_freed_cash_after_payoff(
     default_settings: GlobalSettings,
 ) -> None:

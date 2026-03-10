@@ -7,12 +7,9 @@ enforcement, schedule integrity, and last payment adjustment.
 
 from decimal import Decimal
 
-import pytest
-
 from fathom.models import FinancingOption
 
 
-@pytest.mark.xfail(reason="not yet implemented")
 def test_standard_amortization(standard_loan: FinancingOption) -> None:
     """Standard $10k/6%/36mo loan produces $304.22/month payment."""
     from fathom.amortization import monthly_payment
@@ -28,7 +25,6 @@ def test_standard_amortization(standard_loan: FinancingOption) -> None:
     assert result == Decimal("304.22")
 
 
-@pytest.mark.xfail(reason="not yet implemented")
 def test_zero_apr() -> None:
     """Zero APR loan produces simple division: $10k/36mo = $277.78/month."""
     from fathom.amortization import monthly_payment
@@ -41,7 +37,6 @@ def test_zero_apr() -> None:
     assert result == Decimal("277.78")
 
 
-@pytest.mark.xfail(reason="not yet implemented")
 def test_decimal_types(standard_loan: FinancingOption) -> None:
     """All amortization outputs must be Decimal, never float."""
     from fathom.amortization import monthly_payment
@@ -57,7 +52,6 @@ def test_decimal_types(standard_loan: FinancingOption) -> None:
     assert isinstance(result, Decimal)
 
 
-@pytest.mark.xfail(reason="not yet implemented")
 def test_amortization_schedule(standard_loan: FinancingOption) -> None:
     """Sum of all payments in the schedule matches expected total."""
     from fathom.amortization import amortization_schedule
@@ -76,7 +70,6 @@ def test_amortization_schedule(standard_loan: FinancingOption) -> None:
     assert len(schedule) == 36
 
 
-@pytest.mark.xfail(reason="not yet implemented")
 def test_last_payment_adjustment(standard_loan: FinancingOption) -> None:
     """Final payment clears exact remaining balance (no residual)."""
     from fathom.amortization import amortization_schedule
