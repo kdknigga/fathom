@@ -191,7 +191,7 @@ def analyze_results(
             "result": _get_primary_result(result),
             "caveats": per_option_caveats.get(name, []),
         }
-        if is_promo and isinstance(result, PromoResult):
+        if isinstance(result, PromoResult):
             opt_data["not_paid_result"] = result.not_paid_on_time
         options_data.append(opt_data)
 
