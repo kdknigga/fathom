@@ -66,8 +66,8 @@
 - [x] **TECH-04**: Application runs as single deployable Python process with no external database
 - [ ] **TECH-05**: Dockerfile provided for containerized self-hosting
 - [ ] **TECH-06**: Configuration overridable via environment variables (default rates, branding)
-- [ ] **TECH-07**: README with clear self-hosting instructions
-- [ ] **TECH-08**: Open-source license (MIT or Apache 2.0)
+- [x] **TECH-07**: README with clear self-hosting instructions
+- [x] **TECH-08**: Open-source license (MIT or Apache 2.0)
 
 ### Code Quality
 
@@ -158,8 +158,8 @@
 | A11Y-03 | Phase 3 | Complete |
 | TECH-05 | Phase 4 | Pending |
 | TECH-06 | Phase 4 | Pending |
-| TECH-07 | Phase 4 | Pending |
-| TECH-08 | Phase 4 | Pending |
+| TECH-07 | Phase 4 | Complete |
+| TECH-08 | Phase 4 | Complete |
 | PERF-01 | Phase 4 | Pending |
 
 **Coverage:**

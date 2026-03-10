@@ -1,7 +1,14 @@
 [project]
 name = "fathom"
 version = "0.1.0"
-description = "Add your description here"
+description = "A financing options analyzer that compares the true total cost of different financing options"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: Flask",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Office/Business :: Financial",
+]
 readme = "README.md"
 authors = [
     { name = "Kris Knigga", email = "kris@knigga.com" }
