@@ -46,4 +46,7 @@
 <div class="sticky-results-anchor">
   <a href="#results">View Results</a>
 </div>
+{% if has_errors is defined and has_errors %}
+<script>document.querySelector('[aria-invalid=true]')?.scrollIntoView({behavior:'smooth',block:'center'})</script>
+{% endif %}
 {% endblock %}
