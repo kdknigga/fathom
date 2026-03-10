@@ -26,13 +26,13 @@
 
 ### Calculation Engine
 
-- [ ] **CALC-01**: System computes total payments (principal + interest) for each option using standard amortization
-- [ ] **CALC-02**: System computes opportunity cost of upfront cash (down payment or full price) invested at user-specified return rate
+- [x] **CALC-01**: System computes total payments (principal + interest) for each option using standard amortization
+- [x] **CALC-02**: System computes opportunity cost of upfront cash (down payment or full price) invested at user-specified return rate
 - [ ] **CALC-03**: System normalizes all options to the same comparison period (longest term among active options)
-- [ ] **CALC-04**: System models freed-up cash (after shorter loan ends) as invested for remainder of comparison period
+- [x] **CALC-04**: System models freed-up cash (after shorter loan ends) as invested for remainder of comparison period
 - [ ] **CALC-05**: System computes True Total Cost = total payments + opportunity cost - rebates - tax savings ± inflation adjustment
-- [ ] **CALC-06**: System applies inflation adjustment when enabled (discount future cash flows to present value)
-- [ ] **CALC-07**: System computes tax savings when enabled (deductible interest × marginal tax rate)
+- [x] **CALC-06**: System applies inflation adjustment when enabled (discount future cash flows to present value)
+- [x] **CALC-07**: System computes tax savings when enabled (deductible interest × marginal tax rate)
 - [x] **CALC-08**: System uses Decimal arithmetic for all monetary calculations (no float for money)
 
 ### Results Display
@@ -111,13 +111,13 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CALC-01 | Phase 1 | Pending |
-| CALC-02 | Phase 1 | Pending |
+| CALC-01 | Phase 1 | Complete |
+| CALC-02 | Phase 1 | Complete |
 | CALC-03 | Phase 1 | Pending |
-| CALC-04 | Phase 1 | Pending |
+| CALC-04 | Phase 1 | Complete |
 | CALC-05 | Phase 1 | Pending |
-| CALC-06 | Phase 1 | Pending |
-| CALC-07 | Phase 1 | Pending |
+| CALC-06 | Phase 1 | Complete |
+| CALC-07 | Phase 1 | Complete |
 | CALC-08 | Phase 1 | Complete |
 | TECH-01 | Phase 1 | Complete |
 | TECH-02 | Phase 1 | Complete |
