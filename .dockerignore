@@ -1,0 +1,15 @@
+.planning/
+tests/
+.git/
+.github/
+.venv/
+__pycache__/
+*.pyc
+.ruff_cache/
+.pytest_cache/
+.env
+docs/
+*.md
+!README.md
+.pre-commit-config.yaml
+.prek.yaml
