@@ -33,7 +33,7 @@
 - [ ] **CALC-05**: System computes True Total Cost = total payments + opportunity cost - rebates - tax savings ± inflation adjustment
 - [ ] **CALC-06**: System applies inflation adjustment when enabled (discount future cash flows to present value)
 - [ ] **CALC-07**: System computes tax savings when enabled (deductible interest × marginal tax rate)
-- [ ] **CALC-08**: System uses Decimal arithmetic for all monetary calculations (no float for money)
+- [x] **CALC-08**: System uses Decimal arithmetic for all monetary calculations (no float for money)
 
 ### Results Display
 
@@ -60,10 +60,10 @@
 
 ### Technical
 
-- [ ] **TECH-01**: All financial calculations are server-side Python — no client-side JS calculation logic
-- [ ] **TECH-02**: No user data persisted on server beyond single request/response cycle
+- [x] **TECH-01**: All financial calculations are server-side Python — no client-side JS calculation logic
+- [x] **TECH-02**: No user data persisted on server beyond single request/response cycle
 - [ ] **TECH-03**: Form inputs repopulated on response so values are not lost between submissions
-- [ ] **TECH-04**: Application runs as single deployable Python process with no external database
+- [x] **TECH-04**: Application runs as single deployable Python process with no external database
 - [ ] **TECH-05**: Dockerfile provided for containerized self-hosting
 - [ ] **TECH-06**: Configuration overridable via environment variables (default rates, branding)
 - [ ] **TECH-07**: README with clear self-hosting instructions
@@ -75,7 +75,7 @@
 - [ ] **QUAL-02**: All code passes `ruff format` (Black-compatible, double quotes, 88 char lines)
 - [ ] **QUAL-03**: All code passes `ty check` with zero errors (no `# type: ignore` suppression)
 - [ ] **QUAL-04**: All code passes `pyrefly check` with zero errors (no error suppression)
-- [ ] **QUAL-05**: All public modules, classes, and functions have docstrings (ruff `D` rules)
+- [x] **QUAL-05**: All public modules, classes, and functions have docstrings (ruff `D` rules)
 - [ ] **QUAL-06**: `prek` pre-commit hooks pass on all commits
 
 ### Performance
@@ -118,15 +118,15 @@
 | CALC-05 | Phase 1 | Pending |
 | CALC-06 | Phase 1 | Pending |
 | CALC-07 | Phase 1 | Pending |
-| CALC-08 | Phase 1 | Pending |
-| TECH-01 | Phase 1 | Pending |
-| TECH-02 | Phase 1 | Pending |
-| TECH-04 | Phase 1 | Pending |
+| CALC-08 | Phase 1 | Complete |
+| TECH-01 | Phase 1 | Complete |
+| TECH-02 | Phase 1 | Complete |
+| TECH-04 | Phase 1 | Complete |
 | QUAL-01 | Phase 1 | Pending |
 | QUAL-02 | Phase 1 | Pending |
 | QUAL-03 | Phase 1 | Pending |
 | QUAL-04 | Phase 1 | Pending |
-| QUAL-05 | Phase 1 | Pending |
+| QUAL-05 | Phase 1 | Complete |
 | QUAL-06 | Phase 1 | Pending |
 | FORM-01 | Phase 2 | Pending |
 | FORM-02 | Phase 2 | Pending |
