@@ -254,7 +254,12 @@ def prepare_line_chart(
                 "end_y": _to_float(end_y),
                 "end_value": _format_cost(end_cost),
                 "points": [
-                    {"month": m, "x": _to_float(scale_x(m)), "y": _to_float(scale_y(c))}
+                    {
+                        "month": m,
+                        "x": _to_float(scale_x(m)),
+                        "y": _to_float(scale_y(c)),
+                        "cost": _format_cost(c),
+                    }
                     for m, c in pts
                 ],
             }

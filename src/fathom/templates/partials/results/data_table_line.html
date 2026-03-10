@@ -17,7 +17,7 @@
         <td>
           {%- for point in line.points -%}
             {%- if point.month == label.month -%}
-              ${{ "${:,.0f}".format(point.y) }}
+              ${{ point.cost }}
             {%- endif -%}
           {%- endfor -%}
         </td>
