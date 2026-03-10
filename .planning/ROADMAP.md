@@ -64,6 +64,7 @@ Plans:
   3. User sees a True Total Cost bar chart comparing all options (winner highlighted) and a cumulative cost over time line chart showing month-by-month evolution
   4. Charts include accessible text alternatives (data tables or ARIA labels) and use patterns or labels alongside color for differentiation
   5. Results update via HTMX partial page replacement when inputs change, with a visible "Calculate" button always present as fallback
+  6. All browser-based verification (visual layout, HTMX behavior, chart rendering, responsive design, accessibility) is automated via Playwright MCP — no manual browser checks
 **Plans**: TBD
 
 Plans:
@@ -79,6 +80,7 @@ Plans:
   2. Configuration (default rates, branding) is overridable via environment variables
   3. README provides clear self-hosting instructions and the project ships with an open-source license (MIT or Apache 2.0)
   4. Results render within 300ms of form submission under typical usage
+  5. All browser-based verification (visual, responsive, functional) is automated via Playwright MCP — no manual browser checks
 **Plans**: TBD
 
 Plans:

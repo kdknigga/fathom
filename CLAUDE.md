@@ -69,7 +69,16 @@ Use these tools during development:
 - **Serena** — Semantic code analysis and editing. Use for token-efficient code navigation via symbols and references instead of reading entire files.
 - **Context7** — Fetch current library/framework documentation. Always use this instead of relying on training data when working with external packages.
 - **Tavily** — Web search, crawling, and content extraction for research.
-- **Playwright** — Browser automation for testing the web application.
+- **Playwright** — Browser automation for all browser-based validation. Never mark browser checks as "manual-only" or "needs human." Use Playwright MCP to automate visual layout verification, HTMX interactivity, responsive design, chart rendering, and accessibility checks.
+
+## Browser-Based Validation
+
+All browser-based verification must be automated via Playwright MCP — no manual browser checks. This includes:
+- Visual layout and CSS rendering (navigate + screenshot + DOM assertions)
+- HTMX partial page swaps (click element, assert DOM changed without full reload)
+- Responsive design (resize viewport, assert layout changes)
+- Chart rendering and accessibility (query ARIA attributes, verify SVG content)
+- Form interactivity (fill fields, submit, verify results)
 
 ## Skills available
 

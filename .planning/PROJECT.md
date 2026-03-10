@@ -62,6 +62,18 @@ Users can instantly see which financing option truly costs least when opportunit
 - **Tavily** — Web search and content extraction for research
 - **Playwright** — Browser automation for testing the web application
 
+### Browser-Based Validation Policy
+
+All browser-based validation (visual layout, responsive design, HTMX interactivity, CSS rendering, accessibility checks) MUST be automated via the Playwright MCP server. Do not mark browser checks as "manual-only" or "needs human." Instead:
+
+1. Start the app server programmatically during verification
+2. Use Playwright MCP to navigate, take screenshots, resize viewports, click elements, and assert DOM state
+3. Verify HTMX partial swaps by checking DOM mutations after interactions (no full page reload)
+4. Verify responsive layout by resizing the viewport and asserting element visibility/position
+5. Verify accessibility attributes by querying ARIA roles, labels, and semantic structure via Playwright snapshots
+
+This replaces the previous approach where browser checks were deferred to human verification.
+
 ### Code Quality Standards
 
 All code must pass with zero errors/warnings:
