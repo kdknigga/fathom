@@ -7,8 +7,6 @@ options data construction, and recommendation text generation.
 
 from decimal import Decimal
 
-from fathom.results import analyze_results, generate_recommendation_text
-
 from fathom.models import (
     ComparisonResult,
     FinancingOption,
@@ -17,6 +15,7 @@ from fathom.models import (
     OptionType,
     PromoResult,
 )
+from fathom.results import analyze_results, generate_recommendation_text
 
 
 def _make_option_result(
