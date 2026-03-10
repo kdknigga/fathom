@@ -95,6 +95,15 @@ docstring-code-format = false
 # enabled.
 docstring-code-line-length = "dynamic"
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "ANN", "TCH"]
+
+[tool.ty.src]
+exclude = ["tests/"]
+
+[tool.pyrefly]
+project_excludes = ["tests/"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
