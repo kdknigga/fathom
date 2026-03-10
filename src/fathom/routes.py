@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from flask import Blueprint, render_template, request
 
+from fathom.charts import prepare_charts
 from fathom.engine import compare
 from fathom.forms import build_domain_objects, parse_form_data, validate_form_data
 from fathom.models import OptionType
@@ -307,9 +308,13 @@ def compare_options() -> str:
     parsed = parse_form_data(request.form)
     errors = validate_form_data(parsed)
 
+    is_htmx = request.headers.get("HX-Request") == "true"
+
     if errors:
         ctx = _build_template_context(parsed, errors)
         ctx["has_errors"] = True
+        if is_htmx:
+            return render_template("partials/results.html", **ctx)
         return render_template("index.html", **ctx)
 
     financing_options, global_settings = build_domain_objects(parsed)
@@ -317,5 +322,15 @@ def compare_options() -> str:
 
     ctx = _build_template_context(parsed, errors={}, results=results)
     display_data = analyze_results(results, financing_options)
+    # Charts expect sorted_options as (name, cost) tuples
+    chart_display = dict(display_data)
+    chart_display["sorted_options"] = [
+        (opt["name"], opt["result"].true_total_cost)
+        for opt in display_data["options_data"]
+    ]
+    chart_data = prepare_charts(results, chart_display)
     ctx["display"] = display_data
+    ctx["charts"] = chart_data
+    if is_htmx:
+        return render_template("partials/results.html", **ctx)
     return render_template("index.html", **ctx)

@@ -1,4 +1,13 @@
-{% if display is defined %}
+{% if has_errors is defined and has_errors %}
+<section class="results-errors" aria-label="Validation Errors">
+  <p><strong>Please fix the following errors:</strong></p>
+  <ul>
+    {% for field, msg in errors.items() %}
+    <li>{{ msg }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% elif display is defined %}
 <section class="results-section" aria-label="Comparison Results">
   {% include "partials/results/recommendation.html" %}
 

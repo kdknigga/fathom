@@ -208,3 +208,32 @@
 .results-section {
   margin-top: 0;
 }
+
+/* HTMX loading indicator */
+.htmx-indicator {
+  display: none;
+}
+
+.htmx-request .htmx-indicator {
+  display: inline;
+}
+
+.htmx-request .btn-text {
+  display: none;
+}
+
+/* Responsive SVG charts */
+.chart-bar,
+.chart-line {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Results error display */
+.results-errors {
+  padding: 1rem;
+}
+
+.results-errors ul {
+  margin-top: 0.5rem;
+}
