@@ -7,10 +7,7 @@ and full-term tax savings accumulation.
 
 from decimal import Decimal
 
-import pytest
 
-
-@pytest.mark.xfail(reason="not yet implemented")
 def test_tax_savings_basic() -> None:
     """Tax savings equals total interest times marginal tax rate."""
     from fathom.tax import compute_tax_savings
@@ -24,7 +21,6 @@ def test_tax_savings_basic() -> None:
     assert result == expected
 
 
-@pytest.mark.xfail(reason="not yet implemented")
 def test_tax_disabled() -> None:
     """When tax rate is zero, tax savings is zero."""
     from fathom.tax import compute_tax_savings
@@ -37,7 +33,6 @@ def test_tax_disabled() -> None:
     assert result == Decimal(0)
 
 
-@pytest.mark.xfail(reason="not yet implemented")
 def test_tax_over_full_term() -> None:
     """Tax savings accumulates correctly over a full 36-month term."""
     from fathom.tax import compute_tax_savings
