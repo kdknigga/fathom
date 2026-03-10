@@ -82,10 +82,12 @@ Plans:
   3. README provides clear self-hosting instructions and the project ships with an open-source license (MIT or Apache 2.0)
   4. Results render within 300ms of form submission under typical usage
   5. All browser-based verification (visual, responsive, functional) is automated via Playwright MCP — no manual browser checks
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 04-01: TBD
+- [ ] 04-01-PLAN.md — Production infrastructure: pydantic-settings config, vendor asset bundling, Dockerfile, config and performance tests
+- [ ] 04-02-PLAN.md — MIT license and comprehensive README with self-hosting documentation
+- [ ] 04-03-PLAN.md — Visual polish via Playwright audit, code quality sweep, test coverage gaps, final verification
 
 ## Progress
 
@@ -97,4 +99,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 1. Calculation Engine | 3/3 | Complete   | 2026-03-10 |
 | 2. Web Layer and Input Forms | 3/3 | Complete   | 2026-03-10 |
 | 3. Results Display and Charts | 3/3 | Complete    | 2026-03-10 |
-| 4. Deployment and Polish | 0/1 | Not started | - |
+| 4. Deployment and Polish | 0/3 | Not started | - |
