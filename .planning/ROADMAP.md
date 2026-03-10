@@ -65,11 +65,12 @@ Plans:
   4. Charts include accessible text alternatives (data tables or ARIA labels) and use patterns or labels alongside color for differentiation
   5. Results update via HTMX partial page replacement when inputs change, with a visible "Calculate" button always present as fallback
   6. All browser-based verification (visual layout, HTMX behavior, chart rendering, responsive design, accessibility) is automated via Playwright MCP — no manual browser checks
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md — Results analysis module, recommendation hero card, and cost breakdown table
+- [ ] 03-02-PLAN.md — SVG chart data preparation, bar and line chart templates, accessible data tables
+- [ ] 03-03-PLAN.md — HTMX partial page replacement, loading indicator, and full integration wiring
 
 ### Phase 4: Deployment and Polish
 **Goal**: Application is ready for self-hosting with documentation, containerization, and verified performance
@@ -95,5 +96,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 |-------|----------------|--------|-----------|
 | 1. Calculation Engine | 3/3 | Complete   | 2026-03-10 |
 | 2. Web Layer and Input Forms | 3/3 | Complete   | 2026-03-10 |
-| 3. Results Display and Charts | 0/2 | Not started | - |
+| 3. Results Display and Charts | 0/3 | Not started | - |
 | 4. Deployment and Polish | 0/1 | Not started | - |
