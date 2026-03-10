@@ -1,0 +1,46 @@
+<article class="recommendation-card">
+  <header>
+    <span class="winner-star" aria-hidden="true">&#9733;</span>
+    <strong class="winner-name">{{ display.winner_name }}</strong>
+    <span class="winner-label">is your best option</span>
+  </header>
+
+  <div class="recommendation-body">
+    <p class="winner-cost">
+      True Total Cost: <strong>${{ "{:,.2f}".format(display.winner_cost) }}</strong>
+    </p>
+
+    {% if display.runner_up_name %}
+    <p class="savings">
+      Saves <strong>${{ "{:,.2f}".format(display.savings) }}</strong> compared to {{ display.runner_up_name }}
+    </p>
+    {% endif %}
+
+    <p class="recommendation-text">{{ display.recommendation_text }}</p>
+  </div>
+
+  {% if display.winner_caveats %}
+  <div class="caveats-section" role="alert">
+    <h3 class="visually-hidden">Caveats for {{ display.winner_name }}</h3>
+    {% for caveat in display.winner_caveats %}
+    <div class="caveat caveat-{{ caveat.severity.value }}">
+      <span class="caveat-icon" aria-hidden="true">
+        {% if caveat.severity.value == "critical" %}&#9888;{% elif caveat.severity.value == "warning" %}&#9888;{% else %}&#8505;{% endif %}
+      </span>
+      {{ caveat.message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if display.general_caveats %}
+  <div class="caveats-section general-caveats">
+    {% for caveat in display.general_caveats %}
+    <div class="caveat caveat-{{ caveat.severity.value }}">
+      <span class="caveat-icon" aria-hidden="true">&#8505;</span>
+      {{ caveat.message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</article>

@@ -38,7 +38,11 @@
 
   <div>
     <article id="results">
-      <p>Fill in your financing options and click "Compare Options" to see results.</p>
+      {% if display is defined %}
+        {% include "partials/results.html" %}
+      {% else %}
+        <p>Fill in your financing options and click "Compare Options" to see results.</p>
+      {% endif %}
     </article>
   </div>
 </div>

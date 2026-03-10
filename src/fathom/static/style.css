@@ -64,3 +64,147 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* === Results Display === */
+
+/* Recommendation hero card */
+.recommendation-card {
+  border: 2px solid var(--pico-primary);
+  border-radius: var(--pico-border-radius);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.recommendation-card header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.recommendation-card .winner-star {
+  color: #f59e0b;
+  font-size: 1.5rem;
+}
+
+.recommendation-card .winner-name {
+  font-size: 1.5rem;
+}
+
+.recommendation-card .winner-label {
+  color: var(--pico-muted-color);
+  font-size: 1.1rem;
+}
+
+.recommendation-card .winner-cost {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.recommendation-card .savings {
+  font-size: 1.25rem;
+  color: var(--pico-ins-color, #16a34a);
+  margin-bottom: 0.75rem;
+}
+
+.recommendation-card .recommendation-text {
+  color: var(--pico-muted-color);
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+/* Caveats */
+.caveat {
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: var(--pico-border-radius);
+  border-left: 4px solid;
+}
+
+.caveat-icon {
+  margin-right: 0.5rem;
+}
+
+.caveat-warning {
+  border-left-color: #f59e0b;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.caveat-critical {
+  border-left-color: #ef4444;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.caveat-info {
+  border-left-color: #3b82f6;
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+/* Cost breakdown table */
+.breakdown-section {
+  margin-top: 1.5rem;
+}
+
+.breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.breakdown-table th,
+.breakdown-table td {
+  padding: 0.5rem 0.75rem;
+  text-align: right;
+  border-bottom: 1px solid var(--pico-muted-border-color);
+}
+
+.breakdown-table th.row-label,
+.breakdown-table td.row-label {
+  text-align: left;
+  position: sticky;
+  left: 0;
+  background: var(--pico-background-color);
+  z-index: 1;
+  font-weight: 600;
+}
+
+.breakdown-table th.winner-col,
+.breakdown-table td.winner-col {
+  background: rgba(59, 130, 246, 0.06);
+}
+
+.breakdown-table .sub-header th {
+  font-weight: normal;
+  font-size: 0.85rem;
+  color: var(--pico-muted-color);
+}
+
+.true-total-cost td {
+  border-top: 2px solid var(--pico-color);
+  font-weight: 600;
+}
+
+.true-total-cost .winner-col {
+  font-weight: 700;
+}
+
+.winner-highlight .winner-star {
+  color: #f59e0b;
+}
+
+/* Other option caveats below table */
+.other-caveats {
+  margin-top: 1.5rem;
+}
+
+.option-caveats h4 {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+/* Results section spacing */
+.results-section {
+  margin-top: 0;
+}

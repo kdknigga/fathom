@@ -13,6 +13,7 @@ from flask import Blueprint, render_template, request
 from fathom.engine import compare
 from fathom.forms import build_domain_objects, parse_form_data, validate_form_data
 from fathom.models import OptionType
+from fathom.results import analyze_results
 
 bp = Blueprint("main", __name__)
 
@@ -315,4 +316,6 @@ def compare_options() -> str:
     results = compare(financing_options, global_settings)
 
     ctx = _build_template_context(parsed, errors={}, results=results)
+    display_data = analyze_results(results, financing_options)
+    ctx["display"] = display_data
     return render_template("index.html", **ctx)

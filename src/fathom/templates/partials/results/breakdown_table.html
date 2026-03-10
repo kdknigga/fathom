@@ -1,0 +1,78 @@
+<div class="breakdown-wrapper" style="overflow-x: auto;">
+  <table class="breakdown-table" role="table">
+    <caption class="visually-hidden">Cost breakdown comparison of financing options</caption>
+    <thead>
+      <tr>
+        <th class="row-label" scope="col">Component</th>
+        {% for opt in display.options_data %}
+          {% if opt.is_promo %}
+        <th colspan="2" scope="colgroup" class="{% if opt.is_winner %}winner-col{% endif %}">
+          {{ opt.name }}
+        </th>
+          {% else %}
+        <th scope="col" class="{% if opt.is_winner %}winner-col{% endif %}">
+          {{ opt.name }}
+        </th>
+          {% endif %}
+        {% endfor %}
+      </tr>
+      {# Sub-header row for promo options #}
+      {% set has_promo = display.options_data | selectattr("is_promo") | list | length > 0 %}
+      {% if has_promo %}
+      <tr class="sub-header">
+        <th class="row-label"></th>
+        {% for opt in display.options_data %}
+          {% if opt.is_promo %}
+        <th class="{% if opt.is_winner %}winner-col{% endif %}">If paid on time</th>
+        <th class="{% if opt.is_winner %}winner-col{% endif %}">If not paid on time</th>
+          {% else %}
+        <th class="{% if opt.is_winner %}winner-col{% endif %}">&nbsp;</th>
+          {% endif %}
+        {% endfor %}
+      </tr>
+      {% endif %}
+    </thead>
+    <tbody>
+      {% for row in display.breakdown_rows %}
+      <tr class="{% if row.label == 'True Total Cost' %}true-total-cost{% endif %}">
+        <td class="row-label">{{ row.label }}</td>
+        {% for val in row["values"] %}
+          {% if val.is_promo %}
+        <td class="{% if display.options_data[loop.index0].is_winner %}winner-col{% endif %}{% if row.label == 'True Total Cost' and display.options_data[loop.index0].is_winner %} winner-highlight{% endif %}">
+          {% if row.label == "True Total Cost" and display.options_data[loop.index0].is_winner %}<span class="winner-star" aria-hidden="true">&#9733;</span> {% endif %}<strong>${{ "{:,.2f}".format(val.paid) }}</strong>
+        </td>
+        <td class="{% if display.options_data[loop.index0].is_winner %}winner-col{% endif %}">
+          ${{ "{:,.2f}".format(val.not_paid) }}
+        </td>
+          {% else %}
+        <td class="{% if display.options_data[loop.index0].is_winner %}winner-col{% endif %}{% if row.label == 'True Total Cost' and display.options_data[loop.index0].is_winner %} winner-highlight{% endif %}">
+          {% if row.label == "True Total Cost" and display.options_data[loop.index0].is_winner %}<span class="winner-star" aria-hidden="true">&#9733;</span> {% endif %}{% if row.label == "True Total Cost" and display.options_data[loop.index0].is_winner %}<strong>${{ "{:,.2f}".format(val.value) }}</strong>{% else %}<span>${{ "{:,.2f}".format(val.value) }}</span>{% endif %}
+        </td>
+          {% endif %}
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% set non_winner_options = display.options_data | rejectattr("is_winner") | list %}
+{% if non_winner_options %}
+<div class="other-caveats">
+  {% for opt in non_winner_options %}
+    {% if opt.caveats %}
+  <div class="option-caveats">
+    <h4>{{ opt.name }} caveats</h4>
+    {% for caveat in opt.caveats %}
+    <div class="caveat caveat-{{ caveat.severity.value }}">
+      <span class="caveat-icon" aria-hidden="true">
+        {% if caveat.severity.value == "critical" %}&#9888;{% elif caveat.severity.value == "warning" %}&#9888;{% else %}&#8505;{% endif %}
+      </span>
+      {{ caveat.message }}
+    </div>
+    {% endfor %}
+  </div>
+    {% endif %}
+  {% endfor %}
+</div>
+{% endif %}
