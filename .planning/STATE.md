@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 4 context gathered
-last_updated: "2026-03-10T23:16:35.566Z"
-last_activity: 2026-03-10 -- Completed 03-03-PLAN.md
+status: executing
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-03-10T23:22:32.440Z"
+last_activity: 2026-03-10 -- Completed 04-02-PLAN.md
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 12
-  completed_plans: 10
-  percent: 100
+  completed_plans: 11
+  percent: 83
 ---
 
 # Project State
@@ -60,6 +60,7 @@ Progress: [████████░░] 83%
 | Phase 03 P01 | 6min | 2 tasks | 9 files |
 | Phase 03 P03 | 6min | 3 tasks | 8 files |
 | Phase 04 P02 | 2min | 2 tasks | 2 files |
+| Phase 04 P01 | 6min | 3 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,9 @@ Recent decisions affecting current work:
 - [Phase 03]: Transform sorted_options to (name, cost) tuples in route before passing to charts module
 - [Phase 03]: HTMX error responses render results.html partial with error summary list
 - [Phase 04]: Adjusted architecture tree in README to match actual source files (no config.py exists)
+- [Phase 04]: 127.0.0.1 default host (not 0.0.0.0) to avoid S104 lint; Dockerfile CMD sets 0.0.0.0
+- [Phase 04]: Field(default_factory=lambda) for secret_key to avoid S105 hardcoded password lint
+- [Phase 04]: Shell-form CMD in Dockerfile for env var substitution of port and workers
 
 ### Pending Todos
 
@@ -103,6 +107,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-10T23:16:12Z
-Stopped at: Completed 04-02-PLAN.md
-Resume file: .planning/phases/04-deployment-and-polish/04-02-SUMMARY.md
+Last session: 2026-03-10T23:22:32.438Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: None

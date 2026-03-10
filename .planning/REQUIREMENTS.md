@@ -64,8 +64,8 @@
 - [x] **TECH-02**: No user data persisted on server beyond single request/response cycle
 - [x] **TECH-03**: Form inputs repopulated on response so values are not lost between submissions
 - [x] **TECH-04**: Application runs as single deployable Python process with no external database
-- [ ] **TECH-05**: Dockerfile provided for containerized self-hosting
-- [ ] **TECH-06**: Configuration overridable via environment variables (default rates, branding)
+- [x] **TECH-05**: Dockerfile provided for containerized self-hosting
+- [x] **TECH-06**: Configuration overridable via environment variables (default rates, branding)
 - [x] **TECH-07**: README with clear self-hosting instructions
 - [x] **TECH-08**: Open-source license (MIT or Apache 2.0)
 
@@ -156,8 +156,8 @@
 | RSLT-08 | Phase 3 | Complete |
 | A11Y-02 | Phase 3 | Complete |
 | A11Y-03 | Phase 3 | Complete |
-| TECH-05 | Phase 4 | Pending |
-| TECH-06 | Phase 4 | Pending |
+| TECH-05 | Phase 4 | Complete |
+| TECH-06 | Phase 4 | Complete |
 | TECH-07 | Phase 4 | Complete |
 | TECH-08 | Phase 4 | Complete |
 | PERF-01 | Phase 4 | Pending |
