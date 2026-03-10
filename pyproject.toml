@@ -95,10 +95,14 @@ docstring-code-format = false
 # enabled.
 docstring-code-line-length = "dynamic"
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
 [dependency-groups]
 dev = [
     "prek>=0.3.5",
     "pyrefly>=0.55.0",
+    "pytest>=9.0.2",
     "ruff>=0.15.5",
     "ty>=0.0.21",
 ]
