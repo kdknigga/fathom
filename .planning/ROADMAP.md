@@ -30,12 +30,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. The engine normalizes all options to the longest term and models post-payoff cash flows as invested
   5. Inflation adjustment and tax savings toggles produce correct present-value discounting and interest deduction calculations respectively
   6. All code passes ruff check, ruff format, ty check, pyrefly check, and prek hooks with zero errors — no suppression comments
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
-- [ ] 01-03: TBD
+- [ ] 01-01-PLAN.md — Test infrastructure, domain models, and failing test stubs
+- [ ] 01-02-PLAN.md — Core calculation modules (amortization, opportunity cost, inflation, tax)
+- [ ] 01-03-PLAN.md — Engine orchestrator, caveats, and full quality gate
 
 ### Phase 2: Web Layer and Input Forms
 **Goal**: Users can fill out a complete financing comparison form with all 6 option types, see validation errors, and submit for calculation
