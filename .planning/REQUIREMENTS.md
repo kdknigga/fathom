@@ -7,22 +7,22 @@
 
 ### Input Form
 
-- [ ] **FORM-01**: User can enter purchase price as primary input
+- [x] **FORM-01**: User can enter purchase price as primary input
 - [ ] **FORM-02**: User can set investment return rate via presets (Conservative 4%, Moderate 7%, Aggressive 10%) or manual override
 - [ ] **FORM-03**: User can toggle inflation adjustment and enter custom inflation rate (default 3%)
 - [ ] **FORM-04**: User can toggle tax implications and enter marginal tax rate (default 22%)
-- [ ] **FORM-05**: User can define 2-4 financing options to compare
-- [ ] **FORM-06**: User can select option type which reveals relevant fields for that type
-- [ ] **FORM-07**: User can reset form to defaults via "Reset / Start Over" button
+- [x] **FORM-05**: User can define 2-4 financing options to compare
+- [x] **FORM-06**: User can select option type which reveals relevant fields for that type
+- [x] **FORM-07**: User can reset form to defaults via "Reset / Start Over" button
 
 ### Option Types
 
-- [ ] **OPTY-01**: User can configure "Pay in Full (Cash)" option (no additional fields)
-- [ ] **OPTY-02**: User can configure "Traditional Loan" option (APR, term, down payment)
-- [ ] **OPTY-03**: User can configure "0% Promotional Financing" option (promo term, down payment, deferred interest toggle)
-- [ ] **OPTY-04**: User can configure "Promo with Cash-Back Rebate" option (APR, term, cash-back amount, down payment)
-- [ ] **OPTY-05**: User can configure "Promo with Price Reduction" option (discounted price, APR, term, down payment)
-- [ ] **OPTY-06**: User can configure "Custom/Other" option (effective APR, term, upfront cash, optional label)
+- [x] **OPTY-01**: User can configure "Pay in Full (Cash)" option (no additional fields)
+- [x] **OPTY-02**: User can configure "Traditional Loan" option (APR, term, down payment)
+- [x] **OPTY-03**: User can configure "0% Promotional Financing" option (promo term, down payment, deferred interest toggle)
+- [x] **OPTY-04**: User can configure "Promo with Cash-Back Rebate" option (APR, term, cash-back amount, down payment)
+- [x] **OPTY-05**: User can configure "Promo with Price Reduction" option (discounted price, APR, term, down payment)
+- [x] **OPTY-06**: User can configure "Custom/Other" option (effective APR, term, upfront cash, optional label)
 
 ### Calculation Engine
 
@@ -48,15 +48,15 @@
 
 ### Accessibility
 
-- [ ] **A11Y-01**: All form inputs have visible labels (WCAG 2.1 AA)
+- [x] **A11Y-01**: All form inputs have visible labels (WCAG 2.1 AA)
 - [ ] **A11Y-02**: Charts include accessible text alternatives (data tables or ARIA labels)
 - [ ] **A11Y-03**: Color is not the sole differentiator in charts (patterns or labels used as well)
 
 ### Layout & UX
 
-- [ ] **LYOT-01**: Desktop displays two-column layout (inputs left, results right)
-- [ ] **LYOT-02**: Mobile/tablet displays single-column stacked layout with sticky "View Results" anchor
-- [ ] **LYOT-03**: All labels and copy use plain, consumer-friendly language (no jargon)
+- [x] **LYOT-01**: Desktop displays two-column layout (inputs left, results right)
+- [x] **LYOT-02**: Mobile/tablet displays single-column stacked layout with sticky "View Results" anchor
+- [x] **LYOT-03**: All labels and copy use plain, consumer-friendly language (no jargon)
 
 ### Technical
 
@@ -128,23 +128,23 @@
 | QUAL-04 | Phase 1 | Complete |
 | QUAL-05 | Phase 1 | Complete |
 | QUAL-06 | Phase 1 | Complete |
-| FORM-01 | Phase 2 | Pending |
+| FORM-01 | Phase 2 | Complete |
 | FORM-02 | Phase 2 | Pending |
 | FORM-03 | Phase 2 | Pending |
 | FORM-04 | Phase 2 | Pending |
-| FORM-05 | Phase 2 | Pending |
-| FORM-06 | Phase 2 | Pending |
-| FORM-07 | Phase 2 | Pending |
-| OPTY-01 | Phase 2 | Pending |
-| OPTY-02 | Phase 2 | Pending |
-| OPTY-03 | Phase 2 | Pending |
-| OPTY-04 | Phase 2 | Pending |
-| OPTY-05 | Phase 2 | Pending |
-| OPTY-06 | Phase 2 | Pending |
-| A11Y-01 | Phase 2 | Pending |
-| LYOT-01 | Phase 2 | Pending |
-| LYOT-02 | Phase 2 | Pending |
-| LYOT-03 | Phase 2 | Pending |
+| FORM-05 | Phase 2 | Complete |
+| FORM-06 | Phase 2 | Complete |
+| FORM-07 | Phase 2 | Complete |
+| OPTY-01 | Phase 2 | Complete |
+| OPTY-02 | Phase 2 | Complete |
+| OPTY-03 | Phase 2 | Complete |
+| OPTY-04 | Phase 2 | Complete |
+| OPTY-05 | Phase 2 | Complete |
+| OPTY-06 | Phase 2 | Complete |
+| A11Y-01 | Phase 2 | Complete |
+| LYOT-01 | Phase 2 | Complete |
+| LYOT-02 | Phase 2 | Complete |
+| LYOT-03 | Phase 2 | Complete |
 | TECH-03 | Phase 2 | Pending |
 | RSLT-01 | Phase 3 | Pending |
 | RSLT-02 | Phase 3 | Pending |
