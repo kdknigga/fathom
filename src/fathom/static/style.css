@@ -1,5 +1,7 @@
 /* Fathom - Custom styles */
 
+/* === Form Styling === */
+
 /* Field error styling */
 .field-error {
   color: var(--pico-del-color);
@@ -148,6 +150,10 @@
   margin-top: 1.5rem;
 }
 
+.breakdown-wrapper {
+  -webkit-overflow-scrolling: touch;
+}
+
 .breakdown-table {
   width: 100%;
   border-collapse: collapse;
@@ -158,6 +164,7 @@
   padding: 0.5rem 0.75rem;
   text-align: right;
   border-bottom: 1px solid var(--pico-muted-border-color);
+  white-space: nowrap;
 }
 
 .breakdown-table th.row-label,
@@ -168,6 +175,7 @@
   background: var(--pico-background-color);
   z-index: 1;
   font-weight: 600;
+  white-space: normal;
 }
 
 .breakdown-table th.winner-col,
@@ -229,6 +237,11 @@
   height: auto;
 }
 
+/* Charts section spacing */
+.charts-section {
+  margin-top: 1.5rem;
+}
+
 /* Results error display */
 .results-errors {
   padding: 1rem;
@@ -236,4 +249,29 @@
 
 .results-errors ul {
   margin-top: 0.5rem;
+}
+
+/* === Mobile Responsive Adjustments === */
+@media (max-width: 768px) {
+  .recommendation-card {
+    padding: 1rem;
+  }
+
+  .recommendation-card header {
+    flex-wrap: wrap;
+  }
+
+  .recommendation-card .winner-name {
+    font-size: 1.25rem;
+  }
+
+  .recommendation-card .savings {
+    font-size: 1.1rem;
+  }
+
+  .breakdown-table th,
+  .breakdown-table td {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.875rem;
+  }
 }
