@@ -102,56 +102,56 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FORM-01 | — | Pending |
-| FORM-02 | — | Pending |
-| FORM-03 | — | Pending |
-| FORM-04 | — | Pending |
-| FORM-05 | — | Pending |
-| FORM-06 | — | Pending |
-| FORM-07 | — | Pending |
-| OPTY-01 | — | Pending |
-| OPTY-02 | — | Pending |
-| OPTY-03 | — | Pending |
-| OPTY-04 | — | Pending |
-| OPTY-05 | — | Pending |
-| OPTY-06 | — | Pending |
-| CALC-01 | — | Pending |
-| CALC-02 | — | Pending |
-| CALC-03 | — | Pending |
-| CALC-04 | — | Pending |
-| CALC-05 | — | Pending |
-| CALC-06 | — | Pending |
-| CALC-07 | — | Pending |
-| CALC-08 | — | Pending |
-| RSLT-01 | — | Pending |
-| RSLT-02 | — | Pending |
-| RSLT-03 | — | Pending |
-| RSLT-04 | — | Pending |
-| RSLT-05 | — | Pending |
-| RSLT-06 | — | Pending |
-| RSLT-07 | — | Pending |
-| RSLT-08 | — | Pending |
-| A11Y-01 | — | Pending |
-| A11Y-02 | — | Pending |
-| A11Y-03 | — | Pending |
-| LYOT-01 | — | Pending |
-| LYOT-02 | — | Pending |
-| LYOT-03 | — | Pending |
-| TECH-01 | — | Pending |
-| TECH-02 | — | Pending |
-| TECH-03 | — | Pending |
-| TECH-04 | — | Pending |
-| TECH-05 | — | Pending |
-| TECH-06 | — | Pending |
-| TECH-07 | — | Pending |
-| TECH-08 | — | Pending |
-| PERF-01 | — | Pending |
+| CALC-01 | Phase 1 | Pending |
+| CALC-02 | Phase 1 | Pending |
+| CALC-03 | Phase 1 | Pending |
+| CALC-04 | Phase 1 | Pending |
+| CALC-05 | Phase 1 | Pending |
+| CALC-06 | Phase 1 | Pending |
+| CALC-07 | Phase 1 | Pending |
+| CALC-08 | Phase 1 | Pending |
+| TECH-01 | Phase 1 | Pending |
+| TECH-02 | Phase 1 | Pending |
+| TECH-04 | Phase 1 | Pending |
+| FORM-01 | Phase 2 | Pending |
+| FORM-02 | Phase 2 | Pending |
+| FORM-03 | Phase 2 | Pending |
+| FORM-04 | Phase 2 | Pending |
+| FORM-05 | Phase 2 | Pending |
+| FORM-06 | Phase 2 | Pending |
+| FORM-07 | Phase 2 | Pending |
+| OPTY-01 | Phase 2 | Pending |
+| OPTY-02 | Phase 2 | Pending |
+| OPTY-03 | Phase 2 | Pending |
+| OPTY-04 | Phase 2 | Pending |
+| OPTY-05 | Phase 2 | Pending |
+| OPTY-06 | Phase 2 | Pending |
+| A11Y-01 | Phase 2 | Pending |
+| LYOT-01 | Phase 2 | Pending |
+| LYOT-02 | Phase 2 | Pending |
+| LYOT-03 | Phase 2 | Pending |
+| TECH-03 | Phase 2 | Pending |
+| RSLT-01 | Phase 3 | Pending |
+| RSLT-02 | Phase 3 | Pending |
+| RSLT-03 | Phase 3 | Pending |
+| RSLT-04 | Phase 3 | Pending |
+| RSLT-05 | Phase 3 | Pending |
+| RSLT-06 | Phase 3 | Pending |
+| RSLT-07 | Phase 3 | Pending |
+| RSLT-08 | Phase 3 | Pending |
+| A11Y-02 | Phase 3 | Pending |
+| A11Y-03 | Phase 3 | Pending |
+| TECH-05 | Phase 4 | Pending |
+| TECH-06 | Phase 4 | Pending |
+| TECH-07 | Phase 4 | Pending |
+| TECH-08 | Phase 4 | Pending |
+| PERF-01 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 42 total
-- Mapped to phases: 0
-- Unmapped: 42 ⚠️
+- Mapped to phases: 42
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-10*
-*Last updated: 2026-03-10 after initial definition*
+*Last updated: 2026-03-10 after roadmap creation*
