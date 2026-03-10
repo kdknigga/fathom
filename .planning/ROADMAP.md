@@ -33,9 +33,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Test infrastructure, domain models, and failing test stubs
-- [ ] 01-02-PLAN.md — Core calculation modules (amortization, opportunity cost, inflation, tax)
-- [ ] 01-03-PLAN.md — Engine orchestrator, caveats, and full quality gate
+- [x] 01-01-PLAN.md — Test infrastructure, domain models, and failing test stubs
+- [x] 01-02-PLAN.md — Core calculation modules (amortization, opportunity cost, inflation, tax)
+- [x] 01-03-PLAN.md — Engine orchestrator, caveats, and full quality gate
 
 ### Phase 2: Web Layer and Input Forms
 **Goal**: Users can fill out a complete financing comparison form with all 6 option types, see validation errors, and submit for calculation
@@ -47,12 +47,12 @@ Plans:
   3. Form displays on desktop as two-column layout (inputs left, results right) and on mobile as stacked single-column with sticky "View Results" anchor
   4. All form inputs have visible labels using plain consumer-friendly language, and form values are repopulated after submission
   5. User can reset the form to defaults via "Reset / Start Over" button
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
-- [ ] 02-03: TBD
+- [ ] 02-01-PLAN.md — Flask app factory, templates, responsive layout, and all option field templates
+- [ ] 02-02-PLAN.md — Form parsing, validation, HTMX interactivity, and submission handler
+- [ ] 02-03-PLAN.md — Quality gate enforcement and visual verification
 
 ### Phase 3: Results Display and Charts
 **Goal**: Users see a complete, accessible results view with recommendation, cost breakdown, and visualizations that update dynamically
