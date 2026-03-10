@@ -8,7 +8,7 @@ submission handler that validates and calls the calculation engine.
 
 from __future__ import annotations
 
-from flask import Blueprint, render_template, request
+from flask import Blueprint, current_app, render_template, request
 
 from fathom.charts import prepare_charts
 from fathom.engine import compare
@@ -140,18 +140,19 @@ def index() -> str:
         Rendered HTML for the index page.
 
     """
+    fathom_settings = current_app.config["FATHOM_SETTINGS"]
     return render_template(
         "index.html",
         purchase_price="",
         options=_build_default_options(),
         option_types=_build_option_types(),
         settings={
-            "return_preset": "0.07",
+            "return_preset": str(fathom_settings.default_return_rate),
             "return_rate_custom": "",
             "inflation_enabled": False,
-            "inflation_rate": "3",
+            "inflation_rate": str(int(fathom_settings.default_inflation_rate * 100)),
             "tax_enabled": False,
-            "tax_rate": "22",
+            "tax_rate": str(int(fathom_settings.default_tax_rate * 100)),
         },
         errors={},
     )
