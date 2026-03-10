@@ -8,9 +8,9 @@
 ### Input Form
 
 - [x] **FORM-01**: User can enter purchase price as primary input
-- [ ] **FORM-02**: User can set investment return rate via presets (Conservative 4%, Moderate 7%, Aggressive 10%) or manual override
-- [ ] **FORM-03**: User can toggle inflation adjustment and enter custom inflation rate (default 3%)
-- [ ] **FORM-04**: User can toggle tax implications and enter marginal tax rate (default 22%)
+- [x] **FORM-02**: User can set investment return rate via presets (Conservative 4%, Moderate 7%, Aggressive 10%) or manual override
+- [x] **FORM-03**: User can toggle inflation adjustment and enter custom inflation rate (default 3%)
+- [x] **FORM-04**: User can toggle tax implications and enter marginal tax rate (default 22%)
 - [x] **FORM-05**: User can define 2-4 financing options to compare
 - [x] **FORM-06**: User can select option type which reveals relevant fields for that type
 - [x] **FORM-07**: User can reset form to defaults via "Reset / Start Over" button
@@ -62,7 +62,7 @@
 
 - [x] **TECH-01**: All financial calculations are server-side Python — no client-side JS calculation logic
 - [x] **TECH-02**: No user data persisted on server beyond single request/response cycle
-- [ ] **TECH-03**: Form inputs repopulated on response so values are not lost between submissions
+- [x] **TECH-03**: Form inputs repopulated on response so values are not lost between submissions
 - [x] **TECH-04**: Application runs as single deployable Python process with no external database
 - [ ] **TECH-05**: Dockerfile provided for containerized self-hosting
 - [ ] **TECH-06**: Configuration overridable via environment variables (default rates, branding)
@@ -129,9 +129,9 @@
 | QUAL-05 | Phase 1 | Complete |
 | QUAL-06 | Phase 1 | Complete |
 | FORM-01 | Phase 2 | Complete |
-| FORM-02 | Phase 2 | Pending |
-| FORM-03 | Phase 2 | Pending |
-| FORM-04 | Phase 2 | Pending |
+| FORM-02 | Phase 2 | Complete |
+| FORM-03 | Phase 2 | Complete |
+| FORM-04 | Phase 2 | Complete |
 | FORM-05 | Phase 2 | Complete |
 | FORM-06 | Phase 2 | Complete |
 | FORM-07 | Phase 2 | Complete |
@@ -145,7 +145,7 @@
 | LYOT-01 | Phase 2 | Complete |
 | LYOT-02 | Phase 2 | Complete |
 | LYOT-03 | Phase 2 | Complete |
-| TECH-03 | Phase 2 | Pending |
+| TECH-03 | Phase 2 | Complete |
 | RSLT-01 | Phase 3 | Pending |
 | RSLT-02 | Phase 3 | Pending |
 | RSLT-03 | Phase 3 | Pending |
