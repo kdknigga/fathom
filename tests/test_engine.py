@@ -7,8 +7,6 @@ cash vs loan comparison, all-cash scenarios, and dual-outcome promo.
 
 from decimal import Decimal
 
-import pytest
-
 from fathom.models import (
     FinancingOption,
     GlobalSettings,
@@ -17,7 +15,6 @@ from fathom.models import (
 )
 
 
-@pytest.mark.xfail(reason="not yet implemented")
 def test_normalization_to_longest_term(
     standard_loan: FinancingOption,
     cash_option: FinancingOption,
@@ -34,7 +31,6 @@ def test_normalization_to_longest_term(
     assert result.comparison_period_months == standard_loan.term_months
 
 
-@pytest.mark.xfail(reason="not yet implemented")
 def test_true_total_cost(
     standard_loan: FinancingOption,
     default_settings: GlobalSettings,
@@ -57,7 +53,6 @@ def test_true_total_cost(
     assert option_result.true_total_cost == expected
 
 
-@pytest.mark.xfail(reason="not yet implemented")
 def test_cash_vs_loan_comparison(
     standard_loan: FinancingOption,
     cash_option: FinancingOption,
@@ -74,7 +69,6 @@ def test_cash_vs_loan_comparison(
     assert cash_option.label in result.results
 
 
-@pytest.mark.xfail(reason="not yet implemented")
 def test_all_cash_instant_comparison() -> None:
     """All-cash comparison is instant with no investment modeling."""
     from fathom.engine import compare
@@ -95,7 +89,6 @@ def test_all_cash_instant_comparison() -> None:
     assert result.comparison_period_months == 0
 
 
-@pytest.mark.xfail(reason="not yet implemented")
 def test_dual_outcome_promo(
     promo_zero_percent: FinancingOption,
     default_settings: GlobalSettings,

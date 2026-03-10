@@ -7,8 +7,6 @@ high interest warnings, and caveat generation for all options.
 
 from decimal import Decimal
 
-import pytest
-
 from fathom.models import (
     CaveatType,
     FinancingOption,
@@ -18,7 +16,6 @@ from fathom.models import (
 )
 
 
-@pytest.mark.xfail(reason="not yet implemented")
 def test_deferred_interest_caveat(
     promo_zero_percent: FinancingOption,
 ) -> None:
@@ -28,13 +25,11 @@ def test_deferred_interest_caveat(
     caveats = generate_caveats(
         option=promo_zero_percent,
         result=_stub_option_result(),
-        settings=GlobalSettings(return_rate=Decimal("0.07")),
     )
     caveat_types = [c.caveat_type for c in caveats]
     assert CaveatType.DEFERRED_INTEREST_RISK in caveat_types
 
 
-@pytest.mark.xfail(reason="not yet implemented")
 def test_opportunity_cost_dominance(
     standard_loan: FinancingOption,
     default_settings: GlobalSettings,
@@ -51,7 +46,6 @@ def test_opportunity_cost_dominance(
     assert isinstance(is_sensitive, bool)
 
 
-@pytest.mark.xfail(reason="not yet implemented")
 def test_high_interest_caveat() -> None:
     """High interest caveat when total interest exceeds 30% of price."""
     from fathom.caveats import generate_caveats
@@ -69,13 +63,11 @@ def test_high_interest_caveat() -> None:
     caveats = generate_caveats(
         option=option,
         result=high_interest_result,
-        settings=GlobalSettings(return_rate=Decimal("0.07")),
     )
     caveat_types = [c.caveat_type for c in caveats]
     assert CaveatType.HIGH_INTEREST_TOTAL in caveat_types
 
 
-@pytest.mark.xfail(reason="not yet implemented")
 def test_caveats_all_options(
     standard_loan: FinancingOption,
     cash_option: FinancingOption,
