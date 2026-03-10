@@ -1,0 +1,63 @@
+<label for="option-{{ opt.idx }}-apr">Annual Interest Rate (APR)</label>
+<fieldset role="group">
+  <input
+    type="text"
+    inputmode="decimal"
+    id="option-{{ opt.idx }}-apr"
+    name="options[{{ opt.idx }}][apr]"
+    value="{{ opt.fields.apr|default('') }}"
+    placeholder="e.g., 5.99"
+    {% if errors.get('options.' ~ opt.idx|string ~ '.apr') %}aria-invalid="true"{% endif %}
+  >
+  <span class="suffix">%</span>
+</fieldset>
+{% if errors.get('options.' ~ opt.idx|string ~ '.apr') %}
+<small class="field-error">{{ errors['options.' ~ opt.idx|string ~ '.apr'] }}</small>
+{% endif %}
+
+<label for="option-{{ opt.idx }}-term-months">Loan Term (months)</label>
+<input
+  type="number"
+  id="option-{{ opt.idx }}-term-months"
+  name="options[{{ opt.idx }}][term_months]"
+  value="{{ opt.fields.term_months|default('') }}"
+  placeholder="e.g., 36"
+  {% if errors.get('options.' ~ opt.idx|string ~ '.term_months') %}aria-invalid="true"{% endif %}
+>
+{% if errors.get('options.' ~ opt.idx|string ~ '.term_months') %}
+<small class="field-error">{{ errors['options.' ~ opt.idx|string ~ '.term_months'] }}</small>
+{% endif %}
+
+<label for="option-{{ opt.idx }}-cash-back">Cash-Back Rebate Amount</label>
+<fieldset role="group">
+  <span class="prefix">$</span>
+  <input
+    type="text"
+    inputmode="decimal"
+    id="option-{{ opt.idx }}-cash-back"
+    name="options[{{ opt.idx }}][cash_back_amount]"
+    value="{{ opt.fields.cash_back_amount|default('') }}"
+    placeholder="e.g., 500"
+    {% if errors.get('options.' ~ opt.idx|string ~ '.cash_back_amount') %}aria-invalid="true"{% endif %}
+  >
+</fieldset>
+{% if errors.get('options.' ~ opt.idx|string ~ '.cash_back_amount') %}
+<small class="field-error">{{ errors['options.' ~ opt.idx|string ~ '.cash_back_amount'] }}</small>
+{% endif %}
+
+<label for="option-{{ opt.idx }}-down-payment">Down Payment</label>
+<fieldset role="group">
+  <span class="prefix">$</span>
+  <input
+    type="text"
+    inputmode="decimal"
+    id="option-{{ opt.idx }}-down-payment"
+    name="options[{{ opt.idx }}][down_payment]"
+    value="{{ opt.fields.down_payment|default('') }}"
+    placeholder="e.g., 5000"
+    {% if errors.get('options.' ~ opt.idx|string ~ '.down_payment') %}aria-invalid="true"{% endif %}
+  >
+</fieldset>
+{% if errors.get('options.' ~ opt.idx|string ~ '.down_payment') %}
+<small class="field-error">{{ errors['options.' ~ opt.idx|string ~ '.down_payment'] }}</small>
+{% endif %}

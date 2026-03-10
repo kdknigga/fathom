@@ -1,4 +1,49 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Fathom</h1>
+<p>Compare the true total cost of financing options</p>
+
+<div class="grid">
+  <div>
+    <form method="post" action="/compare" id="comparison-form">
+      <article>
+        <header>Purchase Price</header>
+        <label for="purchase-price">Purchase Price</label>
+        <input
+          type="text"
+          inputmode="decimal"
+          id="purchase-price"
+          name="purchase_price"
+          value="{{ purchase_price }}"
+          placeholder="e.g., 25000"
+          {% if errors.get('purchase_price') %}aria-invalid="true"{% endif %}
+        >
+        {% if errors.get('purchase_price') %}
+        <small class="field-error">{{ errors['purchase_price'] }}</small>
+        {% endif %}
+      </article>
+
+      <div id="options-container">
+        {% include "partials/option_list.html" %}
+      </div>
+
+      {% include "partials/global_settings.html" %}
+
+      <div class="grid">
+        <button type="submit">Compare Options</button>
+        <a href="/" role="button" class="outline secondary">Reset / Start Over</a>
+      </div>
+    </form>
+  </div>
+
+  <div>
+    <article id="results">
+      <p>Fill in your financing options and click "Compare Options" to see results.</p>
+    </article>
+  </div>
+</div>
+
+<div class="sticky-results-anchor">
+  <a href="#results">View Results</a>
+</div>
 {% endblock %}

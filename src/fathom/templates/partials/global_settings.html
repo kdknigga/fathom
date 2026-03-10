@@ -1,0 +1,94 @@
+<details>
+  <summary>Global Settings <small class="defaults-hint">Using defaults</small></summary>
+
+  <fieldset>
+    <legend>Investment Return Rate</legend>
+    <label>
+      <input
+        type="radio"
+        name="return_preset"
+        value="0.04"
+        {% if settings.return_preset == '0.04' %}checked{% endif %}
+      >
+      Conservative (4%)
+    </label>
+    <label>
+      <input
+        type="radio"
+        name="return_preset"
+        value="0.07"
+        {% if settings.return_preset == '0.07' %}checked{% endif %}
+      >
+      Moderate (7%)
+    </label>
+    <label>
+      <input
+        type="radio"
+        name="return_preset"
+        value="0.10"
+        {% if settings.return_preset == '0.10' %}checked{% endif %}
+      >
+      Aggressive (10%)
+    </label>
+    <label for="return-rate-custom">Custom Rate</label>
+    <fieldset role="group">
+      <input
+        type="text"
+        inputmode="decimal"
+        id="return-rate-custom"
+        name="return_rate_custom"
+        value="{{ settings.return_rate_custom|default('') }}"
+        placeholder="e.g., 8.5"
+      >
+      <span class="suffix">%</span>
+    </fieldset>
+  </fieldset>
+
+  <fieldset>
+    <label>
+      <input
+        type="checkbox"
+        name="inflation_enabled"
+        value="1"
+        {% if settings.inflation_enabled %}checked{% endif %}
+      >
+      Adjust for inflation
+    </label>
+    <label for="inflation-rate">Inflation Rate</label>
+    <fieldset role="group">
+      <input
+        type="text"
+        inputmode="decimal"
+        id="inflation-rate"
+        name="inflation_rate"
+        value="{{ settings.inflation_rate|default('3') }}"
+        placeholder="3"
+      >
+      <span class="suffix">%</span>
+    </fieldset>
+  </fieldset>
+
+  <fieldset>
+    <label>
+      <input
+        type="checkbox"
+        name="tax_enabled"
+        value="1"
+        {% if settings.tax_enabled %}checked{% endif %}
+      >
+      Include tax implications
+    </label>
+    <label for="tax-rate">Marginal Tax Rate</label>
+    <fieldset role="group">
+      <input
+        type="text"
+        inputmode="decimal"
+        id="tax-rate"
+        name="tax_rate"
+        value="{{ settings.tax_rate|default('22') }}"
+        placeholder="22"
+      >
+      <span class="suffix">%</span>
+    </fieldset>
+  </fieldset>
+</details>

@@ -1,0 +1,12 @@
+{% for opt in options %}
+{% include "partials/option_card.html" %}
+{% endfor %}
+{% if options|length < 4 %}
+<button
+  type="button"
+  hx-post="/partials/option/add"
+  hx-target="#options-container"
+  hx-swap="innerHTML"
+  hx-include="#comparison-form"
+>+ Add Financing Option</button>
+{% endif %}

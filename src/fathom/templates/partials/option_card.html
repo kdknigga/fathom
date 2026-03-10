@@ -1,0 +1,44 @@
+<article id="option-{{ opt.idx }}">
+  <header>
+    <div class="grid">
+      <label for="option-{{ opt.idx }}-label" class="visually-hidden">Option name</label>
+      <input
+        type="text"
+        id="option-{{ opt.idx }}-label"
+        name="options[{{ opt.idx }}][label]"
+        value="{{ opt.label }}"
+        placeholder="Option name"
+      >
+
+      <label for="option-{{ opt.idx }}-type" class="visually-hidden">Option type</label>
+      <select
+        id="option-{{ opt.idx }}-type"
+        name="options[{{ opt.idx }}][type]"
+        hx-get="/partials/option-fields/{{ opt.idx }}"
+        hx-target="#option-{{ opt.idx }}-fields"
+        hx-swap="innerHTML"
+        hx-include="this"
+      >
+        {% for ot in option_types %}
+        <option value="{{ ot.value }}" {% if ot.value == opt.type %}selected{% endif %}>{{ ot.label }}</option>
+        {% endfor %}
+      </select>
+
+      {% if options|length > 2 %}
+      <button
+        type="button"
+        class="outline secondary remove-btn"
+        hx-post="/partials/option/{{ opt.idx }}/remove"
+        hx-target="#options-container"
+        hx-swap="innerHTML"
+        hx-include="#comparison-form"
+        aria-label="Remove option"
+      >&times;</button>
+      {% endif %}
+    </div>
+  </header>
+
+  <div id="option-{{ opt.idx }}-fields">
+    {% include opt.template %}
+  </div>
+</article>
