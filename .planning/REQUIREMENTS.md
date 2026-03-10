@@ -37,10 +37,10 @@
 
 ### Results Display
 
-- [ ] **RSLT-01**: User sees a summary recommendation card naming the winning option with plain-English explanation
-- [ ] **RSLT-02**: User sees savings amount compared to next-best option in plain English
-- [ ] **RSLT-03**: User sees caveats flagged on the recommendation (e.g., deferred interest risk)
-- [ ] **RSLT-04**: User sees cost breakdown table with one column per option showing: total payments, total interest, rebates, opportunity cost, tax savings, inflation adjustment, True Total Cost
+- [x] **RSLT-01**: User sees a summary recommendation card naming the winning option with plain-English explanation
+- [x] **RSLT-02**: User sees savings amount compared to next-best option in plain English
+- [x] **RSLT-03**: User sees caveats flagged on the recommendation (e.g., deferred interest risk)
+- [x] **RSLT-04**: User sees cost breakdown table with one column per option showing: total payments, total interest, rebates, opportunity cost, tax savings, inflation adjustment, True Total Cost
 - [x] **RSLT-05**: User sees True Total Cost bar chart comparing all options with winner highlighted
 - [x] **RSLT-06**: User sees cumulative cost over time line chart showing month-by-month out-of-pocket evolution
 - [ ] **RSLT-07**: Results update via HTMX partial page replacement when inputs change
@@ -146,10 +146,10 @@
 | LYOT-02 | Phase 2 | Complete |
 | LYOT-03 | Phase 2 | Complete |
 | TECH-03 | Phase 2 | Complete |
-| RSLT-01 | Phase 3 | Pending |
-| RSLT-02 | Phase 3 | Pending |
-| RSLT-03 | Phase 3 | Pending |
-| RSLT-04 | Phase 3 | Pending |
+| RSLT-01 | Phase 3 | Complete |
+| RSLT-02 | Phase 3 | Complete |
+| RSLT-03 | Phase 3 | Complete |
+| RSLT-04 | Phase 3 | Complete |
 | RSLT-05 | Phase 3 | Complete |
 | RSLT-06 | Phase 3 | Complete |
 | RSLT-07 | Phase 3 | Pending |
