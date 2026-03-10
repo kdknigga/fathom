@@ -12,7 +12,7 @@ Fathom delivers a financing options analyzer in four phases: first the calculati
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Calculation Engine** - Domain models and all financial calculation logic with Decimal arithmetic
+- [ ] **Phase 1: Calculation Engine** - Domain models, financial calculation logic with Decimal arithmetic, code quality tooling (ruff, ty, pyrefly, prek)
 - [ ] **Phase 2: Web Layer and Input Forms** - Flask app, form handling, all option types, responsive layout
 - [ ] **Phase 3: Results Display and Charts** - Recommendation card, cost breakdown, SVG charts, HTMX live updates
 - [ ] **Phase 4: Deployment and Polish** - Dockerfile, README, env config, performance verification, open-source license
@@ -22,13 +22,14 @@ Decimal phases appear between their surrounding integers in numeric order.
 ### Phase 1: Calculation Engine
 **Goal**: Users' financing options can be computed correctly with full True Total Cost modeling, verified by automated tests against known values
 **Depends on**: Nothing (first phase)
-**Requirements**: CALC-01, CALC-02, CALC-03, CALC-04, CALC-05, CALC-06, CALC-07, CALC-08, TECH-01, TECH-02, TECH-04
+**Requirements**: CALC-01, CALC-02, CALC-03, CALC-04, CALC-05, CALC-06, CALC-07, CALC-08, TECH-01, TECH-02, TECH-04, QUAL-01, QUAL-02, QUAL-03, QUAL-04, QUAL-05, QUAL-06
 **Success Criteria** (what must be TRUE):
   1. Given a set of financing options and global settings, the engine returns a ComparisonResult with True Total Cost for each option, computed using Decimal arithmetic (never float for money)
   2. Standard amortization produces correct values verified against known check ($10,000 / 6% APR / 36 months = $304.22/month)
   3. Opportunity cost is computed correctly: full purchase price for cash, down payment only for loans, with freed-up cash invested for remainder of comparison period
   4. The engine normalizes all options to the longest term and models post-payoff cash flows as invested
   5. Inflation adjustment and tax savings toggles produce correct present-value discounting and interest deduction calculations respectively
+  6. All code passes ruff check, ruff format, ty check, pyrefly check, and prek hooks with zero errors — no suppression comments
 **Plans**: TBD
 
 Plans:

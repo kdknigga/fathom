@@ -69,6 +69,15 @@
 - [ ] **TECH-07**: README with clear self-hosting instructions
 - [ ] **TECH-08**: Open-source license (MIT or Apache 2.0)
 
+### Code Quality
+
+- [ ] **QUAL-01**: All code passes `ruff check` with zero errors (no `# noqa` suppression)
+- [ ] **QUAL-02**: All code passes `ruff format` (Black-compatible, double quotes, 88 char lines)
+- [ ] **QUAL-03**: All code passes `ty check` with zero errors (no `# type: ignore` suppression)
+- [ ] **QUAL-04**: All code passes `pyrefly check` with zero errors (no error suppression)
+- [ ] **QUAL-05**: All public modules, classes, and functions have docstrings (ruff `D` rules)
+- [ ] **QUAL-06**: `prek` pre-commit hooks pass on all commits
+
 ### Performance
 
 - [ ] **PERF-01**: Results page rendered within 300ms of form submission
@@ -113,6 +122,12 @@
 | TECH-01 | Phase 1 | Pending |
 | TECH-02 | Phase 1 | Pending |
 | TECH-04 | Phase 1 | Pending |
+| QUAL-01 | Phase 1 | Pending |
+| QUAL-02 | Phase 1 | Pending |
+| QUAL-03 | Phase 1 | Pending |
+| QUAL-04 | Phase 1 | Pending |
+| QUAL-05 | Phase 1 | Pending |
+| QUAL-06 | Phase 1 | Pending |
 | FORM-01 | Phase 2 | Pending |
 | FORM-02 | Phase 2 | Pending |
 | FORM-03 | Phase 2 | Pending |
@@ -148,8 +163,8 @@
 | PERF-01 | Phase 4 | Pending |
 
 **Coverage:**
-- v1 requirements: 42 total
-- Mapped to phases: 42
+- v1 requirements: 48 total
+- Mapped to phases: 48
 - Unmapped: 0
 
 ---

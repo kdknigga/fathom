@@ -46,11 +46,32 @@ Users can instantly see which financing option truly costs least when opportunit
 - Python 3.14 with SSR as primary paradigm
 - HTMX for partial page updates without full reloads
 - Server-rendered SVG charts preferred; Chart.js acceptable fallback
-- `uv` for Python environment management, `ruff` for linting/formatting
-- `ty` and `pyrefly` for type checking (no mypy/pyright)
-- `prek` for pre-commit hooks
+- `uv` for Python environment management (not pip, poetry, or conda)
+- `ruff` for linting and formatting — extensive rule set in `pyproject.toml`, including `D` rules requiring docstrings on all public modules/classes/functions
+- `ty` and `pyrefly` for type checking — both must pass clean, no mypy/pyright
+- `prek` (pre-commit drop-in replacement) for git hooks — `uv run prek run`
 - Target: 300ms result render time
 - Must deploy as single process with no external database
+- Entry point: `src/fathom/__init__.py:main()`
+- Prefer external packages over reimplementing solved problems; favor libraries available in Context7
+
+### Development Tools (MCP Servers)
+
+- **Serena** — Semantic code analysis/editing for token-efficient navigation
+- **Context7** — Always fetch current library docs instead of relying on training data
+- **Tavily** — Web search and content extraction for research
+- **Playwright** — Browser automation for testing the web application
+
+### Code Quality Standards
+
+All code must pass with zero errors/warnings:
+1. `uv run ruff check .` — linting (fix issues, never suppress with `# noqa`)
+2. `uv run ruff format .` — Black-compatible, double quotes, 88 char lines
+3. `uv run ty check` — type checking (fix issues, never suppress with `# type: ignore`)
+4. `uv run pyrefly check` — type checking (both checkers must pass independently)
+5. `uv run prek run` — all pre-commit hooks
+
+**Gotchas:** `ty` and `pyrefly` may flag different issues for the same code — both must pass. Ruff `D` rules: use no-blank-line-before-class and multi-line-summary-second-line style (D203/D212 ignored).
 
 ## Constraints
 
