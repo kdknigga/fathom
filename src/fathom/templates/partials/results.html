@@ -1,0 +1,18 @@
+{% if display is defined %}
+<section class="results-section" aria-label="Comparison Results">
+  {% include "partials/results/recommendation.html" %}
+
+  <section class="breakdown-section" aria-label="Cost Breakdown">
+    <h2>Cost Breakdown</h2>
+    {% include "partials/results/breakdown_table.html" %}
+  </section>
+
+  {% if charts is defined %}
+  <section class="charts-section" aria-label="Visual Comparisons">
+    <h2>Visual Comparison</h2>
+    {% include "partials/results/bar_chart.html" %}
+    {% include "partials/results/line_chart.html" %}
+  </section>
+  {% endif %}
+</section>
+{% endif %}

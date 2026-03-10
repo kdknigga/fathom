@@ -1,0 +1,36 @@
+<div class="visually-hidden">
+  <table>
+    <caption>Cumulative cost over time data</caption>
+    <thead>
+      <tr>
+        <th scope="col">Month</th>
+        {% for line in charts.line.lines %}
+        <th scope="col">{{ line.name }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for label in charts.line.x_labels %}
+      <tr>
+        <td>{{ label.month }}</td>
+        {% for line in charts.line.lines %}
+        <td>
+          {%- for point in line.points -%}
+            {%- if point.month == label.month -%}
+              ${{ "${:,.0f}".format(point.y) }}
+            {%- endif -%}
+          {%- endfor -%}
+        </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+      {# Final month row #}
+      <tr>
+        <td>{{ charts.line.max_months }}</td>
+        {% for line in charts.line.lines %}
+        <td>${{ line.end_value }}</td>
+        {% endfor %}
+      </tr>
+    </tbody>
+  </table>
+</div>

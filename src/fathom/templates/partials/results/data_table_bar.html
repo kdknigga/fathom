@@ -1,0 +1,19 @@
+<div class="visually-hidden">
+  <table>
+    <caption>True Total Cost comparison data</caption>
+    <thead>
+      <tr>
+        <th scope="col">Option</th>
+        <th scope="col">True Total Cost</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for bar in charts.bar.bars %}
+      <tr>
+        <td>{{ bar.name }}{% if bar.is_winner %} (Winner){% endif %}</td>
+        <td>${{ bar.value }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
