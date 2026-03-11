@@ -9,10 +9,16 @@ submission handler that validates and calls the calculation engine.
 from __future__ import annotations
 
 from flask import Blueprint, current_app, render_template, request
+from pydantic import ValidationError
 
 from fathom.charts import prepare_charts
 from fathom.engine import compare
-from fathom.forms import build_domain_objects, parse_form_data, validate_form_data
+from fathom.forms import (
+    build_domain_objects,
+    extract_form_data,
+    parse_form_data,
+    pydantic_errors_to_dict,
+)
 from fathom.models import OptionType
 from fathom.results import analyze_results
 
@@ -88,7 +94,7 @@ def _build_template_context(
     passed through for repopulation after form submission.
 
     Args:
-        parsed_data: The structured dict from parse_form_data.
+        parsed_data: The structured dict from extract_form_data.
         errors: Validation errors dict (may be empty).
         results: Optional ComparisonResult from the engine.
 
@@ -193,14 +199,14 @@ def add_option() -> str:
     """
     Add a new financing option to the form (HTMX endpoint).
 
-    Parses the current form state from hx-include data, appends a new
+    Extracts the current form state from hx-include data, appends a new
     Traditional Loan option, and returns the updated option list partial.
 
     Returns:
         Rendered HTML for the full option list with the new option appended.
 
     """
-    parsed = parse_form_data(request.form)
+    parsed = extract_form_data(request.form)
     next_idx = len(parsed["options"])
 
     parsed["options"].append(
@@ -250,7 +256,7 @@ def remove_option(idx: int) -> str:
     """
     Remove a financing option from the form (HTMX endpoint).
 
-    Parses current form state, removes the option at the given index,
+    Extracts current form state, removes the option at the given index,
     re-indexes remaining options sequentially, and returns the updated
     option list partial.
 
@@ -261,7 +267,7 @@ def remove_option(idx: int) -> str:
         Rendered HTML for the full option list without the removed option.
 
     """
-    parsed = parse_form_data(request.form)
+    parsed = extract_form_data(request.form)
 
     # Remove the option at the given index (idx maps to parsed list position)
     if 0 <= idx < len(parsed["options"]):
@@ -306,19 +312,21 @@ def compare_options() -> str:
         Rendered HTML for the full index page with results or errors.
 
     """
-    parsed = parse_form_data(request.form)
-    errors = validate_form_data(parsed)
-
     is_htmx = request.headers.get("HX-Request") == "true"
 
-    if errors:
+    try:
+        form_input = parse_form_data(request.form)
+    except ValidationError as exc:
+        errors = pydantic_errors_to_dict(exc)
+        parsed = extract_form_data(request.form)
         ctx = _build_template_context(parsed, errors)
         ctx["has_errors"] = True
         if is_htmx:
             return render_template("partials/results.html", **ctx)
         return render_template("index.html", **ctx)
 
-    financing_options, global_settings = build_domain_objects(parsed)
+    parsed = extract_form_data(request.form)
+    financing_options, global_settings = build_domain_objects(form_input)
     results = compare(financing_options, global_settings)
 
     ctx = _build_template_context(parsed, errors={}, results=results)

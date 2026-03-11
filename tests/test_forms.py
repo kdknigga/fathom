@@ -1,15 +1,21 @@
 """
 Unit tests for form parsing, validation, and domain model construction.
 
-Tests cover parse_form_data, validate_form_data, and build_domain_objects
-from the fathom.forms module.
+Tests cover parse_form_data, extract_form_data, build_domain_objects,
+and pydantic_errors_to_dict from the fathom.forms module.
 """
 
 from decimal import Decimal
 
+from pydantic import ValidationError
 from werkzeug.datastructures import ImmutableMultiDict
 
-from fathom.forms import build_domain_objects, parse_form_data, validate_form_data
+from fathom.forms import (
+    build_domain_objects,
+    extract_form_data,
+    parse_form_data,
+    pydantic_errors_to_dict,
+)
 from fathom.models import OptionType
 
 
@@ -36,27 +42,37 @@ def _valid_cash_loan_form() -> dict[str, str]:
     }
 
 
+def _get_errors(data: dict[str, str]) -> dict[str, str]:
+    """Parse form data and return validation errors as a dict."""
+    form = _make_form(data)
+    try:
+        parse_form_data(form)
+    except ValidationError as exc:
+        return pydantic_errors_to_dict(exc)
+    return {}
+
+
 # --- parse_form_data tests ---
 
 
 class TestParseFormData:
     """Tests for parse_form_data function."""
 
-    def test_extracts_purchase_price(self):
-        """Parse purchase price from form data."""
-        form = _make_form({"purchase_price": "25000"})
-        parsed = parse_form_data(form)
-        assert parsed["purchase_price"] == "25000"
+    def test_returns_form_input(self):
+        """Valid form data returns a FormInput instance."""
+        form = _make_form(_valid_cash_loan_form())
+        result = parse_form_data(form)
+        assert result.purchase_price == "25000"
 
-    def test_extracts_options_by_index(self):
+    def test_extracts_options(self):
         """Parse indexed option fields into a list."""
         form = _make_form(_valid_cash_loan_form())
-        parsed = parse_form_data(form)
-        assert len(parsed["options"]) == 2
-        assert parsed["options"][0]["type"] == "cash"
-        assert parsed["options"][1]["type"] == "traditional_loan"
-        assert parsed["options"][1]["apr"] == "5.99"
-        assert parsed["options"][1]["term_months"] == "36"
+        result = parse_form_data(form)
+        assert len(result.options) == 2
+        assert result.options[0].type == "cash"
+        assert result.options[1].type == "traditional_loan"
+        assert result.options[1].apr == "5.99"
+        assert result.options[1].term_months == "36"
 
     def test_handles_index_gaps(self):
         """Parse options correctly when indices have gaps (e.g., 0, 2)."""
@@ -71,10 +87,10 @@ class TestParseFormData:
                 "options[2][term_months]": "24",
             }
         )
-        parsed = parse_form_data(form)
-        assert len(parsed["options"]) == 2
-        assert parsed["options"][0]["type"] == "cash"
-        assert parsed["options"][1]["type"] == "traditional_loan"
+        result = parse_form_data(form)
+        assert len(result.options) == 2
+        assert result.options[0].type == "cash"
+        assert result.options[1].type == "traditional_loan"
 
     def test_extracts_settings(self):
         """Parse global settings from form data."""
@@ -85,19 +101,19 @@ class TestParseFormData:
                 "tax_enabled": "1",
             }
         )
-        parsed = parse_form_data(form)
-        assert parsed["settings"]["return_preset"] == "0.07"
-        assert parsed["settings"]["inflation_enabled"] is True
-        assert parsed["settings"]["tax_enabled"] is True
-        assert parsed["settings"]["inflation_rate"] == "3"
-        assert parsed["settings"]["tax_rate"] == "22"
+        result = parse_form_data(form)
+        assert result.settings.return_preset == "0.07"
+        assert result.settings.inflation_enabled is True
+        assert result.settings.tax_enabled is True
+        assert result.settings.inflation_rate == "3"
+        assert result.settings.tax_rate == "22"
 
     def test_checkbox_defaults_false(self):
         """Unchecked checkboxes default to False."""
         form = _make_form(_valid_cash_loan_form())
-        parsed = parse_form_data(form)
-        assert parsed["settings"]["inflation_enabled"] is False
-        assert parsed["settings"]["tax_enabled"] is False
+        result = parse_form_data(form)
+        assert result.settings.inflation_enabled is False
+        assert result.settings.tax_enabled is False
 
     def test_extracts_all_option_fields(self):
         """Parse all possible option fields including promo-specific ones."""
@@ -110,12 +126,15 @@ class TestParseFormData:
                 "options[0][down_payment]": "1000",
                 "options[0][post_promo_apr]": "24.99",
                 "options[0][deferred_interest]": "1",
+                "options[1][type]": "cash",
+                "options[1][label]": "Cash",
+                "return_preset": "0.07",
             }
         )
-        parsed = parse_form_data(form)
-        opt = parsed["options"][0]
-        assert opt["post_promo_apr"] == "24.99"
-        assert opt["deferred_interest"] is True
+        result = parse_form_data(form)
+        opt = result.options[0]
+        assert opt.post_promo_apr == "24.99"
+        assert opt.deferred_interest is True
 
     def test_extracts_cash_back_and_discounted_price(self):
         """Parse cash_back_amount and discounted_price fields."""
@@ -134,137 +153,158 @@ class TestParseFormData:
                 "options[1][term_months]": "36",
             }
         )
-        parsed = parse_form_data(form)
-        assert parsed["options"][0]["cash_back_amount"] == "500"
-        assert parsed["options"][1]["discounted_price"] == "22000"
+        result = parse_form_data(form)
+        assert result.options[0].cash_back_amount == "500"
+        assert result.options[1].discounted_price == "22000"
+
+    def test_raises_validation_error_on_invalid(self):
+        """Invalid form data raises ValidationError."""
+        form = _make_form({**_valid_cash_loan_form(), "purchase_price": ""})
+        try:
+            parse_form_data(form)
+            assert False, "Should have raised ValidationError"  # noqa: B011
+        except ValidationError:
+            pass
 
 
-# --- validate_form_data tests ---
+# --- extract_form_data tests ---
+
+
+class TestExtractFormData:
+    """Tests for extract_form_data function."""
+
+    def test_returns_dict(self):
+        """extract_form_data returns a plain dict."""
+        form = _make_form(_valid_cash_loan_form())
+        result = extract_form_data(form)
+        assert isinstance(result, dict)
+        assert "purchase_price" in result
+        assert "options" in result
+        assert "settings" in result
+
+    def test_extracts_purchase_price(self):
+        """Extract purchase price from form data."""
+        form = _make_form({"purchase_price": "25000"})
+        result = extract_form_data(form)
+        assert result["purchase_price"] == "25000"
+
+    def test_extracts_options(self):
+        """Extract indexed option fields into a list of dicts."""
+        form = _make_form(_valid_cash_loan_form())
+        result = extract_form_data(form)
+        assert len(result["options"]) == 2
+        assert result["options"][0]["type"] == "cash"
+        assert result["options"][1]["type"] == "traditional_loan"
+
+
+# --- validate_form_data tests (via parse + pydantic_errors_to_dict) ---
 
 
 class TestValidateFormData:
-    """Tests for validate_form_data function."""
+    """Tests for validation via parse_form_data and pydantic_errors_to_dict."""
 
     def test_valid_data_returns_empty(self):
         """Valid form data produces no errors."""
-        form = _make_form(_valid_cash_loan_form())
-        parsed = parse_form_data(form)
-        errors = validate_form_data(parsed)
+        errors = _get_errors(_valid_cash_loan_form())
         assert errors == {}
 
     def test_empty_purchase_price(self):
         """Empty purchase price produces an error."""
-        form = _make_form({**_valid_cash_loan_form(), "purchase_price": ""})
-        parsed = parse_form_data(form)
-        errors = validate_form_data(parsed)
+        errors = _get_errors({**_valid_cash_loan_form(), "purchase_price": ""})
         assert "purchase_price" in errors
 
     def test_non_numeric_purchase_price(self):
         """Non-numeric purchase price produces an error."""
-        form = _make_form({**_valid_cash_loan_form(), "purchase_price": "abc"})
-        parsed = parse_form_data(form)
-        errors = validate_form_data(parsed)
+        errors = _get_errors({**_valid_cash_loan_form(), "purchase_price": "abc"})
         assert "purchase_price" in errors
 
     def test_zero_purchase_price(self):
         """Zero purchase price produces an error."""
-        form = _make_form({**_valid_cash_loan_form(), "purchase_price": "0"})
-        parsed = parse_form_data(form)
-        errors = validate_form_data(parsed)
+        errors = _get_errors({**_valid_cash_loan_form(), "purchase_price": "0"})
         assert "purchase_price" in errors
 
     def test_apr_out_of_range(self):
         """APR above 40% produces an error."""
         data = _valid_cash_loan_form()
         data["options[1][apr]"] = "41"
-        form = _make_form(data)
-        parsed = parse_form_data(form)
-        errors = validate_form_data(parsed)
+        errors = _get_errors(data)
         assert "options.1.apr" in errors
 
     def test_term_months_out_of_range(self):
         """Term months outside 1-360 produces an error."""
         data = _valid_cash_loan_form()
         data["options[1][term_months]"] = "0"
-        form = _make_form(data)
-        parsed = parse_form_data(form)
-        errors = validate_form_data(parsed)
+        errors = _get_errors(data)
         assert "options.1.term_months" in errors
 
     def test_term_months_too_high(self):
         """Term months above 360 produces an error."""
         data = _valid_cash_loan_form()
         data["options[1][term_months]"] = "361"
-        form = _make_form(data)
-        parsed = parse_form_data(form)
-        errors = validate_form_data(parsed)
+        errors = _get_errors(data)
         assert "options.1.term_months" in errors
 
     def test_down_payment_exceeds_price(self):
         """Down payment exceeding purchase price produces an error."""
         data = _valid_cash_loan_form()
         data["options[1][down_payment]"] = "30000"
-        form = _make_form(data)
-        parsed = parse_form_data(form)
-        errors = validate_form_data(parsed)
+        errors = _get_errors(data)
         assert "options.1.down_payment" in errors
 
     def test_cash_skips_apr_validation(self):
         """Cash option does not require or validate APR."""
-        form = _make_form(_valid_cash_loan_form())
-        parsed = parse_form_data(form)
-        errors = validate_form_data(parsed)
+        errors = _get_errors(_valid_cash_loan_form())
         assert "options.0.apr" not in errors
 
     def test_promo_zero_requires_term(self):
         """Promo zero percent requires term_months."""
-        form = _make_form(
+        errors = _get_errors(
             {
                 "purchase_price": "10000",
                 "options[0][type]": "promo_zero_percent",
                 "options[0][label]": "Promo",
+                "options[1][type]": "cash",
+                "options[1][label]": "Cash",
                 "return_preset": "0.07",
             }
         )
-        parsed = parse_form_data(form)
-        errors = validate_form_data(parsed)
         assert "options.0.term_months" in errors
 
     def test_promo_cashback_requires_amount(self):
         """Promo cash back requires cash_back_amount."""
-        form = _make_form(
+        errors = _get_errors(
             {
                 "purchase_price": "10000",
                 "options[0][type]": "promo_cash_back",
                 "options[0][label]": "CB",
                 "options[0][apr]": "5",
                 "options[0][term_months]": "24",
+                "options[1][type]": "cash",
+                "options[1][label]": "Cash",
                 "return_preset": "0.07",
             }
         )
-        parsed = parse_form_data(form)
-        errors = validate_form_data(parsed)
         assert "options.0.cash_back_amount" in errors
 
     def test_promo_price_requires_discounted_price(self):
         """Promo price reduction requires discounted_price."""
-        form = _make_form(
+        errors = _get_errors(
             {
                 "purchase_price": "25000",
                 "options[0][type]": "promo_price_reduction",
                 "options[0][label]": "Price Cut",
                 "options[0][apr]": "6",
                 "options[0][term_months]": "36",
+                "options[1][type]": "cash",
+                "options[1][label]": "Cash",
                 "return_preset": "0.07",
             }
         )
-        parsed = parse_form_data(form)
-        errors = validate_form_data(parsed)
         assert "options.0.discounted_price" in errors
 
     def test_discounted_price_must_be_less_than_purchase(self):
         """Discounted price >= purchase price produces an error."""
-        form = _make_form(
+        errors = _get_errors(
             {
                 "purchase_price": "25000",
                 "options[0][type]": "promo_price_reduction",
@@ -272,30 +312,48 @@ class TestValidateFormData:
                 "options[0][apr]": "6",
                 "options[0][term_months]": "36",
                 "options[0][discounted_price]": "25000",
+                "options[1][type]": "cash",
+                "options[1][label]": "Cash",
                 "return_preset": "0.07",
             }
         )
-        parsed = parse_form_data(form)
-        errors = validate_form_data(parsed)
         assert "options.0.discounted_price" in errors
 
     def test_custom_return_rate_override(self):
         """Custom return rate with invalid value produces an error."""
         data = _valid_cash_loan_form()
         data["return_rate_custom"] = "35"
-        form = _make_form(data)
-        parsed = parse_form_data(form)
-        errors = validate_form_data(parsed)
+        errors = _get_errors(data)
         assert "settings.return_rate" in errors
 
     def test_valid_custom_return_rate(self):
         """Custom return rate within 0-30% produces no error."""
         data = _valid_cash_loan_form()
         data["return_rate_custom"] = "8.5"
-        form = _make_form(data)
-        parsed = parse_form_data(form)
-        errors = validate_form_data(parsed)
+        errors = _get_errors(data)
         assert "settings.return_rate" not in errors
+
+    def test_error_message_purchase_price(self):
+        """Purchase price error message matches expected text."""
+        errors = _get_errors({**_valid_cash_loan_form(), "purchase_price": ""})
+        assert (
+            errors["purchase_price"]
+            == "Purchase price is required and must be a number."
+        )
+
+    def test_error_message_apr_required(self):
+        """APR required error message matches expected text."""
+        data = _valid_cash_loan_form()
+        data["options[1][apr]"] = ""
+        errors = _get_errors(data)
+        assert errors["options.1.apr"] == "APR is required."
+
+    def test_error_message_term_required(self):
+        """Term required error message matches expected text."""
+        data = _valid_cash_loan_form()
+        data["options[1][term_months]"] = ""
+        errors = _get_errors(data)
+        assert errors["options.1.term_months"] == "Term is required."
 
 
 # --- build_domain_objects tests ---
@@ -305,10 +363,10 @@ class TestBuildDomainObjects:
     """Tests for build_domain_objects function."""
 
     def test_builds_financing_options(self):
-        """Build FinancingOption instances from parsed data."""
+        """Build FinancingOption instances from validated form data."""
         form = _make_form(_valid_cash_loan_form())
-        parsed = parse_form_data(form)
-        options, _settings = build_domain_objects(parsed)
+        form_input = parse_form_data(form)
+        options, _settings = build_domain_objects(form_input)
         assert len(options) == 2
         assert options[0].option_type == OptionType.CASH
         assert options[0].label == "Pay in Full"
@@ -318,8 +376,8 @@ class TestBuildDomainObjects:
     def test_uses_decimal_not_float(self):
         """All monetary and rate values are Decimal, never float."""
         form = _make_form(_valid_cash_loan_form())
-        parsed = parse_form_data(form)
-        options, settings = build_domain_objects(parsed)
+        form_input = parse_form_data(form)
+        options, settings = build_domain_objects(form_input)
         assert isinstance(options[1].apr, Decimal)
         assert isinstance(options[1].purchase_price, Decimal)
         assert isinstance(settings.return_rate, Decimal)
@@ -327,8 +385,8 @@ class TestBuildDomainObjects:
     def test_converts_percentage_to_decimal(self):
         """APR "5.99" is converted to Decimal("5.99") / 100."""
         form = _make_form(_valid_cash_loan_form())
-        parsed = parse_form_data(form)
-        options, _settings = build_domain_objects(parsed)
+        form_input = parse_form_data(form)
+        options, _settings = build_domain_objects(form_input)
         assert options[1].apr == Decimal("5.99") / Decimal(100)
 
     def test_custom_return_rate_overrides_preset(self):
@@ -336,15 +394,15 @@ class TestBuildDomainObjects:
         data = _valid_cash_loan_form()
         data["return_rate_custom"] = "8.5"
         form = _make_form(data)
-        parsed = parse_form_data(form)
-        _options, settings = build_domain_objects(parsed)
+        form_input = parse_form_data(form)
+        _options, settings = build_domain_objects(form_input)
         assert settings.return_rate == Decimal("8.5") / Decimal(100)
 
     def test_preset_return_rate_used_when_no_custom(self):
         """Preset return rate is used when custom is empty."""
         form = _make_form(_valid_cash_loan_form())
-        parsed = parse_form_data(form)
-        _options, settings = build_domain_objects(parsed)
+        form_input = parse_form_data(form)
+        _options, settings = build_domain_objects(form_input)
         assert settings.return_rate == Decimal("0.07")
 
     def test_inflation_defaults_when_enabled(self):
@@ -352,8 +410,8 @@ class TestBuildDomainObjects:
         data = _valid_cash_loan_form()
         data["inflation_enabled"] = "1"
         form = _make_form(data)
-        parsed = parse_form_data(form)
-        _options, settings = build_domain_objects(parsed)
+        form_input = parse_form_data(form)
+        _options, settings = build_domain_objects(form_input)
         assert settings.inflation_enabled is True
         assert settings.inflation_rate == Decimal(3) / Decimal(100)
 
@@ -362,8 +420,8 @@ class TestBuildDomainObjects:
         data = _valid_cash_loan_form()
         data["tax_enabled"] = "1"
         form = _make_form(data)
-        parsed = parse_form_data(form)
-        _options, settings = build_domain_objects(parsed)
+        form_input = parse_form_data(form)
+        _options, settings = build_domain_objects(form_input)
         assert settings.tax_enabled is True
         assert settings.tax_rate == Decimal(22) / Decimal(100)
 
@@ -377,11 +435,13 @@ class TestBuildDomainObjects:
                 "options[0][term_months]": "12",
                 "options[0][post_promo_apr]": "24.99",
                 "options[0][deferred_interest]": "1",
+                "options[1][type]": "cash",
+                "options[1][label]": "Cash",
                 "return_preset": "0.07",
             }
         )
-        parsed = parse_form_data(form)
-        options, _settings = build_domain_objects(parsed)
+        form_input = parse_form_data(form)
+        options, _settings = build_domain_objects(form_input)
         assert options[0].option_type == OptionType.PROMO_ZERO_PERCENT
         assert options[0].term_months == 12
         assert options[0].post_promo_apr == Decimal("24.99") / Decimal(100)
