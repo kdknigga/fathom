@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 5 context gathered
-last_updated: "2026-03-11T01:47:44.352Z"
-last_activity: 2026-03-10 -- Completed 04-03-PLAN.md
+status: executing
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-03-11T01:58:47.035Z"
+last_activity: 2026-03-11 -- Completed 05-01-PLAN.md
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 14
-  completed_plans: 13
-  percent: 100
+  completed_plans: 14
+  percent: 93
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-10)
 ## Current Position
 
 Phase: 5 of 5 (Refactor Form Validation to Use Pydantic)
-Plan: 1 of 2 in current phase -- COMPLETE
-Status: In progress
-Last activity: 2026-03-11 -- Completed 05-01-PLAN.md
+Plan: 2 of 2 in current phase -- COMPLETE
+Status: Completed
+Last activity: 2026-03-11 -- Completed 05-02-PLAN.md
 
-Progress: [█████████░] 93%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -63,6 +63,7 @@ Progress: [█████████░] 93%
 | Phase 04 P01 | 6min | 3 tasks | 13 files |
 | Phase 04 P03 | 8min | 2 tasks | 4 files |
 | Phase 05 P01 | 2min | 2 tasks | 3 files |
+| Phase 05 P02 | 8min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,8 @@ Recent decisions affecting current work:
 - [Phase 04]: CSS nowrap on table cells with mobile breakpoint for responsive breakdown table
 - [Phase 05]: No consumer files needed changes -- Pydantic BaseModel has identical API to dataclasses
 - [Phase 05]: Output models frozen via ConfigDict(frozen=True); input models remain mutable
+- [Phase 05]: Model validator errors use field:message prefix format, remapped in pydantic_errors_to_dict for dot-notation error keys
+- [Phase 05]: extract_form_data returns raw dict for non-validating routes (add/remove option)
 
 ### Roadmap Evolution
 
@@ -117,6 +120,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-11T01:47:08Z
-Stopped at: Completed 05-01-PLAN.md
-Resume file: .planning/phases/05-refactor-form-validation-to-use-pydantic/05-01-SUMMARY.md
+Last session: 2026-03-11T01:58:47.033Z
+Stopped at: Completed 05-02-PLAN.md
+Resume file: None
