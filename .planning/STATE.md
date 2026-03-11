@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: completed
 stopped_at: Phase 5 context gathered
-last_updated: "2026-03-11T01:25:56.313Z"
+last_updated: "2026-03-11T01:47:44.352Z"
 last_activity: 2026-03-10 -- Completed 04-03-PLAN.md
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 14
+  completed_plans: 13
   percent: 100
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-10)
 
 **Core value:** Users can instantly see which financing option truly costs least when opportunity costs, inflation, and taxes are factored in.
-**Current focus:** Phase 4: Deployment and Polish
+**Current focus:** Phase 5: Refactor Form Validation to Use Pydantic
 
 ## Current Position
 
-Phase: 4 of 4 (Deployment and Polish)
-Plan: 3 of 3 in current phase -- COMPLETE
-Status: All phases complete
-Last activity: 2026-03-10 -- Completed 04-03-PLAN.md
+Phase: 5 of 5 (Refactor Form Validation to Use Pydantic)
+Plan: 1 of 2 in current phase -- COMPLETE
+Status: In progress
+Last activity: 2026-03-11 -- Completed 05-01-PLAN.md
 
-Progress: [██████████] 100%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Progress: [██████████] 100%
 | Phase 04 P02 | 2min | 2 tasks | 2 files |
 | Phase 04 P01 | 6min | 3 tasks | 13 files |
 | Phase 04 P03 | 8min | 2 tasks | 4 files |
+| Phase 05 P01 | 2min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,8 @@ Recent decisions affecting current work:
 - [Phase 04]: Shell-form CMD in Dockerfile for env var substitution of port and workers
 - [Phase 04]: Merged duplicate Purchase Price header/label into single label inside article header
 - [Phase 04]: CSS nowrap on table cells with mobile breakpoint for responsive breakdown table
+- [Phase 05]: No consumer files needed changes -- Pydantic BaseModel has identical API to dataclasses
+- [Phase 05]: Output models frozen via ConfigDict(frozen=True); input models remain mutable
 
 ### Roadmap Evolution
 
@@ -114,6 +117,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-11T01:25:56.312Z
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-refactor-form-validation-to-use-pydantic/05-CONTEXT.md
+Last session: 2026-03-11T01:47:08Z
+Stopped at: Completed 05-01-PLAN.md
+Resume file: .planning/phases/05-refactor-form-validation-to-use-pydantic/05-01-SUMMARY.md
