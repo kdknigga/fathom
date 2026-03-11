@@ -100,3 +100,14 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 2. Web Layer and Input Forms | 3/3 | Complete   | 2026-03-10 |
 | 3. Results Display and Charts | 3/3 | Complete    | 2026-03-10 |
 | 4. Deployment and Polish | 0/3 | Not started | - |
+
+### Phase 5: Refactor Form Validation to Use Pydantic
+
+**Goal:** All dataclasses converted to Pydantic BaseModel and form validation pipeline replaced with Pydantic validation models, with identical external behavior
+**Requirements**: REFACTOR-01, REFACTOR-02, REFACTOR-03, REFACTOR-04, REFACTOR-05, REFACTOR-06
+**Depends on:** Phase 4
+**Plans:** 2 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Convert models.py dataclasses to Pydantic BaseModel, update all consumers
+- [ ] 05-02-PLAN.md — Replace forms.py validation with Pydantic models, update routes and tests
