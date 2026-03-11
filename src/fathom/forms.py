@@ -405,10 +405,12 @@ def parse_form_data(form_data: ImmutableMultiDict) -> FormInput:
         "tax_rate": form_data.get("tax_rate", "22"),
     }
 
-    return FormInput(
-        purchase_price=purchase_price,
-        options=options,  # type: ignore[arg-type]
-        settings=settings_data,  # type: ignore[arg-type]
+    return FormInput.model_validate(
+        {
+            "purchase_price": purchase_price,
+            "options": options,
+            "settings": settings_data,
+        }
     )
 
 
