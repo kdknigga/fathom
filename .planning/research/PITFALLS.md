@@ -1,182 +1,329 @@
 # Pitfalls Research
 
-**Domain:** Financial calculator web app (financing comparison with opportunity cost modeling)
-**Researched:** 2026-03-10
-**Confidence:** MEDIUM (based on well-established financial math and web app patterns; web search unavailable for verification)
+**Domain:** Flask/HTMX/Pico CSS SSR app — adding tooltips, complex interactive tables, JSON export/import, comma-formatted inputs, and dark mode to an existing v1.0 system
+**Researched:** 2026-03-13
+**Confidence:** HIGH (verified against official docs, MDN, WCAG spec, HTMX docs, Pico CSS source)
+
+---
+
+## Context: v1.0 Pitfalls Already Addressed
+
+The original PITFALLS.md (researched 2026-03-10) covers v1.0 concerns: floating-point arithmetic, comparison period normalization, deferred interest, HTMX form state loss, and SVG accessibility. Those pitfalls are resolved and should not recur. This document covers only the new risk surface introduced by v1.1 features.
+
+---
 
 ## Critical Pitfalls
 
-### Pitfall 1: Floating-Point Arithmetic in Financial Calculations
+### Pitfall 1: Comma-Formatted Inputs Break `_try_decimal()` Without Stripping
 
 **What goes wrong:**
-Using Python `float` for money calculations produces rounding errors that accumulate over loan terms. A 60-month amortization schedule computed with `float` can drift by several dollars from the correct total. Users who cross-check against their bank's amortization table will see different numbers and lose trust immediately.
+The existing `forms.py::_try_decimal()` calls `Decimal(value.strip())` directly. If a user types `1,500` into a comma-formatted input and submits the form, `Decimal("1,500")` raises `InvalidOperation` and returns `None`. The field silently fails validation as "empty" rather than as "invalid number." The user sees no error, the option is silently skipped or treated as zero, and results are wrong.
 
 **Why it happens:**
-Developers default to `float` because it is simpler. IEEE 754 binary floating point cannot represent values like `0.01` exactly. Over hundreds of multiply-and-round operations in an amortization loop, errors compound.
+`decimal.Decimal()` does not accept thousands separators. The constructor strictly requires strings like `"1500"` or `"1500.00"`. This is a silent failure — `InvalidOperation` is caught and swallowed, returning `None` — so the bad input never surfaces as an error message.
 
 **How to avoid:**
-Use Python's `decimal.Decimal` with explicit precision for all monetary values. Set a calculation context (e.g., `decimal.getcontext().prec = 28`) and round to cents only at the final display step, not at intermediate steps. Alternatively, compute in integer cents and convert to dollars at display time. Either approach works; mixing them does not.
+Strip commas (and optionally spaces) before passing to `Decimal()`. Add a preprocessing step in `_try_decimal()`:
+```python
+value = value.strip().replace(",", "")
+```
+This must happen for every numeric field, not just the new comma-formatted ones — users will type commas in any number input once they see commas are accepted elsewhere. Add a test that submits `"1,500"` and verifies it parses as `Decimal("1500")`.
 
 **Warning signs:**
-- Amortization schedule final payment does not exactly zero out the remaining balance
-- Two options with identical inputs produce True Total Cost values that differ by fractions of a cent
-- Unit tests that compare expected dollar values with `==` fail intermittently
+- A field shows no error but the result is obviously wrong (missing a factor of 1000)
+- Submitting `10,000` as purchase price causes results to show as if price were 0 or empty
+- No validation error appears for malformed comma input
 
 **Phase to address:**
-Phase 1 (Calculation Engine) -- this must be the foundation. Retrofitting `Decimal` into a `float`-based engine requires touching every calculation.
+Phase 1 (Comma-normalized inputs) — before any form field gets the comma-display treatment.
 
 ---
 
-### Pitfall 2: Wrong Comparison Period Normalization
+### Pitfall 2: `input[type="number"]` Cannot Display Commas
 
 **What goes wrong:**
-When comparing a 24-month 0% promo against a 60-month loan, the app must normalize both to the same 60-month window. The common mistake is to stop modeling the 0% option at month 24 -- ignoring what happens to the freed-up monthly payments for months 25-60. This makes short-term options look artificially cheap because the opportunity cost of reinvested payments is omitted.
+The current form likely uses `<input type="number">` for numeric fields. If you add comma formatting via JavaScript while keeping `type="number"`, the browser rejects the comma-containing value as invalid and sends an empty string to the server. The JavaScript-formatted display and the browser's internal value are in conflict.
 
 **Why it happens:**
-Developers think "the loan is paid off, so the cost is final." But the whole point of this app is opportunity cost modeling. Cash freed up early must be modeled as invested for the remaining comparison period, or the comparison is not apples-to-apples.
+`type="number"` has a strict value model: only numeric characters and `.` are valid. Commas are not valid in the HTML number input value. The browser will not submit a number input whose display value contains commas.
 
 **How to avoid:**
-Define a clear "comparison window" equal to the longest term among active options. For each option that terminates early:
-1. Calculate the monthly payment that was being made.
-2. From termination month through end of comparison window, compound those monthly contributions at the user's investment return rate.
-3. Subtract this investment gain from that option's True Total Cost (it reduces the effective cost).
-
-Encode this as an explicit, tested step in the calculation pipeline -- not as an afterthought adjustment.
+Switch comma-formatted fields to `type="text"` with `inputmode="numeric"` (or `inputmode="decimal"` for fields that accept decimals). This gives mobile users the numeric keyboard while allowing the value to contain commas. The server must handle the comma-stripped parsing regardless (see Pitfall 1).
 
 **Warning signs:**
-- Cash purchase always "wins" when compared against short-term 0% financing (the opportunity cost of the lump sum is being ignored or understated)
-- Changing comparison period length does not change relative rankings (it should, because it changes how long freed-up cash compounds)
+- Comma-formatted inputs submit as empty strings on form post
+- Browser developer tools show the input's `.value` as `""` when display shows `"1,500"`
+- Chrome / Firefox behave differently because they have different tolerance for invalid `type="number"` values
 
 **Phase to address:**
-Phase 1 (Calculation Engine). The normalization logic is architecturally central. It cannot be bolted on later without rewriting the cost comparison pipeline.
+Phase 1 (Comma-normalized inputs) — must be done at the same time as the comma JavaScript, not after.
 
 ---
 
-### Pitfall 3: Deferred Interest Mismodeling
+### Pitfall 3: FOUC (Flash of Unstyled Content) on Dark Mode Initial Load
 
 **What goes wrong:**
-0% promotional financing with deferred interest is not the same as 0% financing. If the balance is not paid in full by the end of the promo period, interest is charged retroactively on the original balance from day one, often at 20-30% APR. Calculators that treat deferred interest as simply "0% for X months" dramatically understate the risk.
+If dark mode is implemented purely via CSS `prefers-color-scheme`, the page loads correctly on first visit. But if a user-override toggle is added later (stored in `localStorage`), and the toggle is implemented by setting `data-theme` via JavaScript after page load, users who have toggled to dark mode see a white flash before the page goes dark on every subsequent load.
 
 **Why it happens:**
-The "happy path" (balance paid in full on time) is mathematically identical to true 0% financing. Developers model only the happy path because it is simpler. But the PRD explicitly includes a deferred interest toggle, meaning the app must communicate this risk.
+The browser renders the initial HTML (with `data-theme="light"` hardcoded in `base.html`) immediately, before JavaScript executes. The JavaScript then reads `localStorage` and changes `data-theme` to `"dark"`. The gap between first paint and JavaScript execution causes the white flash.
 
 **How to avoid:**
-When the deferred interest flag is set:
-1. Display a prominent caveat on the recommendation card explaining the retroactive interest risk.
-2. Optionally calculate a "worst case" True Total Cost assuming the balance is not paid off in time, showing the user what happens if they miss the deadline.
-3. Never present a deferred-interest option as equivalent to true 0% in the summary recommendation.
+For CSS-only `prefers-color-scheme` (no user override toggle), FOUC does not occur — the CSS media query is evaluated before paint. If v1.1 only adds `prefers-color-scheme` support without a toggle button, this pitfall does not apply.
+
+If a toggle button is added: remove the hardcoded `data-theme="light"` from `<html>` and add a blocking inline `<script>` in `<head>` (before the CSS links) that reads `localStorage` and sets `data-theme` synchronously:
+```html
+<script>
+  (function() {
+    var t = localStorage.getItem('fathom-theme');
+    if (t) document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+```
+This script must be inline (not in an external file) and must appear before any `<link rel="stylesheet">` tags. The Pico CSS GitHub issues tracker explicitly identifies this pattern as the fix for FOUC.
 
 **Warning signs:**
-- The recommendation card says "Take the 0% financing" without any caveat when deferred interest is enabled
-- No unit tests covering the deferred-interest scenario
-- The deferred interest toggle has no visible effect on displayed results
+- Users with dark mode toggled see white flash on every page load
+- The flash is present on desktop but not mobile (mobile renders faster before JS executes, but the same race exists)
+- Dark mode preference is lost after HTMX partial page updates replace `<html>` element attributes
 
 **Phase to address:**
-Phase 1 (Calculation Engine) for the math, Phase 2 (Results Display) for the caveat UI.
+Phase 5 (Dark mode) — only relevant if a user override toggle is implemented alongside `prefers-color-scheme`.
 
 ---
 
-### Pitfall 4: Opportunity Cost of Down Payments Ignored or Double-Counted
+### Pitfall 4: SVG Charts Use Hardcoded Hex Colors That Are Invisible in Dark Mode
 
 **What goes wrong:**
-Down payments create opportunity cost (money paid upfront that could have been invested), but developers either forget to model it or accidentally count it twice -- once in the "total payments" column and again in the "opportunity cost" column.
+`charts.py` defines `COLORS = ["#2563eb", "#dc2626", "#059669", "#d97706"]`. In dark mode these colors remain usable (they are saturated enough to show on dark backgrounds), but any chart text, axis lines, grid lines, or annotation colors that are hardcoded as `"#333"` or `"#000000"` become invisible against a dark background. The Pico CSS CSS variables (`--pico-color`, `--pico-muted-color`) adapt automatically; hardcoded hex in SVG attributes do not.
 
 **Why it happens:**
-The down payment sits at the boundary between "money you paid" and "money you could have invested." The cash purchase is entirely a down payment (the full amount upfront). A loan with a down payment has both an upfront outlay and a stream of payments. Without a clear accounting framework, it is easy to lose track.
+SVG attributes (`fill="#333"`, `stroke="#000"`) are not CSS properties and do not inherit from the CSS cascade. They are hardcoded values that ignore `prefers-color-scheme` and `data-theme`. Only SVG elements whose colors are expressed as `currentColor` or CSS variables pick up theme changes.
 
 **How to avoid:**
-Define a strict cost accounting model upfront:
-- **Total Payments** = down payment + sum of all monthly payments
-- **Opportunity Cost** = future value of down payment (compounded over comparison period) + future value of each monthly payment (compounded from payment date to end of comparison period) -- but only for the "what if you invested instead" counterfactual, which applies to the cash option
-- For loan options, opportunity cost = future value of down payment only (monthly payments are obligatory, not discretionary cash)
+In the SVG Jinja templates (not `charts.py` — that generates data, not markup), replace any hardcoded color values for text, axes, and grid lines with `currentColor` or CSS custom properties:
+- Axis labels: `fill="currentColor"` instead of `fill="#333"`
+- Grid lines: `stroke="currentColor"` instead of `stroke="#ccc"`
+- Chart border: `stroke="currentColor"` instead of `stroke="#000"`
 
-The key insight: for a loan, the monthly payments are not "cash you could have invested" -- they are the cost of the loan. Only the down payment represents discretionary upfront cash. For the cash purchase, the entire purchase price is the upfront discretionary cash.
+The data series colors (`#2563eb`, etc.) can remain hardcoded because they are already saturated enough for both modes, and changing them risks breaking the established pattern/color accessibility system.
 
-Document this accounting model explicitly in code comments and tests.
+After implementing dark mode, visually check the charts in both themes via Playwright screenshot comparison.
 
 **Warning signs:**
-- Cash purchase True Total Cost is exactly equal to purchase price (opportunity cost is missing)
-- Loan with 50% down payment shows same opportunity cost as loan with 0% down payment
-- True Total Cost for any option is negative (over-subtraction)
+- Chart axis labels disappear in dark mode (black text on dark background)
+- Grid lines are invisible in dark mode
+- Chart legend text is unreadable
 
 **Phase to address:**
-Phase 1 (Calculation Engine). This is a design decision that must be made before any calculations are implemented.
+Phase 5 (Dark mode) — survey all SVG templates for hardcoded color attributes before shipping.
 
 ---
 
-### Pitfall 5: Month-Level vs. Annual Compounding Errors
+### Pitfall 5: HTMX Partial Updates Overwrite `data-theme` on `<html>` or `<body>`
 
 **What goes wrong:**
-The app must convert between annual rates (APR, investment return) and monthly calculations. Common errors: dividing annual rate by 12 for monthly rate (correct for APR, wrong for investment returns which compound differently), or mixing nominal and effective annual rates.
+HTMX swaps in partial HTML fragments. If any HTMX response includes a `<html>` or `<body>` tag (which can happen if a route accidentally returns the full page for an HTMX request), HTMX replaces the entire document, wiping the `data-theme` attribute the user set. The user's dark mode preference disappears mid-session.
 
 **Why it happens:**
-APR is, by regulatory convention, a nominal annual rate divided by 12 for monthly calculations. But investment returns are typically quoted as effective annual rates. Using the same conversion formula for both produces wrong numbers.
+HTMX partial responses should never include document-level tags. But it is easy to accidentally return a full page from a route if the HTMX header check is missing (`if is_htmx: return partial else: return full`). Dark mode state is stored on the root `<html>` element, so any replacement of that element resets it.
 
 **How to avoid:**
-- For loan APR: monthly rate = APR / 12 (this is the regulatory standard)
-- For investment returns: monthly rate = (1 + annual_rate)^(1/12) - 1 (converting effective annual to effective monthly)
-- Label every rate variable in code with its type: `monthly_loan_rate`, `annual_effective_investment_rate`, etc.
-- Write unit tests that verify a known amortization schedule (e.g., $10,000 at 5% APR for 36 months = $299.71/month)
+Ensure every HTMX-facing route returns only the fragment, never a full page. This is already the pattern in `routes.py` (`is_htmx` checks are present), so the risk is in new routes added for v1.1 features (table endpoint, export/import endpoint) forgetting this check.
+
+Additionally, dark mode state stored in `localStorage` and applied via the inline head script is self-healing: even if `data-theme` is briefly overwritten, the script will not re-run on a partial update. Add an `htmx:afterSwap` event listener that re-applies the stored theme to the `<html>` element:
+```javascript
+document.body.addEventListener('htmx:afterSwap', function() {
+  var t = localStorage.getItem('fathom-theme');
+  if (t) document.documentElement.setAttribute('data-theme', t);
+});
+```
 
 **Warning signs:**
-- Investment opportunity cost calculations are slightly but consistently off from manual spreadsheet verification
-- Monthly payment calculation does not match standard amortization formula results
-- Tests pass with round numbers but fail with realistic rates like 6.49%
+- Clicking "Calculate" reverts to light mode mid-session
+- Any HTMX request resets the theme
 
 **Phase to address:**
-Phase 1 (Calculation Engine). Rate conversion must be correct from the start; it propagates into every other calculation.
+Phase 5 (Dark mode), but also review in any phase that adds new HTMX routes.
 
 ---
 
-### Pitfall 6: SVG Chart Accessibility as an Afterthought
+### Pitfall 6: HTMX Cannot Swap `<tr>` or `<td>` Fragments Directly
 
 **What goes wrong:**
-Server-rendered SVG charts are generated without any semantic markup, ARIA attributes, or text alternatives. The charts look correct visually but are completely invisible to screen readers. Meeting WCAG 2.1 AA after the fact requires restructuring the SVG generation code.
+The detailed breakdown table will likely need HTMX for tab switching and column toggles. If a tab-switch HTMX request returns a `<tbody>` or `<tr>` fragment, HTMX may fail to insert it correctly because the HTML spec disallows table row/cell elements as standalone DOM children outside of a `<table>` context. HTMX parses the response via `innerHTML`, and the browser immediately re-parents or discards these elements.
 
 **Why it happens:**
-SVG is a visual format. Developers focus on making it look right and forget that `<svg>` elements are opaque to assistive technology by default. Unlike HTML tables which have inherent semantics, SVG has none unless explicitly added.
+This is documented in the HTMX GitHub issues as "Troublesome Tables." When HTMX temporarily inserts a fragment as innerHTML of a container, the browser's HTML parser enforces table structure rules and moves elements to unexpected locations.
 
 **How to avoid:**
-From the first SVG chart implementation:
-1. Add `role="img"` and `aria-labelledby` to the root `<svg>` element
-2. Include a `<title>` and `<desc>` element inside the SVG with plain-text summary
-3. Render an accessible data table alongside (or as a visually-hidden companion to) each chart
-4. Use patterns/textures in addition to color to distinguish data series (not color-only)
-5. Ensure all text in the SVG uses sufficient contrast ratios
+Wrap bare table fragments in a `<template>` tag in the response, or wrap the entire `<table>` and use `outerHTML` swap on the table element rather than swapping only rows. An alternative is to wrap the swappable section in a `<div>` inside the table using `<tr><td colspan="N"><div id="swap-target">...</div></td></tr>`, so the swap target is a `<div>` not a table element.
+
+The simplest safe approach for the breakdown table: make the HTMX target the `<div>` that contains the `<table>`, not the table or rows themselves.
 
 **Warning signs:**
-- SVG output contains no `<title>`, `<desc>`, or ARIA attributes
-- Chart colors fail contrast checks against the background
-- No companion data table exists for any chart
-- Axe or Lighthouse accessibility audit flags chart elements
+- Tab switching in the breakdown table seems to work but rows appear in wrong columns
+- Browser inspector shows rows moved outside the table element
+- The table renders correctly on initial load but breaks after any HTMX swap
 
 **Phase to address:**
-Phase 2 (Charts/Visualization). Build accessibility into the SVG generation from the first implementation, not as a retrofit.
+Phase 2 or 3 (Detailed breakdown table) — must be designed with this constraint from the start, not fixed after.
 
 ---
 
-### Pitfall 7: HTMX Partial Updates Losing Form State
+### Pitfall 7: JSON Import Accepting Arbitrary Pydantic Input Without Size or Content Limits
 
 **What goes wrong:**
-HTMX replaces a DOM fragment with server-rendered HTML. If the replacement target includes or overlaps the form, user inputs that were not submitted get wiped. The user types into field A, triggers a partial update on field B, and field A resets to its previous value.
+A JSON import endpoint that passes the uploaded JSON directly to Pydantic model parsing has two risks: (1) a multi-megabyte JSON file causes the server to attempt to parse and validate an enormous payload before returning an error, and (2) deeply nested or malformed JSON that is valid JSON but maximally expensive to validate (e.g., lists with thousands of elements for fields expecting a single value) can cause slow responses or memory pressure.
 
 **Why it happens:**
-HTMX sends the form data in the request, but only the data from inputs that have names and are within the triggering form. If the server re-renders the entire form in the response, all inputs get replaced with the server's version of the state -- which may not include the user's latest keystrokes in other fields.
+Developers trust Pydantic's validation to reject invalid data, which it does — but Pydantic validates after parsing. Python's `json.loads()` will parse any valid JSON regardless of size. The Pydantic model may add field length limits, but without a size cap on the raw request, the parse step is unbounded.
 
 **How to avoid:**
-- Use `hx-target` to replace only the results section, never the form itself
-- If you must update form elements (e.g., showing/hiding conditional fields based on option type), use `hx-swap="outerHTML"` on the specific element, not the parent form
-- Always echo back all form values in the server response so nothing is lost
-- Use `hx-include` to explicitly include all form inputs in every request, even if they are outside the triggering element
-- Test the "type in field A, change field B, verify field A retained" scenario explicitly
+Add an explicit file size limit before calling `json.loads()`. Flask's `request.content_length` and `MAX_CONTENT_LENGTH` config key can enforce this. Since the exported JSON contains only form inputs (purchase price, 2–4 financing options, global settings), a legitimate file will never exceed 10KB. Reject anything larger:
+```python
+MAX_IMPORT_BYTES = 10_240  # 10 KB
+if request.content_length and request.content_length > MAX_IMPORT_BYTES:
+    return error_response("File too large")
+```
+
+Also validate the top-level JSON structure before passing to Pydantic: confirm the root is a dict, not a list or primitive. This prevents Pydantic from attempting to coerce unexpected types.
 
 **Warning signs:**
-- Users report "the form keeps resetting"
-- Changing the option type dropdown clears previously entered values in other options
-- Form state is inconsistent between what the user sees and what the server received
+- Import endpoint takes > 100ms for even small files (indicates excessive parsing)
+- No size limit is visible in the route code
 
 **Phase to address:**
-Phase 2 (UI/HTMX Integration). Must be designed correctly in the HTMX wiring from the start.
+Phase 4 (JSON export/import) — build the limit in from the start, not as a follow-up.
+
+---
+
+### Pitfall 8: JSON Export Triggers a Full Page Reload or an HTMX Partial Swap Instead of a Download
+
+**What goes wrong:**
+If the JSON export endpoint returns JSON with the standard `Content-Type: application/json` and no `Content-Disposition: attachment` header, the browser navigates to the URL and displays the raw JSON, or HTMX intercepts the response and tries to swap it into the DOM. Neither is the desired behavior (triggering a file download).
+
+**Why it happens:**
+Browsers only trigger a file download when the response has `Content-Disposition: attachment`. Without it, `application/json` responses are displayed inline in the browser. HTMX intercepts all responses from elements it controls and applies its swap logic unless told otherwise.
+
+**How to avoid:**
+For the export endpoint, use `hx-boost="false"` on the export button/link so HTMX does not intercept the request. Use a plain `<a>` download link or a form with `target="_blank"` to bypass HTMX entirely. On the server, use `flask.send_file()` or construct the response with explicit headers:
+```python
+response = make_response(json_data)
+response.headers["Content-Type"] = "application/json"
+response.headers["Content-Disposition"] = 'attachment; filename="fathom-scenario.json"'
+```
+
+An alternative that avoids a server round-trip entirely: generate the JSON client-side via JavaScript and trigger a download using `URL.createObjectURL()`. This works cleanly for a stateless app where the server already gave the browser all the form state.
+
+**Warning signs:**
+- Clicking "Export" navigates away from the page
+- Clicking "Export" shows raw JSON in the browser tab
+- HTMX throws a swap error because it received JSON instead of HTML
+
+**Phase to address:**
+Phase 4 (JSON export/import) — the download mechanism must be explicit in the design.
+
+---
+
+### Pitfall 9: Tooltip WCAG 1.4.13 — Hover-Only Content That Fails Persistence, Hoverable, or Dismissable
+
+**What goes wrong:**
+A CSS-only tooltip (`:hover` pseudo-class, no JavaScript) passes the basic "shows on hover" requirement but fails three WCAG 2.1 AA criteria under SC 1.4.13 (Content on Hover or Focus):
+1. **Not dismissable**: Users with screen magnification who accidentally trigger a tooltip cannot dismiss it without moving away (no Escape key support in CSS-only).
+2. **Not hoverable**: The tooltip disappears if the pointer moves from the trigger to the tooltip content itself — meaning users cannot hover over the tooltip to read it at their own pace.
+3. **Not keyboard accessible**: Screen reader and keyboard users cannot trigger `:hover` tooltips via focus.
+
+**Why it happens:**
+CSS-only tooltips are seductive because they have zero JavaScript and appear to "just work." They satisfy the basic visual requirement but are not WCAG 2.1 AA compliant by themselves.
+
+**How to avoid:**
+Use the native HTML Popover API (`popover` attribute) or a small amount of JavaScript for tooltip behavior. The Popover API provides:
+- Keyboard accessibility (triggers on focus)
+- Escape key dismiss (built into the browser)
+- Ability to hover over tooltip content without dismissal
+
+Minimal required behavior:
+- Tooltip triggers on both `mouseover` and `focusin` events
+- Tooltip is linked to its trigger via `aria-describedby`
+- Tooltip text is also available in the form label or accessible name (tooltip is supplementary, not the sole carrier of required information)
+- Tooltip stays visible when the pointer moves into the tooltip itself
+- Pressing Escape dismisses the tooltip
+
+**Warning signs:**
+- Tooltip disappears immediately when pointer moves from `?` icon toward tooltip text
+- Tab-focusing the `?` icon does not show the tooltip
+- Pressing Escape has no effect on visible tooltip
+- Axe or WAVE accessibility audit flags tooltip triggers
+
+**Phase to address:**
+Phase 1 (Input tooltips) and Phase 2 (Output tooltips) — get the accessibility pattern right on the first tooltip, not after implementing all of them.
+
+---
+
+### Pitfall 10: Tooltip z-index Clipped by Overflow or Stacking Context
+
+**What goes wrong:**
+Tooltips appearing inside table cells, grid cells, or form cards may be clipped or hidden if any ancestor element has `overflow: hidden`, `overflow: auto`, or creates a CSS stacking context (via `position: relative; z-index: N` or `transform`). The tooltip renders but is invisible because it is cropped by the ancestor's overflow boundary.
+
+**Why it happens:**
+Pico CSS sets various `overflow` and positioning properties on its card and grid components. A tooltip positioned absolutely inside a Pico CSS `<article>` or `<fieldset>` may be clipped before it exits the parent's bounds.
+
+**How to avoid:**
+Use the HTML Popover API. Popovers render in the "top layer" — a browser-native rendering layer above all stacking contexts and overflow clipping. This makes `z-index` and `overflow` issues irrelevant for popover-based tooltips. If using CSS-only positioning instead, the tooltip element must be positioned relative to the `<body>` or a non-overflow-hidden ancestor, which is fragile.
+
+**Warning signs:**
+- Tooltip is partially visible near the edge of a card but cut off
+- Tooltip appears in one section (global settings) but is clipped in another (option cards)
+- Inspector shows the tooltip element in the DOM but it is hidden visually
+
+**Phase to address:**
+Phase 1 (Input tooltips) — choose the implementation approach (Popover API vs. CSS-only) before writing any tooltip HTML.
+
+---
+
+### Pitfall 11: Tab State in the Breakdown Table Not Reflected in URL, Lost on HTMX Swap
+
+**What goes wrong:**
+If the breakdown table's active tab (e.g., "Option A Detail", "Option B Detail", "Compare All") is tracked only in client-side state (CSS class on the active tab button), and the Calculate button triggers an HTMX swap that replaces the results section, the active tab resets to the default tab. Users who are looking at the "Compare All" tab, change an input, and click Calculate, lose their tab position.
+
+**Why it happens:**
+HTMX replaces the target DOM fragment with fresh server-rendered HTML. The server does not know which tab was active (it was only a CSS class in the browser). The fresh HTML always renders the first tab as active.
+
+**How to avoid:**
+Pass the active tab state back to the server with the Calculate request. Add a hidden input (or use `hx-include` on a data attribute) that tracks the currently active tab name. The server includes this in the template context so the correct tab is rendered as active.
+
+Alternatively, use an HTMX `hx-on::after-settle` event to re-activate the last-known tab from a JavaScript variable, but this is more fragile than the server-echo approach.
+
+**Warning signs:**
+- Active tab resets to "Option A" every time Calculate is clicked
+- Changing an input while on "Compare All" tab causes the view to jump back to the first tab
+
+**Phase to address:**
+Phase 2 or 3 (Detailed breakdown table) — design tab state persistence before building the tab UI.
+
+---
+
+### Pitfall 12: Column Toggles in Breakdown Table Sent as Unchecked Checkboxes (Missing From POST)
+
+**What goes wrong:**
+HTML checkboxes that are unchecked are not included in form POST data. If column visibility toggles are implemented as checkboxes, the server receives only the names of checked (visible) columns, and must infer that absent names mean hidden. This is the correct interpretation, but it is easy to accidentally code the inverse logic: "if the checkbox name is present, hide the column."
+
+**Why it happens:**
+This is a well-known HTML forms gotcha. Developers testing always check at least one checkbox and never test the case where all checkboxes are unchecked, so the absent-means-unchecked behavior is not noticed until a user unchecks everything.
+
+**How to avoid:**
+Be explicit in the server code: the set of visible columns is the set of column names present in the POST data for the toggle checkboxes. Document this clearly. Test: send a request with no column toggles checked and verify the server correctly renders an empty (or minimum-column) table, not a full table.
+
+Alternatively, use `hx-vals` or hidden inputs to explicitly send the toggle state as `true`/`false` strings instead of relying on checkbox presence/absence.
+
+**Warning signs:**
+- Unchecking all column toggles shows all columns instead of none
+- Column toggle behavior works for checking but not for unchecking
+- "I unchecked this but it's still showing" user reports
+
+**Phase to address:**
+Phase 3 (Column toggles in breakdown table) — write the server-side column selection logic with explicit tests for the unchecked case.
 
 ---
 
@@ -184,96 +331,131 @@ Phase 2 (UI/HTMX Integration). Must be designed correctly in the HTMX wiring fro
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
 |----------|-------------------|----------------|-----------------|
-| Using `float` instead of `Decimal` for "just the prototype" | Faster initial development | Requires rewriting every calculation when precision bugs surface | Never -- start with `Decimal` from day one |
-| Hardcoding the comparison period instead of deriving from options | Simpler calculation | Breaks when option terms change; hides normalization bugs | Never |
-| Generating SVG as raw string concatenation | No template dependency | XSS vulnerabilities, unmaintainable chart code, no escaping | Never -- use a template engine or SVG library |
-| Skipping input validation on numeric fields | Faster form development | Division by zero, negative term lengths, nonsensical results | Only in first prototype sprint; must be added before any user testing |
-| Single monolithic calculation function | Quick to write | Untestable, each bug fix risks breaking other calculations | Only for initial proof of concept; refactor before adding second option type |
+| CSS-only tooltips (`::after` pseudo-elements) | Zero JavaScript, simple to implement | Not WCAG 1.4.13 AA compliant; fails keyboard and dismiss requirements | Never for public-facing accessibility-required app |
+| Comma formatting only on the display (not the stored value) | Simpler JS — format on blur, strip on submit | If stripping ever breaks or is bypassed, Decimal() receives invalid input silently | Never — always strip in the server-side parser as the authoritative path |
+| Dark mode toggle storing preference as a URL parameter | No localStorage complexity | Users must re-apply preference on every visit; URLs become unshare-able | Never — use localStorage |
+| Rendering the full breakdown table server-side on every Calculate | No additional HTMX complexity for tabs | 300ms budget risk if table has 60+ rows × 4 options × multiple cost factors | Acceptable if rendering is fast; test with max data before committing |
+| JSON export via server round-trip when all data is in the form | Consistent with SSR philosophy | Extra network round-trip; server must reconstruct data it already sent | Acceptable; clean architecture, negligible latency |
+
+---
 
 ## Integration Gotchas
 
 | Integration | Common Mistake | Correct Approach |
 |-------------|----------------|------------------|
-| HTMX + Python SSR | Returning full page HTML for HTMX partial requests | Check for `HX-Request` header and return only the target fragment; return full page for non-HTMX requests (progressive enhancement) |
-| HTMX + Form Validation | Validating only on full form submit, not on partial updates | Return validation error HTML fragments that swap into the correct location; use appropriate HTTP status codes to trigger error display |
-| SVG in HTML | Serving SVG with wrong content type or double-encoding entities | Inline SVG directly in the HTML response (no `<img>` or `<object>` tags); ensure template engine does not double-escape SVG markup |
+| HTMX + file download (JSON export) | HTMX intercepts the download request and tries to swap JSON into the DOM | Use `hx-boost="false"` on the download link, or use a plain `<a>` tag pointing to the export URL with `download` attribute |
+| HTMX + file upload (JSON import) | Submitting a file input via HTMX requires `hx-encoding="multipart/form-data"` | Set `hx-encoding="multipart/form-data"` on the form or element; without it, Flask receives no file data |
+| Pico CSS dark mode + custom CSS variables | Custom CSS variables in `style.css` do not automatically get dark mode variants | Define separate `[data-theme="dark"]` overrides for every custom CSS variable, or use only Pico's built-in variables |
+| HTMX + Pico CSS loading indicator | Pico CSS uses `aria-busy="true"` for loading states; HTMX uses `.htmx-indicator` class | Choose one pattern; using both means the UI may show double indicators or neither during requests |
+| JavaScript comma formatting + HTMX form submission | JS comma-formatting the input value on `blur` then HTMX including the input value on `input` (before blur fires) | Listen on `htmx:configRequest` event to strip commas from all numeric values before HTMX sends the request |
+
+---
 
 ## Performance Traps
 
 | Trap | Symptoms | Prevention | When It Breaks |
 |------|----------|------------|----------------|
-| Recalculating all options on every keystroke via HTMX | Server hammered with requests; UI feels laggy; 300ms target missed | Debounce HTMX triggers (e.g., `hx-trigger="keyup changed delay:500ms"`) or use explicit Calculate button as primary trigger | Immediately with 3-4 options and complex calculations |
-| Month-by-month iteration for opportunity cost when a closed-form formula exists | Calculation takes milliseconds instead of microseconds; adds up with many options | Use compound interest formulas (future value of lump sum, future value of annuity) instead of iterating month by month | Unlikely to be a real problem at this scale, but closed-form is also simpler to verify |
-| Generating large SVG charts with one `<rect>` or `<circle>` per data point per month | SVG DOM becomes heavy; browser rendering slows | For line charts, use `<polyline>` or `<path>` instead of individual elements; keep SVG element count under a few hundred | At 60+ month comparison periods with 4 options |
+| Breakdown table with period-by-period rows × 4 options × 8+ cost factors | Jinja renders slowly; large HTML payload; browser table layout triggers reflow | Benchmark with 60-month comparison × 4 options before committing to full table expansion; paginate or collapse by default | At 60 months × 4 options × 8 factors = 1,920 table cells in one HTMX response |
+| Comma formatting on every keystroke via JavaScript `input` event | Input lag on older devices, particularly mobile | Debounce the formatting or format only on `blur` | At any significant volume on low-end mobile |
+| JSON import parsing before size check | Server blocks on large file parsing | Check `content_length` before `json.loads()` | Any file over ~100KB; legitimate exports are under 5KB |
+
+---
 
 ## Security Mistakes
 
 | Mistake | Risk | Prevention |
 |---------|------|------------|
-| Injecting user input directly into SVG markup | XSS via crafted option labels (the "Custom / Other" type has a free-text label field) | Escape all user-provided text before embedding in SVG; use a template engine with auto-escaping |
-| No rate limiting on calculation endpoint | DoS via automated form submissions hammering the server | Add basic rate limiting middleware (e.g., 60 requests/minute per IP); since the app is stateless, this is the main abuse vector |
-| Logging form inputs for debugging and forgetting to remove | Privacy violation -- the PRD explicitly requires no user data persistence | Never log form inputs, even in debug mode; log only metadata (request timing, option count, error types) |
+| JSON import without schema validation — passing raw parsed dict to application code | Attacker-crafted JSON with unexpected field types (e.g., list where string expected) causes unhandled exceptions leaking stack traces | Always pass imported JSON through the Pydantic model validation pipeline used for form data; never trust the schema of uploaded JSON |
+| Rendering imported JSON field values directly into HTML without escaping | XSS via crafted `label` or `custom_label` fields in the imported JSON | Jinja2 auto-escaping handles this for `{{ value }}`, but verify no `{{ value | safe }}` is used anywhere in the templates that render option names |
+| Exposing server-generated filename in Content-Disposition with user-controlled content | Path traversal or header injection via filename containing `../` or newlines | Use a fixed, non-user-influenced filename like `"fathom-scenario.json"` — never derive the download filename from any user input |
+
+---
 
 ## UX Pitfalls
 
 | Pitfall | User Impact | Better Approach |
 |---------|-------------|-----------------|
-| Showing only the "winner" without explaining why | User does not trust the recommendation; cannot explain to spouse/partner | Always show the dollar difference AND a plain-English sentence explaining the primary driver (e.g., "because your cash earns more invested than the loan costs in interest") |
-| Displaying opportunity cost as a negative number | Users think they owe money or that something went wrong | Frame opportunity cost as "investment earnings you would miss" (positive framing) or "cost of not investing" -- never show negative dollar amounts in the summary |
-| Using financial jargon in labels (APR, amortization, present value) | Primary persona has no financial background; they abandon the form | Use plain language: "interest rate" not "APR" (with APR in a subtitle), "monthly payment" not "periodic installment", "what your money could earn" not "opportunity cost" |
-| Not showing the monthly payment amount | Users care about monthly cash flow, not just total cost | Always display monthly payment per option even though it is not the primary metric; users need to verify affordability |
-| Requiring all fields before showing any results | Users want to explore; they abandon before filling everything in | Show partial results as soon as minimum viable inputs are provided (purchase price + at least one complete option); gray out or annotate incomplete options |
+| Tooltip text that restates the label ("APR: The APR field") | Users dismiss tooltips as useless, stop reading them | Write tooltips that add meaning the label cannot carry: "The annual interest rate your lender charges. Promotional 0% offers have APR=0 only during the promo period." |
+| Tax rate guidance that gives a number without explaining how to find yours | Users pick a wrong rate and get inaccurate results | Link to IRS tax bracket table, explain "use your marginal rate — the rate on your last dollar of income, not your effective rate" |
+| Breakdown table defaulting to the full period-by-period view | Overwhelming wall of numbers on first encounter | Default to the summary row or first-tab view; expand to period detail on demand |
+| Dark mode toggle that applies only to the results section but not the form | Jarring split-screen appearance | Apply `data-theme` to `<html>`, never to individual sections |
+| JSON import that silently discards unknown fields | Users who manually edit the JSON and misspell a key see no error | Log or surface a warning when unknown fields are present, even if Pydantic's `model_config = ConfigDict(extra="ignore")` swallows them silently |
+
+---
 
 ## "Looks Done But Isn't" Checklist
 
-- [ ] **Amortization math:** Final payment in schedule zeroes out remaining balance exactly (no residual cents)
-- [ ] **Cash option opportunity cost:** Cash purchase shows significantly higher True Total Cost than purchase price alone (the opportunity cost should be substantial for large purchases)
-- [ ] **Comparison period normalization:** Changing which option has the longest term changes the comparison period for all options
-- [ ] **Deferred interest caveat:** Enabling deferred interest toggle produces a visible warning in the recommendation card
-- [ ] **SVG accessibility:** Each chart has a `<title>`, `<desc>`, companion data table, and non-color-only differentiation
-- [ ] **HTMX progressive enhancement:** App works fully with JavaScript disabled (form submit, full page reload, results displayed)
-- [ ] **Mobile layout:** Results are reachable without excessive scrolling; sticky anchor link works
-- [ ] **Edge case inputs:** 0% APR, 0 down payment, 1-month term, maximum 4 options simultaneously all produce valid results
-- [ ] **Rate conversion:** Verify that $10,000 at 6% APR for 36 months produces $304.22/month (standard amortization check)
-- [ ] **Inflation adjustment:** Enabling inflation actually changes the True Total Cost values (not just displayed, but correctly discounted)
-- [ ] **Tax savings:** Enabling tax implications with deductible interest reduces True Total Cost for loan options but not for cash
+- [ ] **Comma inputs — server parse:** Submit `"1,500"` to each numeric field via form POST; verify server receives `Decimal("1500")`, not `None` or an error
+- [ ] **Comma inputs — all browsers:** Verify comma input behavior in Chrome, Firefox, and Safari; all must display and submit correctly
+- [ ] **Tooltips — keyboard:** Tab to every `?` icon; verify tooltip appears on focus and dismisses on Escape
+- [ ] **Tooltips — hover-to-content:** Move pointer from `?` icon onto tooltip text; verify tooltip stays visible
+- [ ] **Tooltips — no overflow clipping:** Check every tooltip location (global settings, each option card, results section) for z-index/overflow clipping
+- [ ] **Dark mode — SVG charts:** Screenshot charts in dark mode; verify axis labels, grid lines, and text are visible (not black-on-dark)
+- [ ] **Dark mode — custom CSS variables:** Confirm every variable in `style.css` has a dark mode counterpart or uses Pico built-in variables that already do
+- [ ] **Dark mode — HTMX does not reset theme:** Trigger a Calculate request while in dark mode; confirm the page stays dark after the HTMX swap
+- [ ] **HTMX table swap:** Tab-switch in the breakdown table returns valid HTML; verify no stray `<tr>` or `<td>` elements appear outside the table
+- [ ] **JSON export:** Click export; confirm browser downloads a `.json` file (not navigates to raw JSON); confirm the page does not reload
+- [ ] **JSON import:** Upload the exported file; confirm form fields repopulate exactly
+- [ ] **JSON import — malformed input:** Upload a non-JSON file and a too-large file; verify graceful error messages, no 500 errors
+- [ ] **Column toggles — unchecked state:** Uncheck all column toggles; verify server handles empty checkbox POST without displaying all columns
+- [ ] **Tab state persistence:** Select "Compare All" tab, change an input, click Calculate; verify the "Compare All" tab is still active after update
+
+---
 
 ## Recovery Strategies
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| Float-based calculations | HIGH | Replace all `float` with `Decimal` throughout calculation engine; update all tests; verify every output |
-| Wrong comparison period normalization | HIGH | Redesign cost model to include post-termination investment phase; rewrite all calculations; all test expected values change |
-| Missing SVG accessibility | MEDIUM | Add ARIA attributes and companion tables to existing SVG generation; audit with screen reader |
-| HTMX form state loss | MEDIUM | Restructure `hx-target` to never replace form elements; add `hx-include` directives; test all field combinations |
-| Deferred interest not modeled | LOW | Add conditional warning text to recommendation template; add one calculation branch |
-| Opportunity cost double-counting | MEDIUM | Audit and document the accounting model; fix affected calculations; update all test baselines |
+| Comma input breaking `_try_decimal()` | LOW | One-line fix in `_try_decimal()`; add test; deploy |
+| CSS-only tooltips needing WCAG retrofit | MEDIUM | Replace `:hover` CSS with Popover API or JavaScript; test all tooltip locations |
+| FOUC on dark mode toggle | LOW | Add inline head script; no other changes required |
+| SVG chart colors invisible in dark mode | LOW–MEDIUM | Audit SVG templates; replace `fill="[hex]"` text/axis colors with `currentColor`; Playwright screenshot test |
+| HTMX resetting dark mode | LOW | Add `htmx:afterSwap` listener; 3 lines of JavaScript |
+| HTMX table fragment swap failures | MEDIUM | Restructure HTMX target from table element to wrapper `<div>`; update all tab-switch endpoints |
+| JSON import without size limit | LOW | Add 10KB check before `json.loads()`; one-line change |
+| JSON export not triggering download | LOW | Add `hx-boost="false"` or switch to plain `<a>` tag |
+
+---
 
 ## Pitfall-to-Phase Mapping
 
 | Pitfall | Prevention Phase | Verification |
 |---------|------------------|--------------|
-| Floating-point arithmetic | Phase 1: Calculation Engine | Unit tests comparing against known amortization tables pass to the cent |
-| Comparison period normalization | Phase 1: Calculation Engine | Test: 24-month option vs 60-month option produces different True Total Cost than when both are 60-month |
-| Deferred interest mismodeling | Phase 1: Calculation Engine + Phase 2: Results UI | Toggle produces visible caveat AND different cost numbers |
-| Opportunity cost accounting | Phase 1: Calculation Engine | Cash purchase True Total Cost > purchase price; loan with down payment has higher opportunity cost than loan without |
-| Rate conversion errors | Phase 1: Calculation Engine | Monthly payment for known scenarios matches published amortization calculators |
-| SVG accessibility | Phase 2: Charts/Visualization | Axe audit passes; screen reader can describe chart content |
-| HTMX form state loss | Phase 2: UI/HTMX Integration | Manual test: change option type in slot 2, verify slot 1 inputs are preserved |
-| XSS via custom labels | Phase 2: UI/HTMX Integration | Input `<script>alert(1)</script>` as custom label; verify it renders as escaped text |
-| No input validation | Phase 2: Form/Validation | Submit negative term, zero price, non-numeric APR; verify graceful error messages |
-| Keystroke-triggered calculation spam | Phase 2: UI/HTMX Integration | Verify debounce or explicit Calculate button; check server logs under rapid typing |
+| Comma inputs breaking `_try_decimal()` | Phase 1: Comma-normalized inputs | Test: POST `"1,500"` → server returns `Decimal("1500")` |
+| `input[type="number"]` rejecting comma values | Phase 1: Comma-normalized inputs | Browser dev tools: input value is correct string before HTMX sends |
+| HTMX + file upload encoding | Phase 4: JSON export/import | Playwright: upload file, verify form populates |
+| JSON import size/schema safety | Phase 4: JSON export/import | Test: upload 100KB file → 413 error; upload `[]` (array root) → validation error |
+| JSON export not downloading | Phase 4: JSON export/import | Playwright: click export, verify file download dialog |
+| Tooltip WCAG 1.4.13 compliance | Phase 1: Input tooltips (first tooltip sets the pattern) | Axe audit; keyboard navigation test; hover-to-content test |
+| Tooltip overflow/z-index clipping | Phase 1: Input tooltips | Visual check in every section; screenshot each tooltip location |
+| SVG chart dark mode | Phase 5: Dark mode | Playwright screenshot in both themes; check axis label visibility |
+| FOUC on dark mode toggle | Phase 5: Dark mode | Load page in dark-mode-toggled state; verify no white flash |
+| HTMX resetting `data-theme` | Phase 5: Dark mode | Toggle dark, click Calculate, verify theme preserved |
+| HTMX table swap with `<tr>` fragments | Phase 2/3: Breakdown table | Playwright: click tab, verify table renders correctly |
+| Tab state lost after Calculate | Phase 2/3: Breakdown table | Playwright: select tab, click Calculate, verify tab still active |
+| Checkbox POST absent-means-unchecked | Phase 3: Column toggles | Test: POST with no toggles checked → server returns minimum-column table |
+
+---
 
 ## Sources
 
-- Python `decimal` module documentation (standard library) -- well-established best practice for financial calculations
-- WCAG 2.1 AA guidelines for SVG accessibility (W3C)
-- HTMX documentation on `hx-target`, `hx-include`, and `hx-trigger` attributes
-- Standard loan amortization formulas (corporate finance reference)
-- Domain expertise on financial calculator design patterns
-
-**Note:** Web search was unavailable during this research session. Confidence is MEDIUM rather than HIGH because findings could not be cross-referenced against current community discussions or recent post-mortems. The pitfalls documented here are well-established in the financial software and web development domains, but specific HTMX + Python SSR edge cases may exist that are not captured here.
+- MDN: [prefers-color-scheme](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme)
+- Pico CSS: [Color Schemes documentation](https://picocss.com/docs/color-schemes)
+- Pico CSS GitHub: [Add inline script in head to prevent FOUC · picocss/examples #18](https://github.com/picocss/examples/issues/18)
+- HTMX Documentation: [hx-swap attribute](https://htmx.org/attributes/hx-swap/), [Tabs (HATEOAS) example](https://htmx.org/examples/tabs-hateoas/)
+- HTMX GitHub: [Troublesome Tables · Issue #2654](https://github.com/bigskysoftware/htmx/issues/2654)
+- W3C WAI: [Understanding SC 1.4.13 Content on Hover or Focus](https://www.w3.org/WAI/WCAG21/Understanding/content-on-hover-or-focus.html)
+- Sarah Higley: [Tooltips in the time of WCAG 2.1](https://sarahmhigley.com/writing/tooltips-in-wcag-21/)
+- Smashing Magazine: [Getting Started With The Popover API](https://www.smashingmagazine.com/2026/03/getting-started-popover-api/)
+- Frontend Masters Blog: [Using the Popover API for HTML Tooltips](https://frontendmasters.com/blog/using-the-popover-api-for-html-tooltips/)
+- n8d.at: [Why input[type="number"] Hurts Your User Experience](https://n8d.at/inputtypenumber-and-why-it-isnt-good-for-your-user-experience/)
+- Sean McP: [Be careful parsing formatted numbers in JavaScript](https://www.seanmcp.com/articles/be-careful-parsing-formatted-numbers-in-javascript/)
+- Cassidy James Blaede: [Give your SVGs light/dark style support](https://cassidyjames.com/blog/prefers-color-scheme-svg-light-dark/)
+- Jonathan Harrell: [Dynamic SVGs in Light & Dark Mode](https://www.jonathanharrell.com/blog/light-dark-mode-svgs)
+- Flask Security Docs: [Security Considerations](https://flask.palletsprojects.com/en/stable/web-security/)
+- Werkzeug GitHub: [send_file Content-Disposition filename issues #2529](https://github.com/pallets/werkzeug/issues/2529)
+- Josh Comeau: [What The Heck, z-index? — Stacking Contexts](https://www.joshwcomeau.com/css/stacking-contexts/)
 
 ---
-*Pitfalls research for: Fathom -- Financing Options Analyzer*
-*Researched: 2026-03-10*
+*Pitfalls research for: Fathom v1.1 — tooltips, breakdown table, JSON export/import, comma inputs, dark mode*
+*Researched: 2026-03-13*
