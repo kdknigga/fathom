@@ -11,6 +11,8 @@ from pydantic import ValidationError
 from werkzeug.datastructures import ImmutableMultiDict
 
 from fathom.forms import (
+    FormInput,
+    OptionInput,
     build_domain_objects,
     extract_form_data,
     parse_form_data,
@@ -446,3 +448,152 @@ class TestBuildDomainObjects:
         assert options[0].term_months == 12
         assert options[0].post_promo_apr == Decimal("24.99") / Decimal(100)
         assert options[0].deferred_interest is True
+
+    def test_retroactive_interest_passed_when_deferred(self):
+        """build_domain_objects passes retroactive_interest=True when deferred_interest checked."""
+        form = _make_form(
+            {
+                "purchase_price": "10000",
+                "options[0][type]": "promo_zero_percent",
+                "options[0][label]": "Promo",
+                "options[0][term_months]": "12",
+                "options[0][deferred_interest]": "1",
+                "options[0][retroactive_interest]": "1",
+                "options[1][type]": "cash",
+                "options[1][label]": "Cash",
+                "return_preset": "0.07",
+            }
+        )
+        form_input = parse_form_data(form)
+        options, _settings = build_domain_objects(form_input)
+        assert options[0].retroactive_interest is True
+
+    def test_retroactive_interest_false_when_deferred_unchecked(self):
+        """build_domain_objects passes retroactive_interest=False when deferred_interest unchecked."""
+        form = _make_form(
+            {
+                "purchase_price": "10000",
+                "options[0][type]": "promo_zero_percent",
+                "options[0][label]": "Promo",
+                "options[0][term_months]": "12",
+                "options[1][type]": "cash",
+                "options[1][label]": "Cash",
+                "return_preset": "0.07",
+            }
+        )
+        form_input = parse_form_data(form)
+        options, _settings = build_domain_objects(form_input)
+        assert options[0].retroactive_interest is False
+
+
+# --- Retroactive interest cross-field validation tests ---
+
+
+class TestRetroactiveInterestValidation:
+    """Tests for retroactive_interest cross-field validation on OptionInput."""
+
+    def test_retroactive_with_deferred_and_promo_zero(self):
+        """retroactive_interest=True with deferred_interest=True and promo_zero validates."""
+        opt = OptionInput(
+            type=OptionType.PROMO_ZERO_PERCENT.value,
+            retroactive_interest=True,
+            deferred_interest=True,
+            term_months="12",
+            purchase_price="10000",
+        )
+        assert opt.retroactive_interest is True
+
+    def test_retroactive_reset_when_deferred_false(self):
+        """retroactive_interest silently resets to False when deferred_interest=False."""
+        opt = OptionInput(
+            type=OptionType.PROMO_ZERO_PERCENT.value,
+            retroactive_interest=True,
+            deferred_interest=False,
+            term_months="12",
+            purchase_price="10000",
+        )
+        assert opt.retroactive_interest is False
+
+    def test_retroactive_reset_when_not_promo_zero(self):
+        """retroactive_interest silently resets to False when type is not promo_zero_percent."""
+        opt = OptionInput(
+            type=OptionType.TRADITIONAL_LOAN.value,
+            retroactive_interest=True,
+            deferred_interest=True,
+            apr="5",
+            term_months="36",
+            purchase_price="10000",
+        )
+        assert opt.retroactive_interest is False
+
+
+# --- Option count validation tests ---
+
+
+class TestOptionCountValidation:
+    """Tests for FormInput option count validation."""
+
+    def test_one_option_rejected(self):
+        """FormInput with 1 option raises ValidationError containing '2 and 4'."""
+        try:
+            FormInput(
+                purchase_price="10000",
+                options=[
+                    OptionInput(
+                        type=OptionType.CASH.value,
+                        purchase_price="10000",
+                    ),
+                ],
+                settings={"return_preset": "0.07"},
+            )
+            assert False, "Should have raised ValidationError"  # noqa: B011
+        except ValidationError as exc:
+            error_str = str(exc)
+            assert "2 and 4" in error_str
+
+    def test_five_options_rejected(self):
+        """FormInput with 5 options raises ValidationError containing '2 and 4'."""
+        opts = [
+            OptionInput(type=OptionType.CASH.value, purchase_price="10000")
+            for _ in range(5)
+        ]
+        try:
+            FormInput(
+                purchase_price="10000",
+                options=opts,
+                settings={"return_preset": "0.07"},
+            )
+            assert False, "Should have raised ValidationError"  # noqa: B011
+        except ValidationError as exc:
+            error_str = str(exc)
+            assert "2 and 4" in error_str
+
+    def test_two_options_valid(self):
+        """FormInput with 2 options validates successfully."""
+        form = FormInput(
+            purchase_price="10000",
+            options=[
+                OptionInput(type=OptionType.CASH.value, purchase_price="10000"),
+                OptionInput(
+                    type=OptionType.TRADITIONAL_LOAN.value,
+                    apr="5",
+                    term_months="36",
+                    purchase_price="10000",
+                ),
+            ],
+            settings={"return_preset": "0.07"},
+        )
+        assert len(form.options) == 2
+
+    def test_four_options_valid(self):
+        """FormInput with 4 options validates successfully."""
+        opts = [
+            OptionInput(type=OptionType.CASH.value, purchase_price="10000")
+            for _ in range(4)
+        ]
+        form = FormInput(
+            purchase_price="10000",
+            options=opts,
+            settings={"return_preset": "0.07"},
+        )
+        assert len(form.options) == 4

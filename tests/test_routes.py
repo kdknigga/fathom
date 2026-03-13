@@ -6,6 +6,7 @@ endpoints for type switching, add/remove options, and form submission
 with validation and result display.
 """
 
+from flask import Flask
 from flask.testing import FlaskClient
 
 
@@ -198,6 +199,27 @@ class TestRemoveOption:
         assert "First" in html
         assert "Last" in html
         assert "Middle" not in html
+
+
+class TestReturnPresetFormat:
+    """Tests for return_preset format in GET / route."""
+
+    def test_return_preset_format_010(self, app: Flask):
+        """Return preset formats 0.10 as '0.10' not '0.1'."""
+        app.config["FATHOM_SETTINGS"].default_return_rate = 0.10
+        with app.test_client() as c:
+            response = c.get("/")
+            html = response.data.decode()
+            # The 10% radio should be checked when default is 0.10
+            assert "checked" in html
+            # The template checks settings.return_preset == '0.10'
+            # If the bug exists (str(0.10) -> "0.1"), the radio won't be checked
+            # Verify the checked attribute appears near the 0.10 radio
+            idx_010 = html.find('value="0.10"')
+            assert idx_010 != -1
+            # Find the nearest checked attribute within 100 chars
+            snippet = html[max(0, idx_010 - 100) : idx_010 + 100]
+            assert "checked" in snippet
 
 
 class TestFormSubmission:
