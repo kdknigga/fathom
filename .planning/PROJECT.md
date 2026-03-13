@@ -12,48 +12,47 @@ Users can instantly see which financing option truly costs least when opportunit
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ Single-page input form with global settings and 2-4 per-option financing configurations — v1.0
+- ✓ Support for 6 option types: cash, traditional loan, 0% promo, promo with cash-back, promo with price reduction, custom/other — v1.0
+- ✓ True Total Cost calculation engine (payments + opportunity cost - rebates - tax savings ± inflation) — v1.0
+- ✓ Opportunity cost modeling with configurable investment return rate (presets + manual) — v1.0
+- ✓ Comparison period normalization across options with different terms — v1.0
+- ✓ Summary recommendation card with plain-English explanation and caveats — v1.0
+- ✓ Cost breakdown table with one column per option — v1.0
+- ✓ True Total Cost bar chart and cumulative cost over time line chart — v1.0
+- ✓ Live result updates as inputs change (HTMX partial page replacement with Calculate button fallback) — v1.0
+- ✓ Responsive layout (two-column desktop, stacked mobile with sticky "View Results" anchor) — v1.0
+- ✓ WCAG 2.1 AA accessibility (visible labels, chart text alternatives, not color-only) — v1.0
+- ✓ Stateless — no persistent storage, no user accounts, no server-side session data — v1.0
+- ✓ Server-side Python for all calculations — no client-side JS calculation logic — v1.0
+- ✓ Open-source with self-hosting support: README, env-var config, Dockerfile — v1.0
 
 ### Active
 
-- [ ] Single-page input form with global settings and 2-4 per-option financing configurations
-- [ ] Support for 6 option types: cash, traditional loan, 0% promo, promo with cash-back, promo with price reduction, custom/other
-- [ ] True Total Cost calculation engine (payments + opportunity cost - rebates - tax savings ± inflation)
-- [ ] Opportunity cost modeling with configurable investment return rate (presets + manual)
-- [ ] Comparison period normalization across options with different terms
-- [ ] Summary recommendation card with plain-English explanation and caveats
-- [ ] Cost breakdown table with one column per option
-- [ ] True Total Cost bar chart and cumulative cost over time line chart
-- [ ] Live result updates as inputs change (HTMX partial page replacement with Calculate button fallback)
-- [ ] Responsive layout (two-column desktop, stacked mobile with sticky "View Results" anchor)
-- [ ] WCAG 2.1 AA accessibility (visible labels, chart text alternatives, not color-only)
-- [ ] Stateless — no persistent storage, no user accounts, no server-side session data
-- [ ] Server-side Python for all calculations — no client-side JS calculation logic
-- [ ] Open-source with self-hosting support: README, env-var config, Dockerfile
+- [ ] Print-friendly CSS for results page
+- [ ] Dark mode / `prefers-color-scheme` support
+- [ ] Advanced input validation (reasonable ranges, "did you mean percent not decimal?")
+- [ ] Exportable PDF or shareable reports
+- [ ] Scenario comparison (save multiple parameter sets for side-by-side)
 
 ### Out of Scope
 
-- Exportable PDF or shareable reports — complexity for v1
 - User accounts or cloud-synced history — conflicts with privacy-first design
 - Live interest rate data or bank API integrations — external dependency risk
 - More than 4 simultaneous options — UI complexity
 - Business-specific calculations (depreciation, asset write-offs) — consumer focus
-- Mobile native app — web-first
+- Mobile native app — web-first, responsive design sufficient
 - Offline support — server-rendered app
+- Multi-currency support — adds complexity for minimal user base; math is currency-agnostic
+- Amortization schedule display — noise for comparison tool; cumulative chart conveys same info better
+- Wizard/multi-step form — hides context; single-page comparison needs all options visible
+- Client-side calculation logic — creates divergence bugs; server is source of truth
 
 ## Context
 
-- Python 3.14 with SSR as primary paradigm
-- HTMX for partial page updates without full reloads
-- Server-rendered SVG charts preferred; Chart.js acceptable fallback
-- `uv` for Python environment management (not pip, poetry, or conda)
-- `ruff` for linting and formatting — extensive rule set in `pyproject.toml`, including `D` rules requiring docstrings on all public modules/classes/functions
-- `ty` and `pyrefly` for type checking — both must pass clean, no mypy/pyright
-- `prek` (pre-commit drop-in replacement) for git hooks — `uv run prek run`
-- Target: 300ms result render time
-- Must deploy as single process with no external database
-- Entry point: `src/fathom/__init__.py:main()`
-- Prefer external packages over reimplementing solved problems; favor libraries available in Context7
+Shipped v1.0 with 2,898 LOC Python across 6 phases (16 plans).
+Tech stack: Python 3.14, Flask, Pydantic, HTMX, Pico CSS, server-rendered SVG charts.
+179 tests passing. All quality gates clean (ruff, ty, pyrefly, prek).
 
 ### Development Tools (MCP Servers)
 
@@ -64,15 +63,7 @@ Users can instantly see which financing option truly costs least when opportunit
 
 ### Browser-Based Validation Policy
 
-All browser-based validation (visual layout, responsive design, HTMX interactivity, CSS rendering, accessibility checks) MUST be automated via the Playwright MCP server. Do not mark browser checks as "manual-only" or "needs human." Instead:
-
-1. Start the app server programmatically during verification
-2. Use Playwright MCP to navigate, take screenshots, resize viewports, click elements, and assert DOM state
-3. Verify HTMX partial swaps by checking DOM mutations after interactions (no full page reload)
-4. Verify responsive layout by resizing the viewport and asserting element visibility/position
-5. Verify accessibility attributes by querying ARIA roles, labels, and semantic structure via Playwright snapshots
-
-This replaces the previous approach where browser checks were deferred to human verification.
+All browser-based validation (visual layout, responsive design, HTMX interactivity, CSS rendering, accessibility checks) MUST be automated via the Playwright MCP server. Do not mark browser checks as "manual-only" or "needs human."
 
 ### Code Quality Standards
 
@@ -82,8 +73,6 @@ All code must pass with zero errors/warnings:
 3. `uv run ty check` — type checking (fix issues, never suppress with `# type: ignore`)
 4. `uv run pyrefly check` — type checking (both checkers must pass independently)
 5. `uv run prek run` — all pre-commit hooks
-
-**Gotchas:** `ty` and `pyrefly` may flag different issues for the same code — both must pass. Ruff `D` rules: use no-blank-line-before-class and multi-line-summary-second-line style (D203/D212 ignored).
 
 ## Constraints
 
@@ -98,10 +87,14 @@ All code must pass with zero errors/warnings:
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| SSR with HTMX over SPA | Simpler architecture, no client-side state management, aligns with server-side calculation requirement | — Pending |
-| SVG charts preferred over JS charting | Fewer client dependencies, better accessibility, server-rendered | — Pending |
-| No persistent storage at all | Privacy-first, simpler deployment, no database dependency | — Pending |
-| Purchase-agnostic design | Wider utility, simpler UX (no domain-specific templates) | — Pending |
+| SSR with HTMX over SPA | Simpler architecture, no client-side state management, aligns with server-side calculation requirement | ✓ Good — clean separation, no JS state bugs |
+| SVG charts preferred over JS charting | Fewer client dependencies, better accessibility, server-rendered | ✓ Good — accessible data tables built in, no Chart.js needed |
+| No persistent storage at all | Privacy-first, simpler deployment, no database dependency | ✓ Good — true single-process deployment |
+| Purchase-agnostic design | Wider utility, simpler UX (no domain-specific templates) | ✓ Good — works for any purchase type |
+| Single FinancingOption with OptionType enum | Simpler than class hierarchy, optional fields per type | ✓ Good — clean, flat domain model |
+| Pydantic BaseModel over dataclasses | Type-safe validation, identical API, better error reporting | ✓ Good — seamless migration, richer validation |
+| Three-function pipeline (parse → validate → build) | Separation of concerns for form processing | ✓ Good — testable, each stage independent |
+| Decimal arithmetic for all money | Eliminates float rounding errors in financial calculations | ✓ Good — exact cent precision |
 
 ---
-*Last updated: 2026-03-10 after initialization*
+*Last updated: 2026-03-13 after v1.0 milestone*
