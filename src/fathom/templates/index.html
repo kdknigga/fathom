@@ -9,6 +9,9 @@
           hx-post="/compare" hx-target="#results" hx-swap="innerHTML"
           hx-indicator="#compare-indicator"
           hx-disabled-elt="find button[type='submit']">
+      {% if errors.get('options') %}
+      <small class="field-error" role="alert">{{ errors['options'] }}</small>
+      {% endif %}
       <article>
         <header><label for="purchase-price">Purchase Price</label></header>
         <input

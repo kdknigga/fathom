@@ -39,6 +39,20 @@
   Interest charges apply retroactively if not paid in full
 </label>
 
+{% if opt.fields.deferred_interest %}
+<label for="option-{{ opt.idx }}-retroactive-interest">
+  <input
+    type="checkbox"
+    id="option-{{ opt.idx }}-retroactive-interest"
+    name="options[{{ opt.idx }}][retroactive_interest]"
+    value="1"
+    {% if opt.fields.retroactive_interest is not defined or opt.fields.retroactive_interest %}checked{% endif %}
+  >
+  Interest calculated from original purchase date
+</label>
+<small>If not paid in full during the promotional period, interest accrues from the original purchase date</small>
+{% endif %}
+
 <label for="option-{{ opt.idx }}-post-promo-apr">Post-Promotional APR</label>
 <fieldset role="group">
   <input
