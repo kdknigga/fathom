@@ -16,6 +16,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Web Layer and Input Forms** - Flask app, form handling, all option types, responsive layout (completed 2026-03-10)
 - [x] **Phase 3: Results Display and Charts** - Recommendation card, cost breakdown, SVG charts, HTMX live updates (completed 2026-03-10)
 - [ ] **Phase 4: Deployment and Polish** - Dockerfile, README, env config, performance verification, open-source license
+- [ ] **Phase 5: Refactor Form Validation to Use Pydantic** - Convert dataclasses to Pydantic BaseModel, replace validation pipeline (completed 2026-03-12)
+- [ ] **Phase 6: Bug Fixes and Tech Debt Cleanup** - Gap closure: server-side validation, return_preset bug, retroactive_interest UI, type ignore removal, test hardening
 
 ## Phase Details
 
@@ -100,6 +102,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 2. Web Layer and Input Forms | 3/3 | Complete   | 2026-03-10 |
 | 3. Results Display and Charts | 3/3 | Complete    | 2026-03-10 |
 | 4. Deployment and Polish | 0/3 | Not started | - |
+| 5. Pydantic Refactor | 2/2 | Complete | 2026-03-12 |
+| 6. Bug Fixes and Tech Debt | 0/? | Not started | - |
 
 ### Phase 5: Refactor Form Validation to Use Pydantic
 
@@ -111,3 +115,21 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 Plans:
 - [ ] 05-01-PLAN.md — Convert models.py dataclasses to Pydantic BaseModel, update all consumers
 - [ ] 05-02-PLAN.md — Replace forms.py validation with Pydantic models, update routes and tests
+
+### Phase 6: Bug Fixes and Tech Debt Cleanup
+
+**Goal:** Close all gaps identified by v1.0 milestone audit — fix bugs, add defense-in-depth validation, expose retroactive_interest in UI, remove code quality violations, and harden tests
+**Requirements**: FORM-05 (defense-in-depth)
+**Depends on:** Phase 5
+**Gap Closure:** Closes gaps from v1.0-MILESTONE-AUDIT.md
+**Plans:** TBD
+
+Integration gaps closed:
+- `retroactive_interest-hardcoded`: Expose retroactive_interest toggle in form UI for 0% promo options
+- `FORM-05-server-validation`: Add `@field_validator` enforcing 2-4 option count in Pydantic model
+
+Tech debt closed:
+- Fix `return_preset` format mismatch (`str(0.10)` → `f"{rate:.2f}"` in routes.py)
+- Remove `# type: ignore[arg-type]` comments in forms.py:410-411
+- Add `config.py` to README architecture tree
+- Enhance Playwright data table test to assert cell value accuracy

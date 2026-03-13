@@ -132,7 +132,7 @@
 | FORM-02 | Phase 2 | Complete |
 | FORM-03 | Phase 2 | Complete |
 | FORM-04 | Phase 2 | Complete |
-| FORM-05 | Phase 2 | Complete |
+| FORM-05 | Phase 2, Phase 6 | Complete (Phase 6: server-side validation hardening) |
 | FORM-06 | Phase 2 | Complete |
 | FORM-07 | Phase 2 | Complete |
 | OPTY-01 | Phase 2 | Complete |
@@ -169,4 +169,4 @@
 
 ---
 *Requirements defined: 2026-03-10*
-*Last updated: 2026-03-10 after roadmap creation*
+*Last updated: 2026-03-13 after gap closure phase creation*
