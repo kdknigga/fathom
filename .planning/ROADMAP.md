@@ -37,7 +37,11 @@
   1. User on a dark-mode OS sees a dark-themed application automatically, with no flash of light content
   2. All custom CSS (caveat cards, form highlights, status badges) renders correctly in both light and dark modes
   3. SVG chart text, axes, and grid lines are legible in both light and dark modes
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 07-01-PLAN.md — Enable Pico dark mode and add CSS custom properties with dark variants for all custom colors
+- [ ] 07-02-PLAN.md — Replace hardcoded SVG chart colors with CSS variables and add Playwright dark mode tests
 
 ### Phase 8: Comma-Normalized Inputs
 **Goal**: Users can enter and see large numbers with commas without any silent parsing failures
@@ -94,7 +98,7 @@
 | 4. Deployment and Polish | v1.0 | 3/3 | Complete | 2026-03-12 |
 | 5. Pydantic Refactor | v1.0 | 2/2 | Complete | 2026-03-12 |
 | 6. Bug Fixes and Tech Debt | v1.0 | 2/2 | Complete | 2026-03-13 |
-| 7. Dark Mode | v1.1 | 0/0 | Not started | - |
+| 7. Dark Mode | v1.1 | 0/2 | Planning | - |
 | 8. Comma-Normalized Inputs | v1.1 | 0/0 | Not started | - |
 | 9. Tooltips and Tax Guidance | v1.1 | 0/0 | Not started | - |
 | 10. JSON Export/Import | v1.1 | 0/0 | Not started | - |
