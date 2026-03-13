@@ -164,8 +164,174 @@ def main():
                 f"Found {len(captions)} captions",
             )
 
-        # === CHECK 5: Responsive layout at 375px ===
-        print("\n--- Check 5: Responsive layout (375px) ---")
+        # === CHECK 5: Bar chart data table cell values (A11Y-02) ===
+        print("\n--- Check 5: Bar chart data table cell values ---")
+        bar_table = page.query_selector(
+            ".visually-hidden table:has(caption:text('True Total Cost'))"
+        )
+        check("Bar chart data table found", bar_table is not None)
+        if bar_table:
+            # Verify parent div has visually-hidden class
+            bar_parent = bar_table.evaluate(
+                "el => el.parentElement.classList.contains('visually-hidden')"
+            )
+            check("Bar table parent has visually-hidden class", bar_parent)
+
+            # Verify caption
+            bar_caption = bar_table.query_selector("caption")
+            check(
+                "Bar table caption is 'True Total Cost comparison data'",
+                bar_caption is not None
+                and bar_caption.text_content().strip()
+                == "True Total Cost comparison data",
+                f"Got: {bar_caption.text_content().strip() if bar_caption else 'None'}",
+            )
+
+            # Verify header columns
+            bar_headers = bar_table.query_selector_all("thead th")
+            check(
+                "Bar table has 2 header columns",
+                len(bar_headers) == 2,
+                f"Found {len(bar_headers)}",
+            )
+            if len(bar_headers) == 2:
+                check(
+                    "Bar table header 1 is 'Option'",
+                    bar_headers[0].text_content().strip() == "Option",
+                )
+                check(
+                    "Bar table header 2 is 'True Total Cost'",
+                    bar_headers[1].text_content().strip() == "True Total Cost",
+                )
+
+            # Verify row values (known scenario: Bank Loan wins)
+            bar_rows = bar_table.query_selector_all("tbody tr")
+            check(
+                "Bar table has 2 data rows",
+                len(bar_rows) == 2,
+                f"Found {len(bar_rows)}",
+            )
+            if len(bar_rows) >= 2:
+                # Row 1: Bank Loan (Winner)
+                row1_cells = bar_rows[0].query_selector_all("td")
+                row1_name = row1_cells[0].text_content().strip()
+                row1_cost = row1_cells[1].text_content().strip()
+                check(
+                    "Bar row 1: Bank Loan (Winner)",
+                    "Bank Loan" in row1_name and "Winner" in row1_name,
+                    f"Got: {row1_name}",
+                )
+                check(
+                    "Bar row 1 cost: $29,171",
+                    row1_cost == "$29,171",
+                    f"Got: {row1_cost}",
+                )
+
+                # Row 2: Pay in Full
+                row2_cells = bar_rows[1].query_selector_all("td")
+                row2_name = row2_cells[0].text_content().strip()
+                row2_cost = row2_cells[1].text_content().strip()
+                check(
+                    "Bar row 2: Pay in Full",
+                    row2_name == "Pay in Full",
+                    f"Got: {row2_name}",
+                )
+                check(
+                    "Bar row 2 cost: $30,823",
+                    row2_cost == "$30,823",
+                    f"Got: {row2_cost}",
+                )
+
+        # === CHECK 6: Line chart data table cell values (A11Y-02 regression) ===
+        print("\n--- Check 6: Line chart data table cell values (A11Y-02) ---")
+        line_table = page.query_selector(
+            ".visually-hidden table:has(caption:text('Cumulative'))"
+        )
+        check("Line chart data table found", line_table is not None)
+        if line_table:
+            # Verify parent div has visually-hidden class
+            line_parent = line_table.evaluate(
+                "el => el.parentElement.classList.contains('visually-hidden')"
+            )
+            check("Line table parent has visually-hidden class", line_parent)
+
+            # Verify caption
+            line_caption = line_table.query_selector("caption")
+            check(
+                "Line table caption is 'Cumulative cost over time data'",
+                line_caption is not None
+                and line_caption.text_content().strip()
+                == "Cumulative cost over time data",
+                f"Got: {line_caption.text_content().strip() if line_caption else 'None'}",
+            )
+
+            # Verify header columns (Month, Bank Loan, Pay in Full)
+            line_headers = line_table.query_selector_all("thead th")
+            check(
+                "Line table has 3 header columns",
+                len(line_headers) == 3,
+                f"Found {len(line_headers)}",
+            )
+            if len(line_headers) == 3:
+                check(
+                    "Line table header 1 is 'Month'",
+                    line_headers[0].text_content().strip() == "Month",
+                )
+                check(
+                    "Line table header 2 is 'Bank Loan'",
+                    line_headers[1].text_content().strip() == "Bank Loan",
+                )
+                check(
+                    "Line table header 3 is 'Pay in Full'",
+                    line_headers[2].text_content().strip() == "Pay in Full",
+                )
+
+            # Verify all row values (deterministic Decimal arithmetic)
+            line_rows = line_table.query_selector_all("tbody tr")
+            expected_line_data = [
+                ("12", "$12,301", "$25,000"),
+                ("24", "$19,603", "$25,000"),
+                ("36", "$26,904", "$25,000"),
+                ("36", "$26,904", "$25,000"),  # Final month row
+            ]
+            check(
+                f"Line table has {len(expected_line_data)} data rows",
+                len(line_rows) == len(expected_line_data),
+                f"Found {len(line_rows)}",
+            )
+            for idx, (exp_month, exp_loan, exp_cash) in enumerate(expected_line_data):
+                if idx >= len(line_rows):
+                    break
+                cells = line_rows[idx].query_selector_all("td")
+                if len(cells) < 3:
+                    enough_cells = len(cells) >= 3
+                    check(
+                        f"Line row {idx + 1} has 3 cells",
+                        enough_cells,
+                        f"Found {len(cells)}",
+                    )
+                    continue
+                month = cells[0].text_content().strip()
+                loan_val = cells[1].text_content().strip()
+                cash_val = cells[2].text_content().strip()
+                check(
+                    f"Line row {idx + 1} month={exp_month}",
+                    month == exp_month,
+                    f"Got: {month}",
+                )
+                check(
+                    f"Line row {idx + 1} Bank Loan={exp_loan}",
+                    loan_val == exp_loan,
+                    f"Got: {loan_val}",
+                )
+                check(
+                    f"Line row {idx + 1} Pay in Full={exp_cash}",
+                    cash_val == exp_cash,
+                    f"Got: {cash_val}",
+                )
+
+        # === CHECK 7: Responsive layout at 375px ===
+        print("\n--- Check 7: Responsive layout (375px) ---")
         page.set_viewport_size({"width": 375, "height": 812})
         page.goto(BASE_URL)
         fill_valid_form(page)
