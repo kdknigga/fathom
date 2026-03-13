@@ -29,11 +29,13 @@ Users can instantly see which financing option truly costs least when opportunit
 
 ### Active
 
-- [ ] Print-friendly CSS for results page
-- [ ] Dark mode / `prefers-color-scheme` support
-- [ ] Advanced input validation (reasonable ranges, "did you mean percent not decimal?")
-- [ ] Exportable PDF or shareable reports
-- [ ] Scenario comparison (save multiple parameter sets for side-by-side)
+- [ ] Input tooltips — `?` icon popovers explaining form options
+- [ ] Output tooltips — `?` icon popovers explaining result terms (opportunity cost, inflation adjustment, etc.)
+- [ ] Detailed cost breakdown table — per-option period-by-period view of all cost factors with tab switching, column toggles, and side-by-side compare tab
+- [ ] JSON export/import — download current inputs as JSON file, upload to restore
+- [ ] Comma-normalized number inputs — accept and display large numbers with commas
+- [ ] US-centric tax rate guidance — help selecting marginal tax rate
+- [ ] Dark mode — `prefers-color-scheme` support
 
 ### Out of Scope
 
@@ -44,9 +46,24 @@ Users can instantly see which financing option truly costs least when opportunit
 - Mobile native app — web-first, responsive design sufficient
 - Offline support — server-rendered app
 - Multi-currency support — adds complexity for minimal user base; math is currency-agnostic
-- Amortization schedule display — noise for comparison tool; cumulative chart conveys same info better
+- Amortization schedule display — ~~noise for comparison tool~~ Revisited: detailed cost breakdown table added in v1.1 with per-factor period-by-period view
 - Wizard/multi-step form — hides context; single-page comparison needs all options visible
 - Client-side calculation logic — creates divergence bugs; server is source of truth
+- Print-friendly CSS — deferred from v1.0 active list, low priority
+- Exportable PDF reports — deferred, JSON export covers data portability for now
+- Scenario comparison (multiple parameter sets side-by-side) — deferred, JSON import/export provides manual workflow
+
+## Current Milestone: v1.1 Deeper Insights
+
+**Goal:** Add explanatory tooltips, detailed per-option cost breakdown tables, JSON import/export, input polish, and dark mode.
+
+**Target features:**
+- Input & output tooltips (`?` icon popovers)
+- Detailed cost breakdown table (tabs, column toggles, compare view)
+- JSON export/import for form inputs
+- Comma-normalized number inputs
+- US-centric tax rate guidance
+- Dark mode (`prefers-color-scheme`)
 
 ## Context
 
@@ -97,4 +114,4 @@ All code must pass with zero errors/warnings:
 | Decimal arithmetic for all money | Eliminates float rounding errors in financial calculations | ✓ Good — exact cent precision |
 
 ---
-*Last updated: 2026-03-13 after v1.0 milestone*
+*Last updated: 2026-03-13 after v1.1 milestone start*
