@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 06-02-PLAN.md
-last_updated: "2026-03-13T16:09:46.825Z"
-last_activity: 2026-03-11 -- Completed 05-02-PLAN.md
+status: in-progress
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-03-13T16:10:56Z"
+last_activity: 2026-03-13 -- Completed 06-01-PLAN.md
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 16
-  completed_plans: 15
+  completed_plans: 16
   percent: 100
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-10)
 
 **Core value:** Users can instantly see which financing option truly costs least when opportunity costs, inflation, and taxes are factored in.
-**Current focus:** Phase 5: Refactor Form Validation to Use Pydantic
+**Current focus:** Phase 6: Bug Fixes and Tech Debt Cleanup
 
 ## Current Position
 
-Phase: 5 of 5 (Refactor Form Validation to Use Pydantic)
-Plan: 2 of 2 in current phase -- COMPLETE
-Status: Completed
-Last activity: 2026-03-11 -- Completed 05-02-PLAN.md
+Phase: 6 of 6 (Bug Fixes and Tech Debt Cleanup)
+Plan: 1 of 2 in current phase -- COMPLETE
+Status: In Progress
+Last activity: 2026-03-13 -- Completed 06-01-PLAN.md
 
 Progress: [██████████] 100%
 
@@ -64,6 +64,7 @@ Progress: [██████████] 100%
 | Phase 04 P03 | 8min | 2 tasks | 4 files |
 | Phase 05 P01 | 2min | 2 tasks | 3 files |
 | Phase 05 P02 | 8min | 2 tasks | 4 files |
+| Phase 06 P01 | 4min | 2 tasks | 6 files |
 | Phase 06 P02 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
@@ -106,6 +107,9 @@ Recent decisions affecting current work:
 - [Phase 05]: Output models frozen via ConfigDict(frozen=True); input models remain mutable
 - [Phase 05]: Model validator errors use field:message prefix format, remapped in pydantic_errors_to_dict for dot-notation error keys
 - [Phase 05]: extract_form_data returns raw dict for non-validating routes (add/remove option)
+- [Phase 06]: Retroactive interest uses silent reset (not error) for UI-hidden checkbox mismatches
+- [Phase 06]: Retroactive interest defaults to checked when deferred_interest enabled (matches real-world behavior)
+- [Phase 06]: Defense-in-depth: build_domain_objects ANDs retroactive_interest with deferred_interest
 - [Phase 06]: Used CSS :has(caption:text()) selector for targeting data tables by caption in Playwright
 
 ### Roadmap Evolution
@@ -122,6 +126,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T16:09:46.823Z
-Stopped at: Completed 06-02-PLAN.md
-Resume file: None
+Last session: 2026-03-13T16:10:56Z
+Stopped at: Completed 06-01-PLAN.md
+Resume file: .planning/phases/06-bug-fixes-and-tech-debt-cleanup/06-01-SUMMARY.md

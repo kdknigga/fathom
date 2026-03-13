@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Results Display and Charts** - Recommendation card, cost breakdown, SVG charts, HTMX live updates (completed 2026-03-10)
 - [ ] **Phase 4: Deployment and Polish** - Dockerfile, README, env config, performance verification, open-source license
 - [ ] **Phase 5: Refactor Form Validation to Use Pydantic** - Convert dataclasses to Pydantic BaseModel, replace validation pipeline (completed 2026-03-12)
-- [ ] **Phase 6: Bug Fixes and Tech Debt Cleanup** - Gap closure: server-side validation, return_preset bug, retroactive_interest UI, type ignore removal, test hardening
+- [x] **Phase 6: Bug Fixes and Tech Debt Cleanup** - Gap closure: server-side validation, return_preset bug, retroactive_interest UI, type ignore removal, test hardening (completed 2026-03-13)
 
 ## Phase Details
 
@@ -103,7 +103,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 3. Results Display and Charts | 3/3 | Complete    | 2026-03-10 |
 | 4. Deployment and Polish | 0/3 | Not started | - |
 | 5. Pydantic Refactor | 2/2 | Complete | 2026-03-12 |
-| 6. Bug Fixes and Tech Debt | 0/2 | Not started | - |
+| 6. Bug Fixes and Tech Debt | 2/2 | Complete   | 2026-03-13 |
 
 ### Phase 5: Refactor Form Validation to Use Pydantic
 
@@ -122,7 +122,7 @@ Plans:
 **Requirements**: FORM-05 (defense-in-depth)
 **Depends on:** Phase 5
 **Gap Closure:** Closes gaps from v1.0-MILESTONE-AUDIT.md
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 06-01-PLAN.md — Retroactive interest UI, server-side option count validation, return_preset format fix
