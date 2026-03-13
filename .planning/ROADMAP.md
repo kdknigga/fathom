@@ -103,7 +103,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 3. Results Display and Charts | 3/3 | Complete    | 2026-03-10 |
 | 4. Deployment and Polish | 0/3 | Not started | - |
 | 5. Pydantic Refactor | 2/2 | Complete | 2026-03-12 |
-| 6. Bug Fixes and Tech Debt | 0/? | Not started | - |
+| 6. Bug Fixes and Tech Debt | 0/2 | Not started | - |
 
 ### Phase 5: Refactor Form Validation to Use Pydantic
 
@@ -122,7 +122,11 @@ Plans:
 **Requirements**: FORM-05 (defense-in-depth)
 **Depends on:** Phase 5
 **Gap Closure:** Closes gaps from v1.0-MILESTONE-AUDIT.md
-**Plans:** TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — Retroactive interest UI, server-side option count validation, return_preset format fix
+- [ ] 06-02-PLAN.md — README architecture tree update, Playwright data table test hardening
 
 Integration gaps closed:
 - `retroactive_interest-hardcoded`: Expose retroactive_interest toggle in form UI for 0% promo options
