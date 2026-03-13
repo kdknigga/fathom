@@ -79,31 +79,31 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TIPS-01 | — | Pending |
-| TIPS-02 | — | Pending |
-| TIPS-03 | — | Pending |
-| TAX-01 | — | Pending |
-| TAX-02 | — | Pending |
-| INPUT-01 | — | Pending |
-| INPUT-02 | — | Pending |
-| INPUT-03 | — | Pending |
-| DATA-01 | — | Pending |
-| DATA-02 | — | Pending |
-| DATA-03 | — | Pending |
-| DARK-01 | — | Pending |
-| DARK-02 | — | Pending |
-| DARK-03 | — | Pending |
-| DETAIL-01 | — | Pending |
-| DETAIL-02 | — | Pending |
-| DETAIL-03 | — | Pending |
-| DETAIL-04 | — | Pending |
-| DETAIL-05 | — | Pending |
+| TIPS-01 | Phase 9 | Pending |
+| TIPS-02 | Phase 9 | Pending |
+| TIPS-03 | Phase 9 | Pending |
+| TAX-01 | Phase 9 | Pending |
+| TAX-02 | Phase 9 | Pending |
+| INPUT-01 | Phase 8 | Pending |
+| INPUT-02 | Phase 8 | Pending |
+| INPUT-03 | Phase 8 | Pending |
+| DATA-01 | Phase 10 | Pending |
+| DATA-02 | Phase 10 | Pending |
+| DATA-03 | Phase 10 | Pending |
+| DARK-01 | Phase 7 | Pending |
+| DARK-02 | Phase 7 | Pending |
+| DARK-03 | Phase 7 | Pending |
+| DETAIL-01 | Phase 11 | Pending |
+| DETAIL-02 | Phase 11 | Pending |
+| DETAIL-03 | Phase 11 | Pending |
+| DETAIL-04 | Phase 11 | Pending |
+| DETAIL-05 | Phase 11 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 19 total
-- Mapped to phases: 0
-- Unmapped: 19 ⚠️
+- Mapped to phases: 19
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-13*
-*Last updated: 2026-03-13 after initial definition*
+*Last updated: 2026-03-13 after roadmap creation*
