@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from werkzeug.datastructures import ImmutableMultiDict
 
 # Fields that are checkboxes (present=True, absent=False)
-_CHECKBOX_FIELDS = {"deferred_interest"}
+_CHECKBOX_FIELDS = {"deferred_interest", "retroactive_interest"}
 
 # All extractable per-option fields
 _OPTION_FIELDS = (
@@ -31,6 +31,7 @@ _OPTION_FIELDS = (
     "down_payment",
     "post_promo_apr",
     "deferred_interest",
+    "retroactive_interest",
     "cash_back_amount",
     "discounted_price",
     "custom_label",
@@ -113,6 +114,7 @@ class OptionInput(BaseModel):
     down_payment: str = ""
     post_promo_apr: str = ""
     deferred_interest: bool = False
+    retroactive_interest: bool = False
     cash_back_amount: str = ""
     discounted_price: str = ""
     custom_label: str = ""
@@ -215,6 +217,13 @@ class OptionInput(BaseModel):
             msg = "\n".join(errors)
             raise ValueError(msg)
 
+        # Silently reset retroactive_interest when not applicable
+        if self.retroactive_interest and (
+            not self.deferred_interest
+            or opt_type != OptionType.PROMO_ZERO_PERCENT.value
+        ):
+            self.retroactive_interest = False
+
         return self
 
 
@@ -240,6 +249,15 @@ class FormInput(BaseModel):
             raise ValueError(msg)
         if val <= 0:
             msg = "Purchase price must be greater than zero."
+            raise ValueError(msg)
+        return v
+
+    @field_validator("options")
+    @classmethod
+    def validate_option_count(cls, v: list[OptionInput]) -> list[OptionInput]:
+        """Enforce 2-4 financing options for comparison."""
+        if len(v) < 2 or len(v) > 4:
+            msg = "Please compare between 2 and 4 financing options."
             raise ValueError(msg)
         return v
 
@@ -447,6 +465,7 @@ def build_domain_objects(
         down_payment = _to_money(opt.down_payment)
         post_promo_apr = _to_rate(opt.post_promo_apr)
         deferred_interest = bool(opt.deferred_interest)
+        retroactive_interest = bool(opt.retroactive_interest) and deferred_interest
         cash_back_amount = _to_money(opt.cash_back_amount)
         discounted_price = _to_money(opt.discounted_price)
 
@@ -460,6 +479,7 @@ def build_domain_objects(
                 down_payment=down_payment,
                 post_promo_apr=post_promo_apr,
                 deferred_interest=deferred_interest,
+                retroactive_interest=retroactive_interest,
                 cash_back_amount=cash_back_amount,
                 discounted_price=discounted_price,
             ),

@@ -153,7 +153,7 @@ def index() -> str:
         options=_build_default_options(),
         option_types=_build_option_types(),
         settings={
-            "return_preset": str(fathom_settings.default_return_rate),
+            "return_preset": f"{fathom_settings.default_return_rate:.2f}",
             "return_rate_custom": "",
             "inflation_enabled": False,
             "inflation_rate": str(int(fathom_settings.default_inflation_rate * 100)),
