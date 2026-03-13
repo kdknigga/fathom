@@ -1,9 +1,9 @@
 ---
 phase: 5
 slug: refactor-form-validation-to-use-pydantic
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: complete
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-03-10
 ---
 
@@ -38,12 +38,12 @@ created: 2026-03-10
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 05-01-01 | 01 | 1 | REFACTOR-01 | unit | `uv run pytest tests/test_engine.py tests/test_amortization.py -x` | Yes | ⬜ pending |
-| 05-01-02 | 01 | 1 | REFACTOR-05 | unit | `uv run pytest tests/test_engine.py -x` | Yes | ⬜ pending |
-| 05-02-01 | 02 | 1 | REFACTOR-02 | unit | `uv run pytest tests/test_forms.py -x` | Yes (rewrite) | ⬜ pending |
-| 05-02-02 | 02 | 1 | REFACTOR-03 | unit | `uv run pytest tests/test_forms.py tests/test_edge_cases.py -x` | Yes (rewrite) | ⬜ pending |
-| 05-03-01 | 03 | 2 | REFACTOR-04 | integration | `uv run pytest tests/test_routes.py -x` | Yes | ⬜ pending |
-| 05-03-02 | 03 | 2 | REFACTOR-06 | lint | `uv run ty check && uv run pyrefly check` | N/A | ⬜ pending |
+| 05-01-01 | 01 | 1 | REFACTOR-01 | unit | `uv run pytest tests/test_models.py -x` | Yes | ✅ green |
+| 05-01-02 | 01 | 1 | REFACTOR-05 | unit | `uv run pytest tests/test_models.py -x` | Yes | ✅ green |
+| 05-02-01 | 02 | 2 | REFACTOR-02 | unit | `uv run pytest tests/test_forms.py -x` | Yes (rewrite) | ✅ green |
+| 05-02-02 | 02 | 2 | REFACTOR-03 | unit | `uv run pytest tests/test_forms.py tests/test_edge_cases.py -x` | Yes (rewrite) | ✅ green |
+| 05-02-03 | 02 | 2 | REFACTOR-04 | integration | `uv run pytest tests/test_routes.py -x` | Yes | ✅ green |
+| 05-02-04 | 02 | 2 | REFACTOR-06 | lint | `uv run ty check && uv run pyrefly check` | N/A | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -63,11 +63,21 @@ All phase behaviors have automated verification.
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 10s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 10s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved
+
+---
+
+## Validation Audit 2026-03-13
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 2 |
+| Resolved | 2 |
+| Escalated | 0 |
