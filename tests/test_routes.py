@@ -36,6 +36,32 @@ class TestGetIndex:
         html = response.data.decode()
         assert 'for="purchase-price"' in html
 
+    def test_reset_form(self, client: FlaskClient):
+        """GET / returns fresh default state: empty purchase price and 2 default options."""
+        response = client.get("/")
+        assert response.status_code == 200
+        html = response.data.decode()
+        # Purchase price is empty on fresh load
+        assert 'name="purchase_price"' in html
+        assert 'value=""' in html
+        # Exactly 2 default option cards
+        assert 'id="option-0"' in html
+        assert 'id="option-1"' in html
+        assert 'id="option-2"' not in html
+        # No validation errors on fresh page
+        assert "field-error" not in html
+
+    def test_grid_layout(self, client: FlaskClient):
+        """GET / response contains two-column grid structure (LYOT-01)."""
+        response = client.get("/")
+        html = response.data.decode()
+        # Outer grid wrapper for the two-column layout
+        assert 'class="grid"' in html
+        # Form column on the left
+        assert 'id="comparison-form"' in html
+        # Results column on the right
+        assert 'id="results"' in html
+
 
 class TestTypeSwitch:
     """Tests for GET /partials/option-fields/<idx> HTMX endpoint."""
@@ -286,3 +312,26 @@ class TestFormSubmission:
         )
         html = response.data.decode()
         assert "scrollIntoView" in html
+
+    def test_tax_toggle(self, client: FlaskClient):
+        """POST /compare with tax_enabled checkbox processes tax without errors."""
+        response = client.post(
+            "/compare",
+            data={
+                "purchase_price": "10000",
+                "options[0][type]": "cash",
+                "options[0][label]": "Cash",
+                "options[1][type]": "traditional_loan",
+                "options[1][label]": "Loan",
+                "options[1][apr]": "5",
+                "options[1][term_months]": "24",
+                "return_preset": "0.07",
+                "return_rate_custom": "",
+                "tax_enabled": "1",
+                "tax_rate": "22",
+                "inflation_rate": "3",
+            },
+        )
+        assert response.status_code == 200
+        html = response.data.decode()
+        assert "field-error" not in html
