@@ -56,6 +56,7 @@ Fathom is a Flask application that renders all pages server-side using Jinja2 te
 src/fathom/
   __init__.py      # Entry point
   app.py           # Flask app factory
+  config.py        # Application configuration (pydantic-settings)
   routes.py        # HTTP route handlers
   engine.py        # Calculation engine orchestrator
   models.py        # Domain models (FinancingOption, etc.)
