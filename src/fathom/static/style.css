@@ -1,5 +1,185 @@
 /* Fathom - Custom styles */
 
+/* === Theme Custom Properties === */
+
+:root {
+  --caveat-warning-bg: #fef3c7;
+  --caveat-warning-text: #92400e;
+  --caveat-warning-border: #f59e0b;
+  --caveat-critical-bg: #fee2e2;
+  --caveat-critical-text: #991b1b;
+  --caveat-critical-border: #ef4444;
+  --caveat-info-bg: #dbeafe;
+  --caveat-info-text: #1e40af;
+  --caveat-info-border: #3b82f6;
+  --winner-star-color: #f59e0b;
+  --winner-col-bg: rgba(59, 130, 246, 0.06);
+  --chart-grid: #e5e7eb;
+  --chart-label: #6b7280;
+  --chart-bar-label: #374151;
+  --chart-bg: #ffffff;
+  --chart-series-0: #2563eb;
+  --chart-series-1: #dc2626;
+  --chart-series-2: #059669;
+  --chart-series-3: #d97706;
+  --tip-border: var(--pico-muted-border-color);
+  --tip-color: var(--pico-muted-color);
+  --tip-bg: transparent;
+  --tooltip-bg: #ffffff;
+  --tooltip-border: var(--pico-muted-border-color);
+  --tooltip-text: var(--pico-color);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --caveat-warning-bg: #422006;
+    --caveat-warning-text: #fbbf24;
+    --caveat-warning-border: #f59e0b;
+    --caveat-critical-bg: #450a0a;
+    --caveat-critical-text: #fca5a5;
+    --caveat-critical-border: #f87171;
+    --caveat-info-bg: #1e3a5f;
+    --caveat-info-text: #93c5fd;
+    --caveat-info-border: #60a5fa;
+    --winner-star-color: #fbbf24;
+    --winner-col-bg: rgba(59, 130, 246, 0.15);
+    --chart-grid: #374151;
+    --chart-label: #9ca3af;
+    --chart-bar-label: #d1d5db;
+    --chart-bg: var(--pico-background-color);
+    --chart-series-0: #60a5fa;
+    --chart-series-1: #f87171;
+    --chart-series-2: #34d399;
+    --chart-series-3: #fbbf24;
+    --tooltip-bg: #1e293b;
+    --tooltip-border: #475569;
+    --tooltip-text: #e2e8f0;
+  }
+}
+
+/* === Tooltip & Tip Button Styles === */
+
+/* Tip trigger button */
+.tip {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 50%;
+  border: 1.5px solid var(--tip-border);
+  color: var(--tip-color);
+  background: var(--tip-bg);
+  cursor: pointer;
+  vertical-align: middle;
+  margin-left: 0.25rem;
+}
+
+.tip:focus-visible {
+  outline: 2px solid var(--pico-primary);
+  outline-offset: 2px;
+}
+
+/* Tooltip popover content */
+.tooltip-content {
+  max-width: 320px;
+  padding: 0.75rem 1rem;
+  border-radius: var(--pico-border-radius);
+  border: 1px solid var(--tooltip-border);
+  background: var(--tooltip-bg);
+  color: var(--tooltip-text);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Label + tip button layout */
+.label-with-tip {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+/* CSS Anchor Positioning for modern browsers */
+@supports (anchor-name: --tip) {
+  .tooltip-content {
+    position: absolute;
+    position-area: top center;
+    position-try-fallbacks: bottom center, right center, left center;
+    margin: 0;
+    inset: auto;
+  }
+}
+
+/* Fallback for browsers without anchor positioning */
+@supports not (anchor-name: --tip) {
+  .tooltip-content {
+    position: fixed;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    inset: auto;
+  }
+}
+
+/* === Tax Bracket Widget === */
+
+/* Details element for bracket reference */
+.tax-bracket-ref {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.tax-bracket-ref summary {
+  cursor: pointer;
+  color: var(--pico-primary);
+  font-weight: 500;
+}
+
+/* Bracket table */
+.bracket-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.bracket-table th,
+.bracket-table td {
+  padding: 0.35rem 0.5rem;
+  text-align: right;
+  border-bottom: 1px solid var(--pico-muted-border-color);
+  font-size: 0.85rem;
+}
+
+.bracket-table th:first-child,
+.bracket-table td:first-child {
+  text-align: left;
+}
+
+/* Bracket row click target */
+.bracket-row {
+  cursor: pointer;
+}
+
+.bracket-row:hover {
+  background: var(--pico-primary-focus);
+}
+
+.bracket-row:focus-visible {
+  outline: 2px solid var(--pico-primary);
+  outline-offset: -2px;
+}
+
+.bracket-row[aria-selected="true"] {
+  background: var(--pico-primary-focus);
+  font-weight: 600;
+}
+
 /* === Form Styling === */
 
 /* Field error styling */
@@ -85,7 +265,7 @@
 }
 
 .recommendation-card .winner-star {
-  color: #f59e0b;
+  color: var(--winner-star-color);
   font-size: 1.5rem;
 }
 
@@ -128,21 +308,21 @@
 }
 
 .caveat-warning {
-  border-left-color: #f59e0b;
-  background: #fef3c7;
-  color: #92400e;
+  border-left-color: var(--caveat-warning-border);
+  background: var(--caveat-warning-bg);
+  color: var(--caveat-warning-text);
 }
 
 .caveat-critical {
-  border-left-color: #ef4444;
-  background: #fee2e2;
-  color: #991b1b;
+  border-left-color: var(--caveat-critical-border);
+  background: var(--caveat-critical-bg);
+  color: var(--caveat-critical-text);
 }
 
 .caveat-info {
-  border-left-color: #3b82f6;
-  background: #dbeafe;
-  color: #1e40af;
+  border-left-color: var(--caveat-info-border);
+  background: var(--caveat-info-bg);
+  color: var(--caveat-info-text);
 }
 
 /* Cost breakdown table */
@@ -180,7 +360,7 @@
 
 .breakdown-table th.winner-col,
 .breakdown-table td.winner-col {
-  background: rgba(59, 130, 246, 0.06);
+  background: var(--winner-col-bg);
 }
 
 .breakdown-table .sub-header th {
@@ -199,7 +379,7 @@
 }
 
 .winner-highlight .winner-star {
-  color: #f59e0b;
+  color: var(--winner-star-color);
 }
 
 /* Other option caveats below table */
@@ -249,6 +429,120 @@
 
 .results-errors ul {
   margin-top: 0.5rem;
+}
+
+/* === Detailed Period Breakdown === */
+
+/* Tab styles (underline tabs, Pico-native feel) */
+.detail-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--pico-muted-border-color);
+  margin-bottom: 1rem;
+  overflow-x: auto;
+}
+
+.detail-tabs [role="tab"] {
+  all: unset;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  white-space: nowrap;
+  color: var(--pico-muted-color);
+  font-size: 0.95rem;
+}
+
+.detail-tabs [role="tab"][aria-selected="true"] {
+  color: var(--pico-primary);
+  border-bottom-color: var(--pico-primary);
+  font-weight: 600;
+}
+
+.detail-tabs [role="tab"]:hover {
+  color: var(--pico-primary);
+}
+
+.detail-tabs [role="tab"]:focus-visible {
+  outline: 2px solid var(--pico-primary);
+  outline-offset: -2px;
+}
+
+/* Sticky totals row */
+.detail-table tfoot tr {
+  position: sticky;
+  bottom: 0;
+  background: var(--pico-background-color);
+  font-weight: 700;
+  border-top: 2px solid var(--pico-color);
+  z-index: 1;
+}
+
+/* Column toggle checkbox row */
+.col-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin-bottom: 1rem;
+  padding: 0;
+  border: none;
+}
+
+.col-toggles label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Table scroll container */
+.detail-table-scroll {
+  max-height: 70vh;
+  overflow-y: auto;
+  overflow-x: auto;
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+}
+
+/* Detail table base styles */
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.detail-table th,
+.detail-table td {
+  padding: 0.35rem 0.5rem;
+  text-align: right;
+  border-bottom: 1px solid var(--pico-muted-border-color);
+  white-space: nowrap;
+  font-size: 0.875rem;
+}
+
+.detail-table th:first-child,
+.detail-table td:first-child {
+  text-align: left;
+}
+
+.detail-table .sub-header th {
+  font-weight: normal;
+  font-size: 0.8rem;
+  color: var(--pico-muted-color);
+}
+
+/* Detail section spacing */
+.detailed-breakdown-section {
+  margin-top: 2rem;
+}
+
+.detail-granularity {
+  margin-bottom: 1rem;
+}
+
+.detail-granularity label {
+  margin-right: 1rem;
 }
 
 /* === Mobile Responsive Adjustments === */

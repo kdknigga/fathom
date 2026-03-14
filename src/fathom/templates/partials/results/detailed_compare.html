@@ -1,0 +1,41 @@
+<div class="detail-table-scroll">
+  <table class="detail-table">
+    <caption>Side-by-Side Comparison -- Payment and Cumulative True Total Cost</caption>
+    <thead>
+      <tr>
+        <th scope="col" rowspan="2">Period</th>
+        {% for opt in options_data %}
+        <th scope="colgroup" colspan="2">{{ opt.name }}</th>
+        {% endfor %}
+      </tr>
+      <tr>
+        {% for opt in options_data %}
+        <th scope="col">Payment</th>
+        <th scope="col">Cumulative</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in compare_rows %}
+      <tr>
+        <td>{{ row.period }}</td>
+        {% for opt_col in row.options %}
+        <td>${{ "{:,.2f}".format(opt_col.payment) }}</td>
+        <td>${{ "{:,.2f}".format(opt_col.cumulative) }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      {% if compare_totals %}
+      <tr class="detail-totals">
+        <td><strong>Total</strong></td>
+        {% for tot in compare_totals %}
+        <td><strong>${{ "{:,.2f}".format(tot.payment) }}</strong></td>
+        <td><strong>${{ "{:,.2f}".format(tot.cumulative) }}</strong></td>
+        {% endfor %}
+      </tr>
+      {% endif %}
+    </tfoot>
+  </table>
+</div>

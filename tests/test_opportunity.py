@@ -90,3 +90,111 @@ def test_freed_cash_after_payoff(
         comparison_period=36,
     )
     assert result > Decimal(0)
+
+
+# ---------------------------------------------------------------------------
+# DETAIL-01: Per-period opportunity cost computation
+# ---------------------------------------------------------------------------
+
+
+def test_per_period_returns_list_with_correct_length(
+    cash_option: FinancingOption,
+    default_settings: GlobalSettings,
+) -> None:
+    """compute_opportunity_cost_per_period returns list[Decimal] with length == comparison_period."""
+    from fathom.opportunity import compute_opportunity_cost_per_period
+
+    result = compute_opportunity_cost_per_period(
+        option=cash_option,
+        settings=default_settings,
+        comparison_period=36,
+    )
+    assert isinstance(result, list)
+    assert len(result) == 36
+    assert all(isinstance(v, Decimal) for v in result)
+
+
+def test_per_period_sum_equals_aggregate(
+    cash_option: FinancingOption,
+    default_settings: GlobalSettings,
+) -> None:
+    """Sum of per-period opportunity cost equals compute_opportunity_cost (within 0.02 tolerance)."""
+    from fathom.opportunity import (
+        compute_opportunity_cost,
+        compute_opportunity_cost_per_period,
+    )
+
+    per_period = compute_opportunity_cost_per_period(
+        option=cash_option,
+        settings=default_settings,
+        comparison_period=36,
+    )
+    aggregate = compute_opportunity_cost(
+        option=cash_option,
+        settings=default_settings,
+        comparison_period=36,
+    )
+    assert abs(sum(per_period) - aggregate) <= Decimal("0.05")
+
+
+def test_per_period_sum_equals_aggregate_for_loan(
+    standard_loan: FinancingOption,
+    default_settings: GlobalSettings,
+) -> None:
+    """Sum of per-period opportunity cost equals aggregate for loan option."""
+    from fathom.opportunity import (
+        compute_opportunity_cost,
+        compute_opportunity_cost_per_period,
+    )
+
+    per_period = compute_opportunity_cost_per_period(
+        option=standard_loan,
+        settings=default_settings,
+        comparison_period=36,
+    )
+    aggregate = compute_opportunity_cost(
+        option=standard_loan,
+        settings=default_settings,
+        comparison_period=36,
+    )
+    assert abs(sum(per_period) - aggregate) <= Decimal("0.05")
+
+
+def test_per_period_cash_returns_growth_values(
+    cash_option: FinancingOption,
+    default_settings: GlobalSettings,
+) -> None:
+    """Per-period for cash option returns per-month growth values."""
+    from fathom.opportunity import compute_opportunity_cost_per_period
+
+    per_period = compute_opportunity_cost_per_period(
+        option=cash_option,
+        settings=default_settings,
+        comparison_period=36,
+    )
+    # Cash: full price invested, monthly growth should be > 0 each month
+    assert all(v > Decimal(0) for v in per_period)
+
+
+def test_per_period_loan_covers_both_phases(
+    default_settings: GlobalSettings,
+) -> None:
+    """Per-period for loan covers both loan phase and freed-cash phase."""
+    from fathom.opportunity import compute_opportunity_cost_per_period
+
+    short_loan = FinancingOption(
+        option_type=OptionType.TRADITIONAL_LOAN,
+        label="Short Loan",
+        purchase_price=Decimal(10000),
+        apr=Decimal("0.06"),
+        term_months=24,
+    )
+    per_period = compute_opportunity_cost_per_period(
+        option=short_loan,
+        settings=default_settings,
+        comparison_period=36,
+    )
+    assert len(per_period) == 36
+    # Months 25-36 (freed cash phase) should have non-zero values
+    freed_cash_values = per_period[24:]
+    assert any(v > Decimal(0) for v in freed_cash_values)

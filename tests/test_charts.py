@@ -66,7 +66,7 @@ class TestBarChart:
     def test_bar_chart_winner_is_first(self):
         """Verify cheapest option is first with is_winner=True."""
         display = _make_display_data(
-            [("Loan", 27500), ("Cash", 25000), ("Promo", 26000)]
+            [("Loan", 27500), ("Cash", 25000), ("Promo", 26000)],
         )
         result = prepare_bar_chart(display)
         assert result["bars"][0]["is_winner"] is True

@@ -7,12 +7,16 @@ and pydantic_errors_to_dict from the fathom.forms module.
 
 from decimal import Decimal
 
+import pytest
 from pydantic import ValidationError
 from werkzeug.datastructures import ImmutableMultiDict
 
+from fathom.formatting import comma_format
 from fathom.forms import (
     FormInput,
     OptionInput,
+    _to_money,
+    _try_decimal,
     build_domain_objects,
     extract_form_data,
     parse_form_data,
@@ -87,7 +91,7 @@ class TestParseFormData:
                 "options[2][label]": "Loan",
                 "options[2][apr]": "6",
                 "options[2][term_months]": "24",
-            }
+            },
         )
         result = parse_form_data(form)
         assert len(result.options) == 2
@@ -101,7 +105,7 @@ class TestParseFormData:
                 **_valid_cash_loan_form(),
                 "inflation_enabled": "1",
                 "tax_enabled": "1",
-            }
+            },
         )
         result = parse_form_data(form)
         assert result.settings.return_preset == "0.07"
@@ -131,7 +135,7 @@ class TestParseFormData:
                 "options[1][type]": "cash",
                 "options[1][label]": "Cash",
                 "return_preset": "0.07",
-            }
+            },
         )
         result = parse_form_data(form)
         opt = result.options[0]
@@ -153,7 +157,7 @@ class TestParseFormData:
                 "options[1][discounted_price]": "22000",
                 "options[1][apr]": "6",
                 "options[1][term_months]": "36",
-            }
+            },
         )
         result = parse_form_data(form)
         assert result.options[0].cash_back_amount == "500"
@@ -164,7 +168,7 @@ class TestParseFormData:
         form = _make_form({**_valid_cash_loan_form(), "purchase_price": ""})
         try:
             parse_form_data(form)
-            assert False, "Should have raised ValidationError"  # noqa: B011
+            pytest.fail("Should have raised ValidationError")
         except ValidationError:
             pass
 
@@ -268,7 +272,7 @@ class TestValidateFormData:
                 "options[1][type]": "cash",
                 "options[1][label]": "Cash",
                 "return_preset": "0.07",
-            }
+            },
         )
         assert "options.0.term_months" in errors
 
@@ -284,7 +288,7 @@ class TestValidateFormData:
                 "options[1][type]": "cash",
                 "options[1][label]": "Cash",
                 "return_preset": "0.07",
-            }
+            },
         )
         assert "options.0.cash_back_amount" in errors
 
@@ -300,7 +304,7 @@ class TestValidateFormData:
                 "options[1][type]": "cash",
                 "options[1][label]": "Cash",
                 "return_preset": "0.07",
-            }
+            },
         )
         assert "options.0.discounted_price" in errors
 
@@ -317,7 +321,7 @@ class TestValidateFormData:
                 "options[1][type]": "cash",
                 "options[1][label]": "Cash",
                 "return_preset": "0.07",
-            }
+            },
         )
         assert "options.0.discounted_price" in errors
 
@@ -440,7 +444,7 @@ class TestBuildDomainObjects:
                 "options[1][type]": "cash",
                 "options[1][label]": "Cash",
                 "return_preset": "0.07",
-            }
+            },
         )
         form_input = parse_form_data(form)
         options, _settings = build_domain_objects(form_input)
@@ -462,7 +466,7 @@ class TestBuildDomainObjects:
                 "options[1][type]": "cash",
                 "options[1][label]": "Cash",
                 "return_preset": "0.07",
-            }
+            },
         )
         form_input = parse_form_data(form)
         options, _settings = build_domain_objects(form_input)
@@ -479,7 +483,7 @@ class TestBuildDomainObjects:
                 "options[1][type]": "cash",
                 "options[1][label]": "Cash",
                 "return_preset": "0.07",
-            }
+            },
         )
         form_input = parse_form_data(form)
         options, _settings = build_domain_objects(form_input)
@@ -546,7 +550,7 @@ class TestOptionCountValidation:
                 ],
                 settings={"return_preset": "0.07"},
             )
-            assert False, "Should have raised ValidationError"  # noqa: B011
+            pytest.fail("Should have raised ValidationError")
         except ValidationError as exc:
             error_str = str(exc)
             assert "2 and 4" in error_str
@@ -563,7 +567,7 @@ class TestOptionCountValidation:
                 options=opts,
                 settings={"return_preset": "0.07"},
             )
-            assert False, "Should have raised ValidationError"  # noqa: B011
+            pytest.fail("Should have raised ValidationError")
         except ValidationError as exc:
             error_str = str(exc)
             assert "2 and 4" in error_str
@@ -597,3 +601,215 @@ class TestOptionCountValidation:
             settings={"return_preset": "0.07"},
         )
         assert len(form.options) == 4
+
+
+# --- Comma handling tests ---
+
+
+class TestCommaHandling:
+    """Tests for comma/dollar stripping in parsing and comma_format rendering."""
+
+    # _try_decimal with commas and dollar signs
+
+    def test_try_decimal_strips_commas(self):
+        """_try_decimal('25,000') returns Decimal('25000')."""
+        assert _try_decimal("25,000") == Decimal(25000)
+
+    def test_try_decimal_strips_dollar_and_commas(self):
+        """_try_decimal('$100,000.50') returns Decimal('100000.50')."""
+        assert _try_decimal("$100,000.50") == Decimal("100000.50")
+
+    def test_try_decimal_strips_multiple_commas(self):
+        """_try_decimal('1,000,000') returns Decimal('1000000')."""
+        assert _try_decimal("1,000,000") == Decimal(1000000)
+
+    def test_try_decimal_strips_dollar_and_spaces(self):
+        """_try_decimal('$ 25,000') returns Decimal('25000')."""
+        assert _try_decimal("$ 25,000") == Decimal(25000)
+
+    def test_try_decimal_empty_returns_none(self):
+        """_try_decimal('') returns None (existing behavior)."""
+        assert _try_decimal("") is None
+
+    def test_try_decimal_invalid_returns_none(self):
+        """_try_decimal('abc') returns None (existing behavior)."""
+        assert _try_decimal("abc") is None
+
+    # _to_money with commas and dollar signs
+
+    def test_to_money_strips_commas(self):
+        """_to_money('25,000') returns Decimal('25000')."""
+        assert _to_money("25,000") == Decimal(25000)
+
+    def test_to_money_strips_dollar_and_commas(self):
+        """_to_money('$50,000.99') returns Decimal('50000.99')."""
+        assert _to_money("$50,000.99") == Decimal("50000.99")
+
+    # comma_format function
+
+    def test_comma_format_integer(self):
+        """comma_format('25000') returns '25,000'."""
+        assert comma_format("25000") == "25,000"
+
+    def test_comma_format_decimal(self):
+        """comma_format('25000.50') returns '25,000.50'."""
+        assert comma_format("25000.50") == "25,000.50"
+
+    def test_comma_format_trailing_zero(self):
+        """comma_format('25000.10') returns '25,000.10' (trailing zero preserved)."""
+        assert comma_format("25000.10") == "25,000.10"
+
+    def test_comma_format_empty(self):
+        """comma_format('') returns ''."""
+        assert comma_format("") == ""
+
+    def test_comma_format_invalid(self):
+        """comma_format('abc') returns 'abc' (passthrough)."""
+        assert comma_format("abc") == "abc"
+
+    def test_comma_format_idempotent(self):
+        """comma_format('25,000') returns '25,000' (already formatted)."""
+        assert comma_format("25,000") == "25,000"
+
+    # FormInput validator returns cleaned string
+
+    def test_purchase_price_validator_cleans_commas(self):
+        """FormInput purchase_price validator strips commas for downstream Decimal()."""
+        form = FormInput(
+            purchase_price="25,000",
+            options=[
+                OptionInput(type=OptionType.CASH.value, purchase_price="25,000"),
+                OptionInput(
+                    type=OptionType.TRADITIONAL_LOAN.value,
+                    apr="5",
+                    term_months="36",
+                    purchase_price="25,000",
+                ),
+            ],
+            settings={"return_preset": "0.07"},
+        )
+        assert form.purchase_price == "25000"
+
+    # Full form submission round-trip with commas
+
+    def test_full_submission_with_commas(self):
+        """Submit form with comma values, verify correct ComparisonResult."""
+        form_data = _make_form(
+            {
+                "purchase_price": "25,000",
+                "options[0][type]": "cash",
+                "options[0][label]": "Pay in Full",
+                "options[1][type]": "traditional_loan",
+                "options[1][label]": "Bank Loan",
+                "options[1][apr]": "5.99",
+                "options[1][term_months]": "36",
+                "options[1][down_payment]": "5,000",
+                "return_preset": "0.07",
+                "return_rate_custom": "",
+                "inflation_rate": "3",
+                "tax_rate": "22",
+            },
+        )
+        form_input = parse_form_data(form_data)
+        options, _settings = build_domain_objects(form_input)
+        assert options[0].purchase_price == Decimal(25000)
+        assert options[1].down_payment == Decimal(5000)
+
+
+# --- Export dict tests ---
+
+
+class TestExportDict:
+    """Tests for form_data_to_export_dict function."""
+
+    def test_adds_version_field(self):
+        """Export dict includes version: 1."""
+        from fathom.forms import form_data_to_export_dict
+
+        parsed = {
+            "purchase_price": "25000",
+            "options": [
+                {"type": "cash", "label": "Cash", "deferred_interest": False},
+                {
+                    "type": "traditional_loan",
+                    "label": "Loan",
+                    "apr": "5.99",
+                    "term_months": "36",
+                    "deferred_interest": False,
+                    "retroactive_interest": False,
+                },
+            ],
+            "settings": {
+                "return_preset": "0.07",
+                "return_rate_custom": "",
+                "inflation_enabled": False,
+                "inflation_rate": "3",
+                "tax_enabled": False,
+                "tax_rate": "22",
+            },
+        }
+        result = form_data_to_export_dict(parsed)
+        assert result["version"] == 1
+
+    def test_includes_all_sections(self):
+        """Export dict includes purchase_price, options, and settings."""
+        from fathom.forms import form_data_to_export_dict
+
+        parsed = {
+            "purchase_price": "10000",
+            "options": [
+                {"type": "cash", "label": "Pay in Full", "deferred_interest": False},
+                {
+                    "type": "traditional_loan",
+                    "label": "Loan",
+                    "apr": "6",
+                    "term_months": "24",
+                    "deferred_interest": False,
+                    "retroactive_interest": False,
+                },
+            ],
+            "settings": {
+                "return_preset": "0.07",
+                "return_rate_custom": "",
+                "inflation_enabled": True,
+                "inflation_rate": "3",
+                "tax_enabled": False,
+                "tax_rate": "22",
+            },
+        }
+        result = form_data_to_export_dict(parsed)
+        assert result["purchase_price"] == "10000"
+        assert len(result["options"]) == 2
+        assert result["settings"]["inflation_enabled"] is True
+
+    def test_booleans_are_native(self):
+        """Export dict preserves native Python booleans, not strings."""
+        from fathom.forms import form_data_to_export_dict
+
+        parsed = {
+            "purchase_price": "10000",
+            "options": [
+                {"type": "cash", "label": "Cash", "deferred_interest": False},
+                {
+                    "type": "traditional_loan",
+                    "label": "Loan",
+                    "apr": "5",
+                    "term_months": "12",
+                    "deferred_interest": True,
+                    "retroactive_interest": False,
+                },
+            ],
+            "settings": {
+                "return_preset": "0.07",
+                "return_rate_custom": "",
+                "inflation_enabled": False,
+                "inflation_rate": "3",
+                "tax_enabled": True,
+                "tax_rate": "22",
+            },
+        }
+        result = form_data_to_export_dict(parsed)
+        assert isinstance(result["settings"]["tax_enabled"], bool)
+        assert result["settings"]["tax_enabled"] is True
+        assert isinstance(result["options"][1]["deferred_interest"], bool)
+        assert result["options"][1]["deferred_interest"] is True

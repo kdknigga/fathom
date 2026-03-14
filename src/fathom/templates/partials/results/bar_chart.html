@@ -12,15 +12,15 @@
         <rect width="10" height="10" fill="currentColor"/>
       </pattern>
       <pattern id="bar-pattern-hatched" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-        <rect width="10" height="10" fill="white"/>
+        <rect width="10" height="10" fill="var(--chart-bg, white)"/>
         <line x1="0" y1="0" x2="0" y2="10" stroke="currentColor" stroke-width="3"/>
       </pattern>
       <pattern id="bar-pattern-dotted" width="10" height="10" patternUnits="userSpaceOnUse">
-        <rect width="10" height="10" fill="white"/>
+        <rect width="10" height="10" fill="var(--chart-bg, white)"/>
         <circle cx="5" cy="5" r="2.5" fill="currentColor"/>
       </pattern>
       <pattern id="bar-pattern-crosshatch" width="10" height="10" patternUnits="userSpaceOnUse">
-        <rect width="10" height="10" fill="white"/>
+        <rect width="10" height="10" fill="var(--chart-bg, white)"/>
         <path d="M0,0 L10,10 M10,0 L0,10" stroke="currentColor" stroke-width="1.5"/>
       </pattern>
     </defs>
@@ -28,15 +28,15 @@
     {# Y-axis baseline #}
     <line x1="{{ charts.bar.bars[0].x - 10 if charts.bar.bars else 50 }}" y1="{{ charts.bar.axis_y }}"
           x2="{{ charts.bar.width - 30 }}" y2="{{ charts.bar.axis_y }}"
-          stroke="#e5e7eb" stroke-width="1"/>
+          stroke="var(--chart-grid)" stroke-width="1"/>
 
     {% for bar in charts.bar.bars %}
     {# Bar rectangle with pattern fill #}
-    <g style="color: {{ bar.color }}">
+    <g style="color: var(--chart-series-{{ loop.index0 }})">
       <rect x="{{ bar.x }}" y="{{ bar.y }}"
             width="{{ bar.width }}" height="{{ bar.height }}"
             fill="url(#{{ bar.pattern_id }})"
-            stroke="{{ bar.color }}" stroke-width="2"
+            stroke="var(--chart-series-{{ loop.index0 }})" stroke-width="2"
             {% if bar.is_winner %}class="winner-bar"{% endif %}
             role="presentation"/>
     </g>
@@ -44,12 +44,12 @@
     {# Value label above bar #}
     <text x="{{ bar.value_x }}" y="{{ bar.value_y }}"
           text-anchor="middle" font-size="13" font-weight="bold"
-          fill="{{ bar.color }}">${{ bar.value }}</text>
+          fill="var(--chart-series-{{ loop.index0 }})">${{ bar.value }}</text>
 
     {# Option name below bar #}
     <text x="{{ bar.label_x }}" y="{{ bar.label_y }}"
           text-anchor="middle" font-size="12"
-          fill="#374151">{{ bar.label }}{% if bar.is_winner %} &#9733;{% endif %}</text>
+          fill="var(--chart-bar-label)">{{ bar.label }}{% if bar.is_winner %} &#9733;{% endif %}</text>
     {% endfor %}
   </svg>
 

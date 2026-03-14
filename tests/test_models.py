@@ -89,3 +89,43 @@ def test_global_settings_allows_mutation() -> None:
     settings = GlobalSettings(return_rate=Decimal("0.07"))
     settings.inflation_enabled = True
     assert settings.inflation_enabled
+
+
+# ---------------------------------------------------------------------------
+# DETAIL-01: MonthlyDataPoint per-period cost factor fields
+# ---------------------------------------------------------------------------
+
+
+def test_monthly_data_point_accepts_new_cost_factor_fields() -> None:
+    """MonthlyDataPoint accepts opportunity_cost, inflation_adjustment, tax_savings."""
+    dp = MonthlyDataPoint(
+        month=1,
+        payment=Decimal("500.00"),
+        interest_portion=Decimal("50.00"),
+        principal_portion=Decimal("450.00"),
+        remaining_balance=Decimal("9550.00"),
+        investment_balance=Decimal(0),
+        cumulative_cost=Decimal("500.00"),
+        opportunity_cost=Decimal("12.50"),
+        inflation_adjustment=Decimal("1.25"),
+        tax_savings=Decimal("11.00"),
+    )
+    assert dp.opportunity_cost == Decimal("12.50")
+    assert dp.inflation_adjustment == Decimal("1.25")
+    assert dp.tax_savings == Decimal("11.00")
+
+
+def test_monthly_data_point_defaults_new_fields_to_zero() -> None:
+    """MonthlyDataPoint defaults new fields to Decimal(0) for backward compat."""
+    dp = MonthlyDataPoint(
+        month=1,
+        payment=Decimal("500.00"),
+        interest_portion=Decimal("50.00"),
+        principal_portion=Decimal("450.00"),
+        remaining_balance=Decimal("9550.00"),
+        investment_balance=Decimal(0),
+        cumulative_cost=Decimal("500.00"),
+    )
+    assert dp.opportunity_cost == Decimal(0)
+    assert dp.inflation_adjustment == Decimal(0)
+    assert dp.tax_savings == Decimal(0)

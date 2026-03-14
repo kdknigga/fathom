@@ -7,8 +7,15 @@
 
   <div class="recommendation-body">
     <p class="winner-cost">
-      True Total Cost: <strong>${{ "{:,.2f}".format(display.winner_cost) }}</strong>
+      <span class="label-with-tip">
+        True Total Cost:
+        <button type="button" class="tip" popovertarget="tip-rec-true-total-cost" aria-label="What is True Total Cost?">?</button>
+      </span>
+      <strong>${{ "{:,.2f}".format(display.winner_cost) }}</strong>
     </p>
+    <div id="tip-rec-true-total-cost" popover class="tooltip-content">
+      <p>True Total Cost is the bottom line -- the total amount this option really costs you after accounting for interest, opportunity cost of your money, inflation's effect on future payments, and any tax savings. Lower is better.</p>
+    </div>
 
     {% if display.runner_up_name %}
     <p class="savings">

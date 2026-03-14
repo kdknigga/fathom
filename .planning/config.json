@@ -1,5 +1,8 @@
 {
   "commit_docs": true,
+  "git": {
+    "branching_strategy": "milestone"
+  },
   "granularity": "coarse",
   "mode": "yolo",
   "model_profile": "quality",

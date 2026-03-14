@@ -6,6 +6,9 @@ endpoints for type switching, add/remove options, and form submission
 with validation and result display.
 """
 
+import io
+import json
+
 from flask import Flask
 from flask.testing import FlaskClient
 
@@ -70,7 +73,7 @@ class TestTypeSwitch:
     def test_traditional_returns_apr_field(self, client: FlaskClient):
         """Type switch to traditional_loan returns APR field."""
         response = client.get(
-            "/partials/option-fields/0?options[0][type]=traditional_loan"
+            "/partials/option-fields/0?options[0][type]=traditional_loan",
         )
         assert response.status_code == 200
         html = response.data.decode()
@@ -86,7 +89,7 @@ class TestTypeSwitch:
     def test_promo_zero_returns_term_field(self, client: FlaskClient):
         """Type switch to promo_zero_percent returns term field."""
         response = client.get(
-            "/partials/option-fields/0?options[0][type]=promo_zero_percent"
+            "/partials/option-fields/0?options[0][type]=promo_zero_percent",
         )
         assert response.status_code == 200
         html = response.data.decode()
@@ -357,3 +360,339 @@ class TestFormSubmission:
         assert response.status_code == 200
         html = response.data.decode()
         assert "field-error" not in html
+
+
+class TestCommaFormattedRendering:
+    """Tests for comma-formatted values in server-rendered HTML."""
+
+    def test_purchase_price_comma_formatted(self, client: FlaskClient):
+        """Submit with purchase_price=25000, response shows value='25,000'."""
+        response = client.post(
+            "/compare",
+            data={
+                "purchase_price": "25000",
+                "options[0][type]": "cash",
+                "options[0][label]": "Cash",
+                "options[1][type]": "traditional_loan",
+                "options[1][label]": "Loan",
+                "options[1][apr]": "5.99",
+                "options[1][term_months]": "36",
+                "options[1][down_payment]": "5000",
+                "return_preset": "0.07",
+                "return_rate_custom": "",
+                "inflation_rate": "3",
+                "tax_rate": "22",
+            },
+        )
+        assert response.status_code == 200
+        html = response.data.decode()
+        assert 'value="25,000"' in html
+
+    def test_down_payment_comma_formatted(self, client: FlaskClient):
+        """Submit with down_payment=5000, response shows value='5,000'."""
+        response = client.post(
+            "/compare",
+            data={
+                "purchase_price": "25000",
+                "options[0][type]": "cash",
+                "options[0][label]": "Cash",
+                "options[1][type]": "traditional_loan",
+                "options[1][label]": "Loan",
+                "options[1][apr]": "5.99",
+                "options[1][term_months]": "36",
+                "options[1][down_payment]": "5000",
+                "return_preset": "0.07",
+                "return_rate_custom": "",
+                "inflation_rate": "3",
+                "tax_rate": "22",
+            },
+        )
+        assert response.status_code == 200
+        html = response.data.decode()
+        assert 'value="5,000"' in html
+
+    def test_comma_input_accepted_and_reformatted(self, client: FlaskClient):
+        """Submit with comma values, verify correct parsing and reformatted output."""
+        response = client.post(
+            "/compare",
+            data={
+                "purchase_price": "100,000",
+                "options[0][type]": "cash",
+                "options[0][label]": "Cash",
+                "options[1][type]": "traditional_loan",
+                "options[1][label]": "Loan",
+                "options[1][apr]": "5.99",
+                "options[1][term_months]": "36",
+                "options[1][down_payment]": "10,000",
+                "return_preset": "0.07",
+                "return_rate_custom": "",
+                "inflation_rate": "3",
+                "tax_rate": "22",
+            },
+        )
+        assert response.status_code == 200
+        html = response.data.decode()
+        assert "field-error" not in html
+        assert 'value="100,000"' in html
+
+
+def _valid_form_data() -> dict[str, str]:
+    """Return a minimal valid form with cash + traditional loan options."""
+    return {
+        "purchase_price": "25000",
+        "options[0][type]": "cash",
+        "options[0][label]": "Pay in Full",
+        "options[1][type]": "traditional_loan",
+        "options[1][label]": "Bank Loan",
+        "options[1][apr]": "5.99",
+        "options[1][term_months]": "36",
+        "options[1][down_payment]": "5000",
+        "return_preset": "0.07",
+        "return_rate_custom": "",
+        "inflation_rate": "3",
+        "tax_rate": "22",
+    }
+
+
+class TestExport:
+    """Tests for POST /export route."""
+
+    def test_returns_200(self, client: FlaskClient):
+        """POST /export with valid form data returns 200."""
+        response = client.post("/export", data=_valid_form_data())
+        assert response.status_code == 200
+
+    def test_content_disposition(self, client: FlaskClient):
+        """POST /export returns Content-Disposition attachment header."""
+        response = client.post("/export", data=_valid_form_data())
+        cd = response.headers.get("Content-Disposition", "")
+        assert "attachment" in cd
+
+    def test_filename_pattern(self, client: FlaskClient):
+        """POST /export filename matches fathom-YYYY-MM-DD.json."""
+        response = client.post("/export", data=_valid_form_data())
+        cd = response.headers.get("Content-Disposition", "")
+        # Expect filename like fathom-2026-03-13.json
+        assert "fathom-" in cd
+        assert ".json" in cd
+
+    def test_content_type_json(self, client: FlaskClient):
+        """POST /export returns application/json content type."""
+        response = client.post("/export", data=_valid_form_data())
+        assert "application/json" in response.content_type
+
+    def test_json_has_version(self, client: FlaskClient):
+        """POST /export JSON body includes version field."""
+        response = client.post("/export", data=_valid_form_data())
+        data = json.loads(response.data)
+        assert "version" in data
+        assert data["version"] == 1
+
+    def test_json_structure(self, client: FlaskClient):
+        """POST /export JSON body has purchase_price, options, settings."""
+        response = client.post("/export", data=_valid_form_data())
+        data = json.loads(response.data)
+        assert data["purchase_price"] == "25000"
+        assert len(data["options"]) == 2
+        assert "settings" in data
+
+
+class TestImport:
+    """Tests for POST /import with valid JSON."""
+
+    def test_import_repopulates_form(self, client: FlaskClient):
+        """POST /import with valid JSON repopulates form with imported values."""
+        export_data = {
+            "version": 1,
+            "purchase_price": "25000",
+            "options": [
+                {"type": "cash", "label": "Pay in Full"},
+                {
+                    "type": "traditional_loan",
+                    "label": "Bank Loan",
+                    "apr": "5.99",
+                    "term_months": "36",
+                    "down_payment": "5000",
+                    "deferred_interest": False,
+                    "retroactive_interest": False,
+                    "post_promo_apr": "",
+                    "cash_back_amount": "",
+                    "discounted_price": "",
+                    "custom_label": "",
+                },
+            ],
+            "settings": {
+                "return_preset": "0.07",
+                "return_rate_custom": "",
+                "inflation_enabled": False,
+                "inflation_rate": "3",
+                "tax_enabled": False,
+                "tax_rate": "22",
+            },
+        }
+        json_bytes = json.dumps(export_data).encode()
+        response = client.post(
+            "/import",
+            data={"import_file": (io.BytesIO(json_bytes), "fathom-2026-03-13.json")},
+            content_type="multipart/form-data",
+        )
+        assert response.status_code == 200
+        html = response.data.decode()
+        assert "Bank Loan" in html
+        assert "5.99" in html
+
+
+class TestImportErrors:
+    """Tests for POST /import error handling."""
+
+    def test_no_file_shows_error(self, client: FlaskClient):
+        """POST /import with no file returns error message."""
+        response = client.post(
+            "/import",
+            data={},
+            content_type="multipart/form-data",
+        )
+        assert response.status_code == 200
+        html = response.data.decode()
+        assert "field-error" in html or "import" in html.lower()
+
+    def test_malformed_json_shows_error(self, client: FlaskClient):
+        """POST /import with malformed JSON returns structural error."""
+        response = client.post(
+            "/import",
+            data={
+                "import_file": (
+                    io.BytesIO(b"not valid json{{{"),
+                    "bad.json",
+                ),
+            },
+            content_type="multipart/form-data",
+        )
+        assert response.status_code == 200
+        html = response.data.decode()
+        assert "not a valid Fathom export" in html or "field-error" in html
+
+    def test_invalid_field_values_show_errors(self, client: FlaskClient):
+        """POST /import with invalid field values shows inline field errors."""
+        bad_data = {
+            "version": 1,
+            "purchase_price": "-100",
+            "options": [
+                {"type": "cash", "label": "Cash"},
+                {
+                    "type": "traditional_loan",
+                    "label": "Loan",
+                    "apr": "5",
+                    "term_months": "36",
+                    "deferred_interest": False,
+                    "retroactive_interest": False,
+                    "post_promo_apr": "",
+                    "cash_back_amount": "",
+                    "discounted_price": "",
+                    "custom_label": "",
+                    "down_payment": "",
+                },
+            ],
+            "settings": {
+                "return_preset": "0.07",
+                "return_rate_custom": "",
+                "inflation_enabled": False,
+                "inflation_rate": "3",
+                "tax_enabled": False,
+                "tax_rate": "22",
+            },
+        }
+        json_bytes = json.dumps(bad_data).encode()
+        response = client.post(
+            "/import",
+            data={"import_file": (io.BytesIO(json_bytes), "bad-data.json")},
+            content_type="multipart/form-data",
+        )
+        assert response.status_code == 200
+        html = response.data.decode()
+        assert "field-error" in html
+
+
+class TestDetailTab:
+    """Tests for POST /partials/detail/<idx> HTMX endpoint."""
+
+    def test_detail_tab_returns_200(self, client: FlaskClient):
+        """POST /partials/detail/0 with valid form data returns 200."""
+        response = client.post("/partials/detail/0", data=_valid_form_data())
+        assert response.status_code == 200
+
+    def test_detail_tab_contains_table(self, client: FlaskClient):
+        """POST /partials/detail/0 returns HTML with detail-table."""
+        response = client.post("/partials/detail/0", data=_valid_form_data())
+        html = response.data.decode()
+        assert "detail-table" in html
+
+    def test_detail_tab_annual(self, client: FlaskClient):
+        """POST /partials/detail/0?granularity=annual returns annual data."""
+        response = client.post(
+            "/partials/detail/0?granularity=annual",
+            data=_valid_form_data(),
+        )
+        assert response.status_code == 200
+        html = response.data.decode()
+        assert "Year" in html
+
+    def test_detail_tab_invalid_index(self, client: FlaskClient):
+        """POST /partials/detail/99 returns error message."""
+        response = client.post("/partials/detail/99", data=_valid_form_data())
+        assert response.status_code == 200
+        html = response.data.decode()
+        assert "not found" in html.lower() or "Option" in html
+
+
+class TestDetailCompare:
+    """Tests for POST /partials/detail/compare HTMX endpoint."""
+
+    def test_compare_returns_200(self, client: FlaskClient):
+        """POST /partials/detail/compare with valid form data returns 200."""
+        response = client.post("/partials/detail/compare", data=_valid_form_data())
+        assert response.status_code == 200
+
+    def test_compare_contains_table(self, client: FlaskClient):
+        """POST /partials/detail/compare returns HTML with detail-table."""
+        response = client.post("/partials/detail/compare", data=_valid_form_data())
+        html = response.data.decode()
+        assert "detail-table" in html
+
+    def test_compare_shows_option_names(self, client: FlaskClient):
+        """POST /partials/detail/compare shows option names in header."""
+        response = client.post("/partials/detail/compare", data=_valid_form_data())
+        html = response.data.decode()
+        assert "Pay in Full" in html
+        assert "Bank Loan" in html
+
+
+class TestImportRoundTrip:
+    """Tests for export-then-import round-trip fidelity."""
+
+    def test_round_trip_preserves_values(self, client: FlaskClient):
+        """Export then import produces form with identical values."""
+        # Step 1: Export
+        form_data = _valid_form_data()
+        export_resp = client.post("/export", data=form_data)
+        assert export_resp.status_code == 200
+        exported_json = export_resp.data
+
+        # Step 2: Import the exported JSON
+        import_resp = client.post(
+            "/import",
+            data={
+                "import_file": (
+                    io.BytesIO(exported_json),
+                    "fathom-roundtrip.json",
+                ),
+            },
+            content_type="multipart/form-data",
+        )
+        assert import_resp.status_code == 200
+        html = import_resp.data.decode()
+
+        # Verify key values are present in the re-rendered form
+        assert "Pay in Full" in html
+        assert "Bank Loan" in html
+        assert "5.99" in html

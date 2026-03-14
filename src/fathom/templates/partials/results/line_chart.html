@@ -10,26 +10,26 @@
     {# Grid lines - horizontal (Y-axis) #}
     {% for label in charts.line.y_labels %}
     <line x1="60" y1="{{ label.y }}" x2="{{ charts.line.width - 30 }}" y2="{{ label.y }}"
-          stroke="#e5e7eb" stroke-width="0.5"/>
-    <text x="55" y="{{ label.y + 4 }}" text-anchor="end" font-size="11" fill="#6b7280">${{ label.value }}</text>
+          stroke="var(--chart-grid)" stroke-width="0.5"/>
+    <text x="55" y="{{ label.y + 4 }}" text-anchor="end" font-size="11" fill="var(--chart-label)">${{ label.value }}</text>
     {% endfor %}
 
     {# Grid lines - vertical (X-axis at year boundaries) #}
     {% for label in charts.line.x_labels %}
     <line x1="{{ label.x }}" y1="60" x2="{{ label.x }}" y2="{{ charts.line.height - 60 }}"
-          stroke="#e5e7eb" stroke-width="0.5"/>
-    <text x="{{ label.x }}" y="{{ charts.line.height - 40 }}" text-anchor="middle" font-size="11" fill="#6b7280">{{ label.label }}</text>
+          stroke="var(--chart-grid)" stroke-width="0.5"/>
+    <text x="{{ label.x }}" y="{{ charts.line.height - 40 }}" text-anchor="middle" font-size="11" fill="var(--chart-label)">{{ label.label }}</text>
     {% endfor %}
 
     {# Cost lines for each option #}
     {% for line in charts.line.lines %}
     <path d="{{ line.path_d }}"
-          fill="none" stroke="{{ line.color }}" stroke-width="2.5"
+          fill="none" stroke="var(--chart-series-{{ loop.index0 }})" stroke-width="2.5"
           stroke-dasharray="{{ line.dash_pattern }}" stroke-linecap="round"/>
 
     {# Endpoint label #}
     <text x="{{ line.end_x + 5 }}" y="{{ line.end_y }}"
-          font-size="11" font-weight="bold" fill="{{ line.color }}">{{ line.name }}: ${{ line.end_value }}</text>
+          font-size="11" font-weight="bold" fill="var(--chart-series-{{ loop.index0 }})">{{ line.name }}: ${{ line.end_value }}</text>
     {% endfor %}
   </svg>
 

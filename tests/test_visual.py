@@ -55,9 +55,10 @@ class TestIndexPageStructure:
         assert 'id="results"' in html
 
     def test_purchase_price_label_not_duplicated(self, client: FlaskClient):
-        """Purchase price label appears inside header, not separately."""
+        """Purchase price label appears inside header with tooltip."""
         html = client.get("/").data.decode()
-        assert '<header><label for="purchase-price">' in html
+        assert '<label for="purchase-price">' in html
+        assert "<header>" in html
 
 
 class TestResultsPageStructure:

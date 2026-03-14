@@ -50,8 +50,7 @@ def _compute_pool_series(
     for _month in range(months):
         pool = pool * (1 + monthly_rate)
         pool = pool - monthly_deduction
-        if pool < Decimal(0):
-            pool = Decimal(0)
+        pool = max(pool, Decimal(0))
         balances.append(quantize_money(pool))
 
     return balances
@@ -138,8 +137,7 @@ def compute_opportunity_cost(
         growth = pool * monthly_rate
         total_returns += growth
         pool = pool + growth - monthly_deduction
-        if pool < Decimal(0):
-            pool = Decimal(0)
+        pool = max(pool, Decimal(0))
 
     # Phase 2: freed-cash investment after loan ends
     remaining_months = comparison_period - loan_months
@@ -152,6 +150,69 @@ def compute_opportunity_cost(
             freed_pool = freed_pool + growth
 
     return quantize_money(total_returns)
+
+
+def compute_opportunity_cost_per_period(
+    option: FinancingOption,
+    settings: GlobalSettings,
+    comparison_period: int,
+) -> list[Decimal]:
+    """
+    Compute per-period opportunity cost (investment growth) for a financing option.
+
+    Same logic as compute_opportunity_cost() but returns per-month growth values
+    instead of summing them. The sum of the returned list equals the aggregate
+    opportunity cost (within rounding tolerance).
+
+    Args:
+        option: The financing option to analyze.
+        settings: Global settings including investment return rate.
+        comparison_period: Total comparison period in months.
+
+    Returns:
+        A list of per-month opportunity cost values (length = comparison_period).
+
+    """
+    if option.option_type == OptionType.CASH:
+        initial_pool = option.purchase_price
+        monthly_deduction = Decimal(0)
+        term = comparison_period
+    else:
+        apr = option.apr if option.apr is not None else Decimal(0)
+        term = (
+            option.term_months if option.term_months is not None else comparison_period
+        )
+        down = option.down_payment if option.down_payment is not None else Decimal(0)
+        initial_pool = option.purchase_price - down
+        monthly_deduction = monthly_payment(initial_pool, apr, term)
+
+    monthly_rate = settings.return_rate / 12
+    pool = initial_pool
+    per_period: list[Decimal] = []
+    loan_months = min(term, comparison_period)
+
+    # Phase 1: pool decreasing during loan payments
+    for _month in range(loan_months):
+        growth = pool * monthly_rate
+        per_period.append(quantize_money(growth))
+        pool = pool + growth - monthly_deduction
+        pool = max(pool, Decimal(0))
+
+    # Phase 2: freed-cash investment after loan ends
+    remaining_months = comparison_period - loan_months
+    if remaining_months > 0 and option.option_type != OptionType.CASH:
+        freed_pool = Decimal(0)
+        for _month in range(remaining_months):
+            freed_pool = freed_pool + monthly_deduction
+            growth = freed_pool * monthly_rate
+            per_period.append(quantize_money(growth))
+            freed_pool = freed_pool + growth
+
+    # Pad to comparison_period length if needed
+    while len(per_period) < comparison_period:
+        per_period.append(Decimal(0))
+
+    return per_period
 
 
 def compute_opportunity_cost_series(

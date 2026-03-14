@@ -35,7 +35,19 @@
     <tbody>
       {% for row in display.breakdown_rows %}
       <tr class="{% if row.label == 'True Total Cost' %}true-total-cost{% endif %}">
-        <td class="row-label">{{ row.label }}</td>
+        <td class="row-label">
+          {% if row.tooltip %}
+          <div class="label-with-tip">
+            {{ row.label }}
+            <button type="button" class="tip" popovertarget="tip-metric-{{ loop.index0 }}" aria-label="What is {{ row.label }}?">?</button>
+          </div>
+          <div id="tip-metric-{{ loop.index0 }}" popover class="tooltip-content">
+            <p>{{ row.tooltip }}</p>
+          </div>
+          {% else %}
+          {{ row.label }}
+          {% endif %}
+        </td>
         {% for val in row["values"] %}
           {% if val.is_promo %}
         <td class="{% if display.options_data[loop.index0].is_winner %}winner-col{% endif %}{% if row.label == 'True Total Cost' and display.options_data[loop.index0].is_winner %} winner-highlight{% endif %}">

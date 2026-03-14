@@ -1,4 +1,10 @@
-<label for="option-{{ opt.idx }}-term-months">Promotional Term (months)</label>
+<div class="label-with-tip">
+  <label for="option-{{ opt.idx }}-term-months">Promotional Term (months)</label>
+  <button type="button" class="tip" popovertarget="tip-promo-term-{{ opt.idx }}" aria-label="What is Promotional Term?">?</button>
+</div>
+<div id="tip-promo-term-{{ opt.idx }}" popover class="tooltip-content">
+  <p>The number of months with 0% interest. You pay no interest during this period, but if you don't pay the balance in full before it ends, different rules may apply depending on whether interest is deferred.</p>
+</div>
 <input
   type="number"
   id="option-{{ opt.idx }}-term-months"
@@ -11,16 +17,23 @@
 <small class="field-error">{{ errors['options.' ~ opt.idx|string ~ '.term_months'] }}</small>
 {% endif %}
 
-<label for="option-{{ opt.idx }}-down-payment">Down Payment</label>
+<div class="label-with-tip">
+  <label for="option-{{ opt.idx }}-down-payment">Down Payment</label>
+  <button type="button" class="tip" popovertarget="tip-down-{{ opt.idx }}" aria-label="What is Down Payment?">?</button>
+</div>
+<div id="tip-down-{{ opt.idx }}" popover class="tooltip-content">
+  <p>Cash paid upfront at the time of purchase, reducing the amount you need to finance. A $2,000 down payment on a $10,000 purchase means you only finance $8,000.</p>
+</div>
 <fieldset role="group">
   <span class="prefix">$</span>
   <input
     type="text"
     inputmode="decimal"
+    data-monetary
     id="option-{{ opt.idx }}-down-payment"
     name="options[{{ opt.idx }}][down_payment]"
-    value="{{ opt.fields.down_payment|default('') }}"
-    placeholder="e.g., 5000"
+    value="{{ opt.fields.down_payment|default('')|comma }}"
+    placeholder="e.g., 5,000"
     {% if errors.get('options.' ~ opt.idx|string ~ '.down_payment') %}aria-invalid="true"{% endif %}
   >
 </fieldset>
@@ -28,16 +41,22 @@
 <small class="field-error">{{ errors['options.' ~ opt.idx|string ~ '.down_payment'] }}</small>
 {% endif %}
 
-<label for="option-{{ opt.idx }}-deferred-interest">
-  <input
-    type="checkbox"
-    id="option-{{ opt.idx }}-deferred-interest"
-    name="options[{{ opt.idx }}][deferred_interest]"
-    value="1"
-    {% if opt.fields.deferred_interest %}checked{% endif %}
-  >
-  Interest charges apply retroactively if not paid in full
-</label>
+<div class="label-with-tip">
+  <label for="option-{{ opt.idx }}-deferred-interest">
+    <input
+      type="checkbox"
+      id="option-{{ opt.idx }}-deferred-interest"
+      name="options[{{ opt.idx }}][deferred_interest]"
+      value="1"
+      {% if opt.fields.deferred_interest %}checked{% endif %}
+    >
+    Interest charges apply retroactively if not paid in full
+  </label>
+  <button type="button" class="tip" popovertarget="tip-deferred-{{ opt.idx }}" aria-label="What is Deferred Interest?">?</button>
+</div>
+<div id="tip-deferred-{{ opt.idx }}" popover class="tooltip-content">
+  <p>If checked, interest accrues silently from the purchase date at the Post-Promo APR. If you pay in full before the promo ends, you owe nothing extra. If any balance remains, you owe ALL the accrued interest at once -- this can be a costly surprise.</p>
+</div>
 
 {% if opt.fields.deferred_interest %}
 <label for="option-{{ opt.idx }}-retroactive-interest">
@@ -53,7 +72,13 @@
 <small>If not paid in full during the promotional period, interest accrues from the original purchase date</small>
 {% endif %}
 
-<label for="option-{{ opt.idx }}-post-promo-apr">Post-Promotional APR</label>
+<div class="label-with-tip">
+  <label for="option-{{ opt.idx }}-post-promo-apr">Post-Promotional APR</label>
+  <button type="button" class="tip" popovertarget="tip-post-apr-{{ opt.idx }}" aria-label="What is Post-Promotional APR?">?</button>
+</div>
+<div id="tip-post-apr-{{ opt.idx }}" popover class="tooltip-content">
+  <p>The interest rate that applies after the promotional period ends. If deferred interest is enabled and you have a remaining balance, this rate was also accruing from day one.</p>
+</div>
 <fieldset role="group">
   <input
     type="text"

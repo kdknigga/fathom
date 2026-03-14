@@ -1,0 +1,143 @@
+<div class="detail-table-scroll">
+  <table class="detail-table">
+    <caption>{{ detail.name }} -- Detailed Period Breakdown</caption>
+    <thead>
+      {% if detail.is_promo %}
+      <tr>
+        <th scope="col">Period</th>
+        <th scope="colgroup" colspan="2" class="col-payment">Payment</th>
+        <th scope="colgroup" colspan="2" class="col-interest">Interest</th>
+        <th scope="colgroup" colspan="2" class="col-principal">Principal</th>
+        <th scope="colgroup" colspan="2" class="col-opportunity">Opp. Cost</th>
+        {% if global_settings and global_settings.inflation_enabled %}
+        <th scope="colgroup" colspan="2" class="col-inflation">Inflation Adj.</th>
+        {% endif %}
+        {% if global_settings and global_settings.tax_enabled %}
+        <th scope="colgroup" colspan="2" class="col-tax">Tax Savings</th>
+        {% endif %}
+        <th scope="colgroup" colspan="2">Cumulative True Total Cost</th>
+      </tr>
+      <tr class="sub-header">
+        <th></th>
+        <th class="col-payment">Paid on Time</th>
+        <th class="col-payment">Not Paid on Time</th>
+        <th class="col-interest">Paid on Time</th>
+        <th class="col-interest">Not Paid on Time</th>
+        <th class="col-principal">Paid on Time</th>
+        <th class="col-principal">Not Paid on Time</th>
+        <th class="col-opportunity">Paid on Time</th>
+        <th class="col-opportunity">Not Paid on Time</th>
+        {% if global_settings and global_settings.inflation_enabled %}
+        <th class="col-inflation">Paid on Time</th>
+        <th class="col-inflation">Not Paid on Time</th>
+        {% endif %}
+        {% if global_settings and global_settings.tax_enabled %}
+        <th class="col-tax">Paid on Time</th>
+        <th class="col-tax">Not Paid on Time</th>
+        {% endif %}
+        <th>Paid on Time</th>
+        <th>Not Paid on Time</th>
+      </tr>
+      {% else %}
+      <tr>
+        <th scope="col">Period</th>
+        <th scope="col" class="col-payment">Payment</th>
+        <th scope="col" class="col-interest">Interest</th>
+        <th scope="col" class="col-principal">Principal</th>
+        <th scope="col" class="col-opportunity">Opp. Cost</th>
+        {% if global_settings and global_settings.inflation_enabled %}
+        <th scope="col" class="col-inflation">Inflation Adj.</th>
+        {% endif %}
+        {% if global_settings and global_settings.tax_enabled %}
+        <th scope="col" class="col-tax">Tax Savings</th>
+        {% endif %}
+        <th scope="col">Cumulative True Total Cost</th>
+      </tr>
+      {% endif %}
+    </thead>
+    <tbody>
+      {% if detail.is_promo and detail.not_paid_rows is defined %}
+        {% for row in detail.rows %}
+        <tr>
+          <td>{{ row.period }}</td>
+          <td class="col-payment">${{ "{:,.2f}".format(row.payment) }}</td>
+          <td class="col-payment">${{ "{:,.2f}".format(detail.not_paid_rows[loop.index0].payment) }}</td>
+          <td class="col-interest">${{ "{:,.2f}".format(row.interest_portion) }}</td>
+          <td class="col-interest">${{ "{:,.2f}".format(detail.not_paid_rows[loop.index0].interest_portion) }}</td>
+          <td class="col-principal">${{ "{:,.2f}".format(row.principal_portion) }}</td>
+          <td class="col-principal">${{ "{:,.2f}".format(detail.not_paid_rows[loop.index0].principal_portion) }}</td>
+          <td class="col-opportunity">${{ "{:,.2f}".format(row.opportunity_cost) }}</td>
+          <td class="col-opportunity">${{ "{:,.2f}".format(detail.not_paid_rows[loop.index0].opportunity_cost) }}</td>
+          {% if global_settings and global_settings.inflation_enabled %}
+          <td class="col-inflation">${{ "{:,.2f}".format(row.inflation_adjustment) }}</td>
+          <td class="col-inflation">${{ "{:,.2f}".format(detail.not_paid_rows[loop.index0].inflation_adjustment) }}</td>
+          {% endif %}
+          {% if global_settings and global_settings.tax_enabled %}
+          <td class="col-tax">${{ "{:,.2f}".format(row.tax_savings) }}</td>
+          <td class="col-tax">${{ "{:,.2f}".format(detail.not_paid_rows[loop.index0].tax_savings) }}</td>
+          {% endif %}
+          <td>${{ "{:,.2f}".format(row.cumulative_true_total_cost) }}</td>
+          <td>${{ "{:,.2f}".format(detail.not_paid_rows[loop.index0].cumulative_true_total_cost) }}</td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        {% for row in detail.rows %}
+        <tr>
+          <td>{{ row.period }}</td>
+          <td class="col-payment">${{ "{:,.2f}".format(row.payment) }}</td>
+          <td class="col-interest">${{ "{:,.2f}".format(row.interest_portion) }}</td>
+          <td class="col-principal">${{ "{:,.2f}".format(row.principal_portion) }}</td>
+          <td class="col-opportunity">${{ "{:,.2f}".format(row.opportunity_cost) }}</td>
+          {% if global_settings and global_settings.inflation_enabled %}
+          <td class="col-inflation">${{ "{:,.2f}".format(row.inflation_adjustment) }}</td>
+          {% endif %}
+          {% if global_settings and global_settings.tax_enabled %}
+          <td class="col-tax">${{ "{:,.2f}".format(row.tax_savings) }}</td>
+          {% endif %}
+          <td>${{ "{:,.2f}".format(row.cumulative_true_total_cost) }}</td>
+        </tr>
+        {% endfor %}
+      {% endif %}
+    </tbody>
+    <tfoot>
+      {% if detail.is_promo and detail.not_paid_totals is defined %}
+      <tr class="detail-totals">
+        <td><strong>Total</strong></td>
+        <td class="col-payment"><strong>${{ "{:,.2f}".format(detail.totals.payment) }}</strong></td>
+        <td class="col-payment"><strong>${{ "{:,.2f}".format(detail.not_paid_totals.payment) }}</strong></td>
+        <td class="col-interest"><strong>${{ "{:,.2f}".format(detail.totals.interest_portion) }}</strong></td>
+        <td class="col-interest"><strong>${{ "{:,.2f}".format(detail.not_paid_totals.interest_portion) }}</strong></td>
+        <td class="col-principal"><strong>${{ "{:,.2f}".format(detail.totals.principal_portion) }}</strong></td>
+        <td class="col-principal"><strong>${{ "{:,.2f}".format(detail.not_paid_totals.principal_portion) }}</strong></td>
+        <td class="col-opportunity"><strong>${{ "{:,.2f}".format(detail.totals.opportunity_cost) }}</strong></td>
+        <td class="col-opportunity"><strong>${{ "{:,.2f}".format(detail.not_paid_totals.opportunity_cost) }}</strong></td>
+        {% if global_settings and global_settings.inflation_enabled %}
+        <td class="col-inflation"><strong>${{ "{:,.2f}".format(detail.totals.inflation_adjustment) }}</strong></td>
+        <td class="col-inflation"><strong>${{ "{:,.2f}".format(detail.not_paid_totals.inflation_adjustment) }}</strong></td>
+        {% endif %}
+        {% if global_settings and global_settings.tax_enabled %}
+        <td class="col-tax"><strong>${{ "{:,.2f}".format(detail.totals.tax_savings) }}</strong></td>
+        <td class="col-tax"><strong>${{ "{:,.2f}".format(detail.not_paid_totals.tax_savings) }}</strong></td>
+        {% endif %}
+        <td><strong>${{ "{:,.2f}".format(detail.totals.cumulative_true_total_cost) }}</strong></td>
+        <td><strong>${{ "{:,.2f}".format(detail.not_paid_totals.cumulative_true_total_cost) }}</strong></td>
+      </tr>
+      {% else %}
+      <tr class="detail-totals">
+        <td><strong>Total</strong></td>
+        <td class="col-payment"><strong>${{ "{:,.2f}".format(detail.totals.payment) }}</strong></td>
+        <td class="col-interest"><strong>${{ "{:,.2f}".format(detail.totals.interest_portion) }}</strong></td>
+        <td class="col-principal"><strong>${{ "{:,.2f}".format(detail.totals.principal_portion) }}</strong></td>
+        <td class="col-opportunity"><strong>${{ "{:,.2f}".format(detail.totals.opportunity_cost) }}</strong></td>
+        {% if global_settings and global_settings.inflation_enabled %}
+        <td class="col-inflation"><strong>${{ "{:,.2f}".format(detail.totals.inflation_adjustment) }}</strong></td>
+        {% endif %}
+        {% if global_settings and global_settings.tax_enabled %}
+        <td class="col-tax"><strong>${{ "{:,.2f}".format(detail.totals.tax_savings) }}</strong></td>
+        {% endif %}
+        <td><strong>${{ "{:,.2f}".format(detail.totals.cumulative_true_total_cost) }}</strong></td>
+      </tr>
+      {% endif %}
+    </tfoot>
+  </table>
+</div>

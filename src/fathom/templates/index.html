@@ -13,14 +13,23 @@
       <small class="field-error" role="alert">{{ errors['options'] }}</small>
       {% endif %}
       <article>
-        <header><label for="purchase-price">Purchase Price</label></header>
+        <header>
+          <div class="label-with-tip">
+            <label for="purchase-price">Purchase Price</label>
+            <button type="button" class="tip" popovertarget="tip-purchase-price" aria-label="What is Purchase Price?">?</button>
+          </div>
+        </header>
+        <div id="tip-purchase-price" popover class="tooltip-content">
+          <p>The full retail price of the item before any financing, discounts, or down payments. This is the base amount that all financing options are compared against.</p>
+        </div>
         <input
           type="text"
           inputmode="decimal"
+          data-monetary
           id="purchase-price"
           name="purchase_price"
-          value="{{ purchase_price }}"
-          placeholder="e.g., 25000"
+          value="{{ purchase_price|comma }}"
+          placeholder="e.g., 25,000"
           {% if errors.get('purchase_price') %}aria-invalid="true"{% endif %}
         >
         {% if errors.get('purchase_price') %}
@@ -34,6 +43,10 @@
 
       {% include "partials/global_settings.html" %}
 
+      {% if import_error is defined and import_error %}
+      <small class="field-error" role="alert">{{ import_error }}</small>
+      {% endif %}
+
       <div class="grid">
         <button type="submit" id="compare-btn">
           <span class="btn-text">Compare Options</span>
@@ -41,8 +54,14 @@
             Calculating...
           </span>
         </button>
+        <button type="submit" formaction="/export" formnovalidate class="outline" hx-disable>Export</button>
         <a href="/" role="button" class="outline secondary">Reset / Start Over</a>
       </div>
+    </form>
+
+    <form method="post" action="/import" enctype="multipart/form-data" class="import-form">
+      <label for="import-file" role="button" class="outline secondary">Import</label>
+      <input type="file" id="import-file" name="import_file" accept=".json,application/json" hidden onchange="this.form.submit()">
     </form>
   </div>
 

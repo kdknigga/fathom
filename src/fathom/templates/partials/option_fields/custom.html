@@ -1,4 +1,10 @@
-<label for="option-{{ opt.idx }}-apr">Effective APR</label>
+<div class="label-with-tip">
+  <label for="option-{{ opt.idx }}-apr">Effective APR</label>
+  <button type="button" class="tip" popovertarget="tip-apr-{{ opt.idx }}" aria-label="What is Effective APR?">?</button>
+</div>
+<div id="tip-apr-{{ opt.idx }}" popover class="tooltip-content">
+  <p>The combined annual cost rate including all fees and charges. Use this for financing options that don't fit standard categories -- enter the all-in annual rate.</p>
+</div>
 <fieldset role="group">
   <input
     type="text"
@@ -15,7 +21,13 @@
 <small class="field-error">{{ errors['options.' ~ opt.idx|string ~ '.apr'] }}</small>
 {% endif %}
 
-<label for="option-{{ opt.idx }}-term-months">Term (months)</label>
+<div class="label-with-tip">
+  <label for="option-{{ opt.idx }}-term-months">Term (months)</label>
+  <button type="button" class="tip" popovertarget="tip-term-{{ opt.idx }}" aria-label="What is Term?">?</button>
+</div>
+<div id="tip-term-{{ opt.idx }}" popover class="tooltip-content">
+  <p>Number of months for this financing arrangement.</p>
+</div>
 <input
   type="number"
   id="option-{{ opt.idx }}-term-months"
@@ -28,16 +40,23 @@
 <small class="field-error">{{ errors['options.' ~ opt.idx|string ~ '.term_months'] }}</small>
 {% endif %}
 
-<label for="option-{{ opt.idx }}-down-payment">Upfront Cash Required</label>
+<div class="label-with-tip">
+  <label for="option-{{ opt.idx }}-down-payment">Upfront Cash Required</label>
+  <button type="button" class="tip" popovertarget="tip-down-{{ opt.idx }}" aria-label="What is Upfront Cash?">?</button>
+</div>
+<div id="tip-down-{{ opt.idx }}" popover class="tooltip-content">
+  <p>Total cash required at the time of purchase, including down payments, fees, or deposits.</p>
+</div>
 <fieldset role="group">
   <span class="prefix">$</span>
   <input
     type="text"
     inputmode="decimal"
+    data-monetary
     id="option-{{ opt.idx }}-down-payment"
     name="options[{{ opt.idx }}][down_payment]"
-    value="{{ opt.fields.down_payment|default('') }}"
-    placeholder="e.g., 5000"
+    value="{{ opt.fields.down_payment|default('')|comma }}"
+    placeholder="e.g., 5,000"
     {% if errors.get('options.' ~ opt.idx|string ~ '.down_payment') %}aria-invalid="true"{% endif %}
   >
 </fieldset>

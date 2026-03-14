@@ -2,7 +2,13 @@
   <summary>Global Settings <small class="defaults-hint">Using defaults</small></summary>
 
   <fieldset>
-    <legend>Investment Return Rate</legend>
+    <div class="label-with-tip">
+      <legend>Investment Return Rate</legend>
+      <button type="button" class="tip" popovertarget="tip-return-rate" aria-label="What is Investment Return Rate?">?</button>
+    </div>
+    <div id="tip-return-rate" popover class="tooltip-content">
+      <p>The annual return you could earn by investing your money instead of paying upfront. For example, if you could earn 7% in a stock index fund, that's the opportunity cost of paying cash.</p>
+    </div>
     <label>
       <input
         type="radio"
@@ -54,7 +60,13 @@
       >
       Adjust for inflation
     </label>
-    <label for="inflation-rate">Inflation Rate</label>
+    <div class="label-with-tip">
+      <label for="inflation-rate">Inflation Rate</label>
+      <button type="button" class="tip" popovertarget="tip-inflation-rate" aria-label="What is Inflation Rate?">?</button>
+    </div>
+    <div id="tip-inflation-rate" popover class="tooltip-content">
+      <p>Inflation reduces the real value of future payments. At 3% inflation, a $100 payment next year only costs you about $97 in today's dollars. Higher inflation makes longer loan terms slightly cheaper in real terms.</p>
+    </div>
     <fieldset role="group">
       <input
         type="text"
@@ -78,7 +90,13 @@
       >
       Include tax implications
     </label>
-    <label for="tax-rate">Marginal Tax Rate</label>
+    <div class="label-with-tip">
+      <label for="tax-rate">Marginal Tax Rate</label>
+      <button type="button" class="tip" popovertarget="tip-tax-rate" aria-label="What is Marginal Tax Rate?">?</button>
+    </div>
+    <div id="tip-tax-rate" popover class="tooltip-content">
+      <p>Your marginal tax rate is the rate on your last dollar of income -- not your average rate. If your loan interest is tax-deductible, this rate determines how much you save. A 24% marginal rate means each $1,000 in deductible interest saves $240 in taxes.</p>
+    </div>
     <fieldset role="group">
       <input
         type="text"
@@ -90,5 +108,28 @@
       >
       <span class="suffix">%</span>
     </fieldset>
+    <details class="tax-bracket-ref">
+      <summary>What's my bracket?</summary>
+      <table class="bracket-table">
+        <thead>
+          <tr>
+            <th scope="col">Rate</th>
+            <th scope="col">Single</th>
+            <th scope="col">Married Filing Jointly</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for bracket in tax_brackets %}
+          <tr class="bracket-row" data-rate="{{ bracket.rate }}" tabindex="0"
+              role="button" aria-label="Select {{ bracket.rate }}% tax rate">
+            <td>{{ bracket.rate }}%</td>
+            <td>${{ bracket.single_min|comma }}{% if bracket.single_max %} - ${{ bracket.single_max|comma }}{% else %}+{% endif %}</td>
+            <td>${{ bracket.mfj_min|comma }}{% if bracket.mfj_max %} - ${{ bracket.mfj_max|comma }}{% else %}+{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <small>Click a row to use that rate. Source: IRS Rev. Proc. 2024-40 (2025 tax year)</small>
+    </details>
   </fieldset>
 </details>

@@ -1,0 +1,76 @@
+{# Tab container for detailed period breakdown #}
+<div class="detail-tabs" role="tablist" aria-label="Detailed period breakdown by option">
+  {% for opt in display.options_data %}
+  <button type="button"
+          role="tab"
+          id="detail-tab-{{ loop.index0 }}"
+          aria-selected="{{ 'true' if loop.first else 'false' }}"
+          aria-controls="detail-panel"
+          hx-post="/partials/detail/{{ loop.index0 }}"
+          hx-target="#detail-panel"
+          hx-swap="innerHTML"
+          hx-include="#comparison-form"
+          tabindex="{{ '0' if loop.first else '-1' }}">{{ opt.name }}</button>
+  {% endfor %}
+  <button type="button"
+          role="tab"
+          id="detail-tab-compare"
+          aria-selected="false"
+          aria-controls="detail-panel"
+          hx-post="/partials/detail/compare"
+          hx-target="#detail-panel"
+          hx-swap="innerHTML"
+          hx-include="#comparison-form"
+          tabindex="-1">Compare</button>
+</div>
+
+<fieldset class="col-toggles" aria-label="Toggle visible columns">
+  <label>
+    <input type="checkbox" class="col-toggle" data-column="col-payment" checked>
+    Payment
+  </label>
+  <label>
+    <input type="checkbox" class="col-toggle" data-column="col-interest" checked>
+    Interest
+  </label>
+  <label>
+    <input type="checkbox" class="col-toggle" data-column="col-principal" checked>
+    Principal
+  </label>
+  <label>
+    <input type="checkbox" class="col-toggle" data-column="col-opportunity" checked>
+    Opportunity Cost
+  </label>
+  {% if global_settings and global_settings.inflation_enabled %}
+  <label>
+    <input type="checkbox" class="col-toggle" data-column="col-inflation" checked>
+    Inflation Adj.
+  </label>
+  {% endif %}
+  {% if global_settings and global_settings.tax_enabled %}
+  <label>
+    <input type="checkbox" class="col-toggle" data-column="col-tax" checked>
+    Tax Savings
+  </label>
+  {% endif %}
+</fieldset>
+
+<div class="detail-granularity">
+  <label>
+    <input type="radio" name="detail-granularity" value="monthly" checked>
+    Monthly
+  </label>
+  <label>
+    <input type="radio" name="detail-granularity" value="annual">
+    Annual
+  </label>
+</div>
+
+<div id="detail-panel" role="tabpanel" aria-labelledby="detail-tab-0">
+  {# Render the first tab's content inline #}
+  {% if detail_breakdown and detail_breakdown | length > 0 %}
+    {% with detail=detail_breakdown[0], granularity="monthly" %}
+      {% include "partials/results/detailed_table.html" %}
+    {% endwith %}
+  {% endif %}
+</div>

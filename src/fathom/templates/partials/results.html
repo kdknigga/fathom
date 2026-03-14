@@ -16,6 +16,11 @@
     {% include "partials/results/breakdown_table.html" %}
   </section>
 
+  <section class="detailed-breakdown-section" aria-label="Detailed Period Breakdown">
+    <h2>Detailed Period Breakdown</h2>
+    {% include "partials/results/detailed_breakdown.html" %}
+  </section>
+
   {% if charts is defined %}
   <section class="charts-section" aria-label="Visual Comparisons">
     <h2>Visual Comparison</h2>

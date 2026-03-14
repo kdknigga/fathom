@@ -1,1 +1,7 @@
-<p>Full purchase price paid upfront. No additional fields needed.</p>
+<div class="label-with-tip">
+  <p>Full purchase price paid upfront. No additional fields needed.</p>
+  <button type="button" class="tip" popovertarget="tip-cash-{{ opt.idx }}" aria-label="What does paying cash mean?">?</button>
+</div>
+<div id="tip-cash-{{ opt.idx }}" popover class="tooltip-content">
+  <p>Paying the full purchase price upfront means no interest costs, but you lose the opportunity to invest that money elsewhere. The opportunity cost calculation shows what that invested money could have earned.</p>
+</div>

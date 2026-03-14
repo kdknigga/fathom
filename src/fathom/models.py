@@ -112,6 +112,9 @@ class MonthlyDataPoint(BaseModel):
     remaining_balance: Decimal
     investment_balance: Decimal
     cumulative_cost: Decimal
+    opportunity_cost: Decimal = Field(default_factory=lambda: Decimal(0))
+    inflation_adjustment: Decimal = Field(default_factory=lambda: Decimal(0))
+    tax_savings: Decimal = Field(default_factory=lambda: Decimal(0))
 
 
 class OptionResult(BaseModel):

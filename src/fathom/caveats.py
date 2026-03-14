@@ -172,7 +172,9 @@ def _compute_ttc_at_rate(
         result = results[option.label]
         base_result = result.paid_on_time if isinstance(result, PromoResult) else result
         opp_cost = compute_opportunity_cost(
-            option, adjusted_settings, comparison_period
+            option,
+            adjusted_settings,
+            comparison_period,
         )
         ttc = (
             base_result.total_payments
@@ -209,7 +211,11 @@ def _check_winner_changes(
         return None
 
     base_ttc = _compute_ttc_at_rate(
-        options, results, settings, comparison_period, settings.return_rate
+        options,
+        results,
+        settings,
+        comparison_period,
+        settings.return_rate,
     )
     base_winner = min(base_ttc, key=lambda k: base_ttc[k])
 
@@ -218,10 +224,13 @@ def _check_winner_changes(
         ("-2%", Decimal("-0.02")),
     ]:
         shifted_rate = settings.return_rate + shift
-        if shifted_rate < Decimal(0):
-            shifted_rate = Decimal(0)
+        shifted_rate = max(shifted_rate, Decimal(0))
         shifted_ttc = _compute_ttc_at_rate(
-            options, results, settings, comparison_period, shifted_rate
+            options,
+            results,
+            settings,
+            comparison_period,
+            shifted_rate,
         )
         shifted_winner = min(shifted_ttc, key=lambda k: shifted_ttc[k])
         if shifted_winner != base_winner:

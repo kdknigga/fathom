@@ -54,10 +54,27 @@ def _try_decimal(value: str) -> Decimal | None:
     """
     if not value or not value.strip():
         return None
+    cleaned = value.strip().replace("$", "").replace(",", "").replace(" ", "")
+    if not cleaned:
+        return None
     try:
-        return Decimal(value.strip())
+        return Decimal(cleaned)
     except InvalidOperation:
         return None
+
+
+def _clean_monetary(value: str) -> str:
+    """
+    Strip dollar signs, commas, and spaces from a monetary string.
+
+    Args:
+        value: Raw monetary input string.
+
+    Returns:
+        Cleaned string suitable for Decimal conversion.
+
+    """
+    return value.strip().replace("$", "").replace(",", "").replace(" ", "")
 
 
 # ---------------------------------------------------------------------------
@@ -99,6 +116,161 @@ class SettingsInput(BaseModel):
         return self
 
 
+def _validate_apr(opt: OptionInput, errors: list[str]) -> None:
+    """
+    Validate APR field for option types that require it.
+
+    Checks that APR is present and within the 0-40% range for
+    traditional loans, promo cash-back, promo price reduction,
+    and custom option types.
+
+    Args:
+        opt: The option input being validated.
+        errors: List to append error messages to.
+
+    """
+    apr_required_types = {
+        OptionType.TRADITIONAL_LOAN.value,
+        OptionType.PROMO_CASH_BACK.value,
+        OptionType.PROMO_PRICE_REDUCTION.value,
+        OptionType.CUSTOM.value,
+    }
+    if opt.type not in apr_required_types:
+        return
+    apr_val = _try_decimal(opt.apr)
+    if apr_val is None:
+        errors.append("apr:APR is required.")
+    elif apr_val < 0 or apr_val > 40:
+        errors.append("apr:APR must be between 0% and 40%.")
+
+
+def _validate_term_months(opt: OptionInput, errors: list[str]) -> None:
+    """
+    Validate term_months field for all non-cash option types.
+
+    Ensures term is present, is a whole number, and falls within
+    the 1-360 month range.
+
+    Args:
+        opt: The option input being validated.
+        errors: List to append error messages to.
+
+    """
+    term_str = opt.term_months
+    if not term_str or not term_str.strip():
+        errors.append("term_months:Term is required.")
+        return
+    try:
+        term_val = int(term_str)
+    except ValueError:
+        errors.append("term_months:Term must be a whole number.")
+        return
+    if term_val < 1 or term_val > 360:
+        errors.append("term_months:Term must be between 1 and 360 months.")
+
+
+def _validate_down_payment(opt: OptionInput, errors: list[str]) -> None:
+    """
+    Validate optional down payment field.
+
+    When provided, checks that the value is a valid non-negative number
+    that does not exceed the purchase price.
+
+    Args:
+        opt: The option input being validated.
+        errors: List to append error messages to.
+
+    """
+    dp_str = opt.down_payment
+    if not dp_str or not dp_str.strip():
+        return
+    dp_val = _try_decimal(dp_str)
+    pp_val = _try_decimal(opt.purchase_price)
+    if dp_val is None:
+        errors.append("down_payment:Down payment must be a number.")
+    elif dp_val < 0:
+        errors.append("down_payment:Down payment must not be negative.")
+    elif pp_val is not None and dp_val > pp_val:
+        errors.append("down_payment:Down payment cannot exceed purchase price.")
+
+
+def _validate_promo_fields(opt: OptionInput, errors: list[str]) -> None:
+    """
+    Validate promo-specific fields based on option type.
+
+    Handles post-promo APR for zero-percent promos, cash-back amount
+    for cash-back promos, and discounted price for price reduction promos.
+
+    Args:
+        opt: The option input being validated.
+        errors: List to append error messages to.
+
+    """
+    opt_type = opt.type
+    if opt_type == OptionType.PROMO_ZERO_PERCENT.value:
+        _validate_post_promo_apr(opt, errors)
+    elif opt_type == OptionType.PROMO_CASH_BACK.value:
+        _validate_cash_back(opt, errors)
+    elif opt_type == OptionType.PROMO_PRICE_REDUCTION.value:
+        _validate_discounted_price(opt, errors)
+
+
+def _validate_post_promo_apr(opt: OptionInput, errors: list[str]) -> None:
+    """
+    Validate optional post-promo APR for zero-percent promo options.
+
+    Args:
+        opt: The option input being validated.
+        errors: List to append error messages to.
+
+    """
+    ppa_str = opt.post_promo_apr
+    if not ppa_str or not ppa_str.strip():
+        return
+    ppa_val = _try_decimal(ppa_str)
+    if ppa_val is None:
+        errors.append("post_promo_apr:Post-promo APR must be a number.")
+    elif ppa_val < 0 or ppa_val > 40:
+        errors.append("post_promo_apr:Post-promo APR must be between 0% and 40%.")
+
+
+def _validate_cash_back(opt: OptionInput, errors: list[str]) -> None:
+    """
+    Validate cash-back amount for cash-back promo options.
+
+    Args:
+        opt: The option input being validated.
+        errors: List to append error messages to.
+
+    """
+    cb_val = _try_decimal(opt.cash_back_amount)
+    if cb_val is None:
+        errors.append("cash_back_amount:Cash-back amount is required.")
+    elif cb_val <= 0:
+        errors.append("cash_back_amount:Cash-back amount must be greater than zero.")
+
+
+def _validate_discounted_price(opt: OptionInput, errors: list[str]) -> None:
+    """
+    Validate discounted price for price reduction promo options.
+
+    Args:
+        opt: The option input being validated.
+        errors: List to append error messages to.
+
+    """
+    dp_price_val = _try_decimal(opt.discounted_price)
+    pp_val = _try_decimal(opt.purchase_price)
+    if dp_price_val is None:
+        errors.append("discounted_price:Discounted price is required.")
+    elif dp_price_val <= 0:
+        errors.append("discounted_price:Discounted price must be greater than zero.")
+    elif pp_val is not None and dp_price_val >= pp_val:
+        errors.append(
+            "discounted_price:Discounted price must be less than purchase price.",
+        )
+
+
 class OptionInput(BaseModel):
     """
     Validates a single financing option from form input.
@@ -130,88 +302,14 @@ class OptionInput(BaseModel):
         ``pydantic_errors_to_dict`` can remap the loc correctly.
         """
         opt_type = self.type
-        errors: list[str] = []
-
         if opt_type == OptionType.CASH.value:
             return self
 
-        # Types that require APR
-        apr_required = opt_type in {
-            OptionType.TRADITIONAL_LOAN.value,
-            OptionType.PROMO_CASH_BACK.value,
-            OptionType.PROMO_PRICE_REDUCTION.value,
-            OptionType.CUSTOM.value,
-        }
-
-        if apr_required:
-            apr_val = _try_decimal(self.apr)
-            if apr_val is None:
-                errors.append("apr:APR is required.")
-            elif apr_val < 0 or apr_val > 40:
-                errors.append("apr:APR must be between 0% and 40%.")
-
-        # All non-cash types require term_months
-        term_str = self.term_months
-        if term_str and term_str.strip():
-            try:
-                term_val = int(term_str)
-            except ValueError:
-                errors.append("term_months:Term must be a whole number.")
-            else:
-                if term_val < 1 or term_val > 360:
-                    errors.append("term_months:Term must be between 1 and 360 months.")
-        else:
-            errors.append("term_months:Term is required.")
-
-        # Down payment (optional for all types that have it)
-        dp_str = self.down_payment
-        if dp_str and dp_str.strip():
-            dp_val = _try_decimal(dp_str)
-            pp_val = _try_decimal(self.purchase_price)
-            if dp_val is None:
-                errors.append("down_payment:Down payment must be a number.")
-            elif dp_val < 0:
-                errors.append("down_payment:Down payment must not be negative.")
-            elif pp_val is not None and dp_val > pp_val:
-                errors.append("down_payment:Down payment cannot exceed purchase price.")
-
-        # Promo-specific validations
-        if opt_type == OptionType.PROMO_ZERO_PERCENT.value:
-            ppa_str = self.post_promo_apr
-            if ppa_str and ppa_str.strip():
-                ppa_val = _try_decimal(ppa_str)
-                if ppa_val is None:
-                    errors.append("post_promo_apr:Post-promo APR must be a number.")
-                elif ppa_val < 0 or ppa_val > 40:
-                    errors.append(
-                        "post_promo_apr:Post-promo APR must be between 0% and 40%."
-                    )
-
-        if opt_type == OptionType.PROMO_CASH_BACK.value:
-            cb_str = self.cash_back_amount
-            cb_val = _try_decimal(cb_str)
-            if cb_val is None:
-                errors.append("cash_back_amount:Cash-back amount is required.")
-            elif cb_val <= 0:
-                errors.append(
-                    "cash_back_amount:Cash-back amount must be greater than zero."
-                )
-
-        if opt_type == OptionType.PROMO_PRICE_REDUCTION.value:
-            dp_price_str = self.discounted_price
-            dp_price_val = _try_decimal(dp_price_str)
-            pp_val = _try_decimal(self.purchase_price)
-            if dp_price_val is None:
-                errors.append("discounted_price:Discounted price is required.")
-            elif dp_price_val <= 0:
-                errors.append(
-                    "discounted_price:Discounted price must be greater than zero."
-                )
-            elif pp_val is not None and dp_price_val >= pp_val:
-                errors.append(
-                    "discounted_price:"
-                    "Discounted price must be less than purchase price."
-                )
+        errors: list[str] = []
+        _validate_apr(self, errors)
+        _validate_term_months(self, errors)
+        _validate_down_payment(self, errors)
+        _validate_promo_fields(self, errors)
 
         if errors:
             msg = "\n".join(errors)
@@ -250,7 +348,7 @@ class FormInput(BaseModel):
         if val <= 0:
             msg = "Purchase price must be greater than zero."
             raise ValueError(msg)
-        return v
+        return _clean_monetary(v)
 
     @field_validator("options")
     @classmethod
@@ -295,8 +393,8 @@ def pydantic_errors_to_dict(exc: ValidationError) -> dict[str, str]:
         # Handle multi-error messages from model_validators
         # (newline-separated "field:message" pairs)
         if "\n" in msg:
-            for line in msg.split("\n"):
-                line = line.strip()
+            for raw_line in msg.split("\n"):
+                line = raw_line.strip()
                 if not line:
                     continue
                 if ":" in line:
@@ -314,6 +412,34 @@ def pydantic_errors_to_dict(exc: ValidationError) -> dict[str, str]:
             errors[base_key] = msg
 
     return errors
+
+
+# ---------------------------------------------------------------------------
+# Export helper
+# ---------------------------------------------------------------------------
+
+
+def form_data_to_export_dict(parsed: dict) -> dict:
+    """
+    Build a versioned export dict from parsed form data.
+
+    Adds a ``version`` field for forward compatibility and passes through
+    purchase_price, options, and settings unchanged. Booleans from
+    ``extract_form_data`` are already native Python bools.
+
+    Args:
+        parsed: The structured dict from extract_form_data.
+
+    Returns:
+        A dict suitable for JSON serialization with a version field.
+
+    """
+    return {
+        "version": 1,
+        "purchase_price": parsed["purchase_price"],
+        "options": parsed["options"],
+        "settings": parsed["settings"],
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -428,7 +554,7 @@ def parse_form_data(form_data: ImmutableMultiDict) -> FormInput:
             "purchase_price": purchase_price,
             "options": options,
             "settings": settings_data,
-        }
+        },
     )
 
 
@@ -525,6 +651,8 @@ def _to_rate(value: str) -> Decimal | None:
     """
     Convert a percentage string to a Decimal rate (divided by 100).
 
+    Strips dollar signs, commas, and spaces for consistency.
+
     Args:
         value: The percentage string (e.g., "5.99").
 
@@ -534,8 +662,11 @@ def _to_rate(value: str) -> Decimal | None:
     """
     if not value or not value.strip():
         return None
+    cleaned = _clean_monetary(value)
+    if not cleaned:
+        return None
     try:
-        return Decimal(value.strip()) / Decimal(100)
+        return Decimal(cleaned) / Decimal(100)
     except InvalidOperation:
         return None
 
@@ -544,8 +675,10 @@ def _to_money(value: str) -> Decimal | None:
     """
     Convert a money string to a Decimal.
 
+    Strips dollar signs, commas, and spaces before conversion.
+
     Args:
-        value: The money string (e.g., "5000").
+        value: The money string (e.g., "5000", "$5,000", "5,000.99").
 
     Returns:
         Decimal amount or None if empty/invalid.
@@ -553,8 +686,11 @@ def _to_money(value: str) -> Decimal | None:
     """
     if not value or not value.strip():
         return None
+    cleaned = _clean_monetary(value)
+    if not cleaned:
+        return None
     try:
-        return Decimal(value.strip())
+        return Decimal(cleaned)
     except InvalidOperation:
         return None
 

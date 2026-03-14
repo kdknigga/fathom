@@ -30,8 +30,10 @@ def create_app(settings: Settings | None = None) -> Flask:
     app.config["SECRET_KEY"] = settings.secret_key
     app.config["FATHOM_SETTINGS"] = settings
 
+    from fathom.formatting import comma_format
     from fathom.routes import bp
 
+    app.jinja_env.filters["comma"] = comma_format
     app.register_blueprint(bp)
 
     return app

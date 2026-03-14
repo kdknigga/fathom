@@ -40,7 +40,7 @@ class TestFormValidationEdgeCases:
                 "options[1][type]": "cash",
                 "options[1][label]": "Cash2",
                 "return_preset": "0.07",
-            }
+            },
         )
         assert "purchase_price" in errors
 
@@ -54,7 +54,7 @@ class TestFormValidationEdgeCases:
                 "options[1][type]": "cash",
                 "options[1][label]": "Cash2",
                 "return_preset": "0.07",
-            }
+            },
         )
         assert "purchase_price" in errors
 
@@ -71,7 +71,7 @@ class TestFormValidationEdgeCases:
                 "options[1][type]": "cash",
                 "options[1][label]": "Cash",
                 "return_preset": "0.07",
-            }
+            },
         )
         assert "options.0.down_payment" in errors
 
@@ -87,7 +87,7 @@ class TestFormValidationEdgeCases:
                 "options[1][type]": "cash",
                 "options[1][label]": "Cash",
                 "return_preset": "0.07",
-            }
+            },
         )
         assert "options.0.term_months" in errors
 
@@ -103,7 +103,7 @@ class TestFormValidationEdgeCases:
                 "options[1][type]": "cash",
                 "options[1][label]": "Cash",
                 "return_preset": "0.07",
-            }
+            },
         )
         assert "options.0.apr" in errors
 
@@ -120,7 +120,7 @@ class TestFormValidationEdgeCases:
                 "options[1][type]": "cash",
                 "options[1][label]": "Cash",
                 "return_preset": "0.07",
-            }
+            },
         )
         assert "options.0.cash_back_amount" in errors
 
@@ -135,7 +135,7 @@ class TestFormValidationEdgeCases:
                 "options[1][label]": "Cash2",
                 "return_preset": "0.99",
                 "return_rate_custom": "",
-            }
+            },
         )
         assert "settings.return_rate" in errors
 
@@ -150,7 +150,7 @@ class TestFormValidationEdgeCases:
                 "options[1][label]": "Cash2",
                 "return_preset": "0.07",
                 "return_rate_custom": "xyz",
-            }
+            },
         )
         assert "settings.return_rate" in errors
 
@@ -166,7 +166,7 @@ class TestFormValidationEdgeCases:
                 "options[1][type]": "cash",
                 "options[1][label]": "Cash",
                 "return_preset": "0.07",
-            }
+            },
         )
         assert "options.0.post_promo_apr" in errors
 
@@ -183,7 +183,7 @@ class TestFormValidationEdgeCases:
                 "options[1][type]": "cash",
                 "options[1][label]": "Cash",
                 "return_preset": "0.07",
-            }
+            },
         )
         assert "options.0.discounted_price" in errors
 
@@ -194,7 +194,7 @@ class TestHtmxEdgeCases:
     def test_type_switch_invalid_type_falls_back(self, client: FlaskClient):
         """Unknown option type in type switch falls back to cash fields."""
         response = client.get(
-            "/partials/option-fields/0?options[0][type]=nonexistent_type"
+            "/partials/option-fields/0?options[0][type]=nonexistent_type",
         )
         assert response.status_code == 200
 

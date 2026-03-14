@@ -10,7 +10,7 @@ from decimal import Decimal
 
 from fathom.amortization import amortization_schedule, quantize_money
 from fathom.caveats import generate_all_caveats
-from fathom.inflation import compute_inflation_adjustment
+from fathom.inflation import compute_inflation_adjustment, discount_cash_flows
 from fathom.models import (
     ComparisonResult,
     FinancingOption,
@@ -20,7 +20,10 @@ from fathom.models import (
     OptionType,
     PromoResult,
 )
-from fathom.opportunity import compute_opportunity_cost
+from fathom.opportunity import (
+    compute_opportunity_cost,
+    compute_opportunity_cost_per_period,
+)
 from fathom.tax import compute_tax_savings
 
 
@@ -74,6 +77,24 @@ def _build_cash_result(
     # Opportunity cost: returns lost on the purchase price
     opp_cost = compute_opportunity_cost(option, settings, comparison_period)
 
+    # Per-period opportunity cost
+    opp_per_period = compute_opportunity_cost_per_period(
+        option,
+        settings,
+        comparison_period,
+    )
+
+    # Inflation adjustment on cash: single payment at month 1
+    inflation_adj = Decimal(0)
+    cash_infl_month1 = Decimal(0)
+    if settings.inflation_enabled and comparison_period > 0:
+        inflation_adj = compute_inflation_adjustment(
+            [total_payments],
+            settings.inflation_rate,
+        )
+        # Per-period: only month 1 has a payment, so only month 1 has inflation adj
+        cash_infl_month1 = inflation_adj
+
     # Build monthly data for cash -- single payment in month 1
     monthly_data: list[MonthlyDataPoint] = []
     if comparison_period > 0:
@@ -87,15 +108,13 @@ def _build_cash_result(
                 remaining_balance=Decimal(0),
                 investment_balance=Decimal(0),
                 cumulative_cost=cumulative,
+                opportunity_cost=opp_per_period[month - 1]
+                if month - 1 < len(opp_per_period)
+                else Decimal(0),
+                inflation_adjustment=cash_infl_month1 if month == 1 else Decimal(0),
+                tax_savings=Decimal(0),
             )
             for month in range(1, comparison_period + 1)
-        )
-
-    # Inflation adjustment on cash: single payment at month 1
-    inflation_adj = Decimal(0)
-    if settings.inflation_enabled and comparison_period > 0:
-        inflation_adj = compute_inflation_adjustment(
-            [total_payments], settings.inflation_rate
         )
 
     tax_savings = Decimal(0)
@@ -163,7 +182,8 @@ def _build_loan_result(
     if settings.inflation_enabled:
         payments_list = [dp.payment for dp in schedule]
         inflation_adj = compute_inflation_adjustment(
-            payments_list, settings.inflation_rate
+            payments_list,
+            settings.inflation_rate,
         )
 
     # Tax savings
@@ -174,10 +194,38 @@ def _build_loan_result(
 
     true_total_cost = total_payments + opp_cost - rebates - tax_savings + inflation_adj
 
-    # Build monthly data with cumulative cost
+    # Compute per-period cost factors
+    opp_per_period = compute_opportunity_cost_per_period(
+        option,
+        settings,
+        comparison_period,
+    )
+
+    # Per-period inflation: difference between nominal and discounted per month
+    infl_per_period: list[Decimal] = []
+    if settings.inflation_enabled:
+        payments_list = [dp.payment for dp in schedule]
+        discounted = discount_cash_flows(payments_list, settings.inflation_rate)
+        infl_per_period = [
+            quantize_money(nom - disc)
+            for nom, disc in zip(payments_list, discounted, strict=True)
+        ]
+    else:
+        infl_per_period = [Decimal(0)] * len(schedule)
+
+    # Per-period tax savings
+    tax_per_period: list[Decimal] = []
+    if settings.tax_enabled:
+        tax_per_period = [
+            quantize_money(dp.interest_portion * settings.tax_rate) for dp in schedule
+        ]
+    else:
+        tax_per_period = [Decimal(0)] * len(schedule)
+
+    # Build monthly data with cumulative cost and per-period factors
     monthly_data: list[MonthlyDataPoint] = []
     cumulative = down
-    for dp in schedule:
+    for i, dp in enumerate(schedule):
         cumulative = cumulative + dp.payment
         monthly_data.append(
             MonthlyDataPoint(
@@ -188,24 +236,33 @@ def _build_loan_result(
                 remaining_balance=dp.remaining_balance,
                 investment_balance=Decimal(0),
                 cumulative_cost=quantize_money(cumulative),
+                opportunity_cost=opp_per_period[i],
+                inflation_adjustment=infl_per_period[i],
+                tax_savings=tax_per_period[i],
             ),
         )
 
     # Pad monthly data to comparison period if loan is shorter
     if term < comparison_period:
         final_cumulative = quantize_money(cumulative)
-        monthly_data.extend(
-            MonthlyDataPoint(
-                month=month,
-                payment=Decimal(0),
-                interest_portion=Decimal(0),
-                principal_portion=Decimal(0),
-                remaining_balance=Decimal(0),
-                investment_balance=Decimal(0),
-                cumulative_cost=final_cumulative,
+        for month in range(term + 1, comparison_period + 1):
+            pad_idx = month - 1
+            monthly_data.append(
+                MonthlyDataPoint(
+                    month=month,
+                    payment=Decimal(0),
+                    interest_portion=Decimal(0),
+                    principal_portion=Decimal(0),
+                    remaining_balance=Decimal(0),
+                    investment_balance=Decimal(0),
+                    cumulative_cost=final_cumulative,
+                    opportunity_cost=opp_per_period[pad_idx]
+                    if pad_idx < len(opp_per_period)
+                    else Decimal(0),
+                    inflation_adjustment=Decimal(0),
+                    tax_savings=Decimal(0),
+                ),
             )
-            for month in range(term + 1, comparison_period + 1)
-        )
 
     return OptionResult(
         total_payments=quantize_money(total_payments),
@@ -328,15 +385,21 @@ def compare(
     for option in options:
         if option.option_type == OptionType.CASH:
             results[option.label] = _build_cash_result(
-                option, settings, comparison_period
+                option,
+                settings,
+                comparison_period,
             )
         elif option.option_type == OptionType.PROMO_ZERO_PERCENT:
             results[option.label] = _build_promo_result(
-                option, settings, comparison_period
+                option,
+                settings,
+                comparison_period,
             )
         else:
             results[option.label] = _build_loan_result(
-                option, settings, comparison_period
+                option,
+                settings,
+                comparison_period,
             )
 
     # Generate caveats for all options

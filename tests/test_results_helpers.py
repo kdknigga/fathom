@@ -10,12 +10,19 @@ from decimal import Decimal
 from fathom.models import (
     ComparisonResult,
     FinancingOption,
+    GlobalSettings,
     MonthlyDataPoint,
     OptionResult,
     OptionType,
     PromoResult,
 )
-from fathom.results import analyze_results, generate_recommendation_text
+from fathom.results import (
+    aggregate_annual,
+    analyze_results,
+    build_compare_data,
+    build_detailed_breakdown,
+    generate_recommendation_text,
+)
 
 
 def _make_option_result(
@@ -279,3 +286,187 @@ class TestRecommendationText:
 
         assert isinstance(text, str)
         assert len(text) > 0
+
+
+def _make_multi_month_option_result(
+    months: int = 12,
+    payment: Decimal = Decimal(100),
+) -> OptionResult:
+    """Build an OptionResult with multiple monthly data points."""
+    monthly_data = [
+        MonthlyDataPoint(
+            month=m + 1,
+            payment=payment,
+            interest_portion=Decimal(5),
+            principal_portion=Decimal(95),
+            remaining_balance=Decimal(1000) - Decimal(95) * (m + 1),
+            investment_balance=Decimal(0),
+            cumulative_cost=payment * (m + 1),
+            opportunity_cost=Decimal(2),
+            inflation_adjustment=Decimal(1),
+            tax_savings=Decimal(3),
+        )
+        for m in range(months)
+    ]
+    return OptionResult(
+        total_payments=payment * months,
+        total_interest=Decimal(5) * months,
+        opportunity_cost=Decimal(2) * months,
+        tax_savings=Decimal(3) * months,
+        inflation_adjustment=Decimal(1) * months,
+        rebates=Decimal(0),
+        true_total_cost=payment * months,
+        monthly_data=monthly_data,
+    )
+
+
+class TestBuildDetailedBreakdown:
+    """Tests for build_detailed_breakdown function."""
+
+    def test_returns_correct_structure(self):
+        """build_detailed_breakdown returns list of dicts with required keys."""
+        result = _make_multi_month_option_result(months=3)
+        options_data = [
+            {
+                "name": "Loan",
+                "is_promo": False,
+                "is_winner": True,
+                "result": result,
+            },
+        ]
+        settings = GlobalSettings(return_rate=Decimal("0.07"))
+
+        breakdown = build_detailed_breakdown(options_data, 3, settings)
+
+        assert len(breakdown) == 1
+        entry = breakdown[0]
+        assert entry["name"] == "Loan"
+        assert entry["is_winner"] is True
+        assert len(entry["rows"]) == 3
+        assert "totals" in entry
+
+    def test_monthly_rows_have_required_fields(self):
+        """Each row dict has all required period data fields."""
+        result = _make_multi_month_option_result(months=2)
+        options_data = [
+            {
+                "name": "Loan",
+                "is_promo": False,
+                "is_winner": True,
+                "result": result,
+            },
+        ]
+        settings = GlobalSettings(return_rate=Decimal("0.07"))
+
+        breakdown = build_detailed_breakdown(options_data, 2, settings)
+        row = breakdown[0]["rows"][0]
+
+        assert "period" in row
+        assert "payment" in row
+        assert "cumulative_true_total_cost" in row
+
+    def test_annual_granularity(self):
+        """build_detailed_breakdown with annual granularity groups by year."""
+        result = _make_multi_month_option_result(months=24)
+        options_data = [
+            {
+                "name": "Loan",
+                "is_promo": False,
+                "is_winner": True,
+                "result": result,
+            },
+        ]
+        settings = GlobalSettings(return_rate=Decimal("0.07"))
+
+        breakdown = build_detailed_breakdown(
+            options_data,
+            24,
+            settings,
+            granularity="annual",
+        )
+
+        assert len(breakdown[0]["rows"]) == 2
+        assert breakdown[0]["rows"][0]["period"] == "Year 1"
+        assert breakdown[0]["rows"][1]["period"] == "Year 2"
+
+
+class TestAggregateAnnual:
+    """Tests for aggregate_annual function."""
+
+    def test_groups_12_month_chunks(self):
+        """aggregate_annual groups 12 months into Year 1, remainder into Year 2."""
+        monthly_rows = [
+            {
+                "period": m + 1,
+                "payment": Decimal(100),
+                "interest_portion": Decimal(5),
+                "principal_portion": Decimal(95),
+                "opportunity_cost": Decimal(2),
+                "inflation_adjustment": Decimal(1),
+                "tax_savings": Decimal(3),
+                "cumulative_true_total_cost": Decimal(100) * (m + 1),
+            }
+            for m in range(15)
+        ]
+
+        annual = aggregate_annual(monthly_rows)
+
+        assert len(annual) == 2
+        assert annual[0]["period"] == "Year 1"
+        assert annual[1]["period"] == "Year 2"
+        # Year 1 sums 12 months of $100 payment
+        assert annual[0]["payment"] == Decimal(1200)
+        # Year 2 sums 3 months
+        assert annual[1]["payment"] == Decimal(300)
+
+    def test_cumulative_uses_last_month(self):
+        """aggregate_annual cumulative uses last month value in each group."""
+        monthly_rows = [
+            {
+                "period": m + 1,
+                "payment": Decimal(100),
+                "interest_portion": Decimal(0),
+                "principal_portion": Decimal(0),
+                "opportunity_cost": Decimal(0),
+                "inflation_adjustment": Decimal(0),
+                "tax_savings": Decimal(0),
+                "cumulative_true_total_cost": Decimal(100) * (m + 1),
+            }
+            for m in range(12)
+        ]
+
+        annual = aggregate_annual(monthly_rows)
+
+        assert annual[0]["cumulative_true_total_cost"] == Decimal(1200)
+
+
+class TestBuildCompareData:
+    """Tests for build_compare_data function."""
+
+    def test_returns_per_option_columns(self):
+        """build_compare_data returns rows with per-option payment and cumulative."""
+        result1 = _make_multi_month_option_result(months=3, payment=Decimal(100))
+        result2 = _make_multi_month_option_result(months=3, payment=Decimal(200))
+        options_data = [
+            {
+                "name": "Cash",
+                "is_promo": False,
+                "is_winner": True,
+                "result": result1,
+            },
+            {
+                "name": "Loan",
+                "is_promo": False,
+                "is_winner": False,
+                "result": result2,
+            },
+        ]
+
+        compare_data = build_compare_data(options_data, 3)
+
+        assert len(compare_data) == 3
+        assert len(compare_data[0]["options"]) == 2
+        assert compare_data[0]["options"][0]["name"] == "Cash"
+        assert compare_data[0]["options"][0]["payment"] == Decimal(100)
+        assert compare_data[0]["options"][1]["name"] == "Loan"
+        assert compare_data[0]["options"][1]["payment"] == Decimal(200)

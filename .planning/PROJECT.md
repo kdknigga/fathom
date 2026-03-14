@@ -26,16 +26,19 @@ Users can instantly see which financing option truly costs least when opportunit
 - ✓ Stateless — no persistent storage, no user accounts, no server-side session data — v1.0
 - ✓ Server-side Python for all calculations — no client-side JS calculation logic — v1.0
 - ✓ Open-source with self-hosting support: README, env-var config, Dockerfile — v1.0
+- ✓ Dark mode — `prefers-color-scheme` support — v1.1
+- ✓ Comma-normalized number inputs — accept and display large numbers with commas — v1.1
+- ✓ Input tooltips — `?` icon popovers explaining form options — v1.1
+- ✓ Output tooltips — `?` icon popovers explaining result terms — v1.1
+- ✓ US-centric tax rate guidance — 2025 IRS bracket reference with click-to-fill — v1.1
+- ✓ Detailed cost breakdown table — per-option period-by-period view with tabs, column toggles, compare tab — v1.1
+- ✓ JSON export/import — download current inputs as JSON file, upload to restore — v1.1
+- ✓ Expanded ruff lint coverage (PL, PT, DTZ, T20) with zero violations — v1.1
+- ✓ Complex function refactoring below default complexity thresholds — v1.1
 
 ### Active
 
-- [ ] Input tooltips — `?` icon popovers explaining form options
-- [ ] Output tooltips — `?` icon popovers explaining result terms (opportunity cost, inflation adjustment, etc.)
-- [ ] Detailed cost breakdown table — per-option period-by-period view of all cost factors with tab switching, column toggles, and side-by-side compare tab
-- [ ] JSON export/import — download current inputs as JSON file, upload to restore
-- [ ] Comma-normalized number inputs — accept and display large numbers with commas
-- [ ] US-centric tax rate guidance — help selecting marginal tax rate
-- [ ] Dark mode — `prefers-color-scheme` support
+(None — next milestone requirements TBD via `/gsd:new-milestone`)
 
 ### Out of Scope
 
@@ -46,30 +49,16 @@ Users can instantly see which financing option truly costs least when opportunit
 - Mobile native app — web-first, responsive design sufficient
 - Offline support — server-rendered app
 - Multi-currency support — adds complexity for minimal user base; math is currency-agnostic
-- Amortization schedule display — ~~noise for comparison tool~~ Revisited: detailed cost breakdown table added in v1.1 with per-factor period-by-period view
 - Wizard/multi-step form — hides context; single-page comparison needs all options visible
 - Client-side calculation logic — creates divergence bugs; server is source of truth
-- Print-friendly CSS — deferred from v1.0 active list, low priority
-- Exportable PDF reports — deferred, JSON export covers data portability for now
-- Scenario comparison (multiple parameter sets side-by-side) — deferred, JSON import/export provides manual workflow
-
-## Current Milestone: v1.1 Deeper Insights
-
-**Goal:** Add explanatory tooltips, detailed per-option cost breakdown tables, JSON import/export, input polish, and dark mode.
-
-**Target features:**
-- Input & output tooltips (`?` icon popovers)
-- Detailed cost breakdown table (tabs, column toggles, compare view)
-- JSON export/import for form inputs
-- Comma-normalized number inputs
-- US-centric tax rate guidance
-- Dark mode (`prefers-color-scheme`)
 
 ## Context
 
-Shipped v1.0 with 2,898 LOC Python across 6 phases (16 plans).
+Shipped v1.1 with 3,944 LOC Python, 5,700 LOC tests, 1,310 LOC templates across 12 phases (29 plans total).
 Tech stack: Python 3.14, Flask, Pydantic, HTMX, Pico CSS, server-rendered SVG charts.
-179 tests passing. All quality gates clean (ruff, ty, pyrefly, prek).
+241 tests passing. All quality gates clean (ruff, ty, pyrefly, prek). Zero inline suppressions.
+
+v1.1 added: dark mode, comma-formatted inputs, tooltip popovers on all form/result fields, IRS tax bracket reference, JSON export/import, detailed per-period cost breakdown with tabs and compare view, and full linting/complexity cleanup.
 
 ### Development Tools (MCP Servers)
 
@@ -112,6 +101,14 @@ All code must pass with zero errors/warnings:
 | Pydantic BaseModel over dataclasses | Type-safe validation, identical API, better error reporting | ✓ Good — seamless migration, richer validation |
 | Three-function pipeline (parse → validate → build) | Separation of concerns for form processing | ✓ Good — testable, each stage independent |
 | Decimal arithmetic for all money | Eliminates float rounding errors in financial calculations | ✓ Good — exact cent precision |
+| CSS variables for dark mode theming | Enables SVG chart colors to switch via media query without Python-side logic | ✓ Good — single source of truth in CSS |
+| :root:not([data-theme]) dark selector | Matches Pico CSS convention for auto dark mode detection | ✓ Good — no conflict with Pico framework |
+| HTML Popover API + CSS Anchor Positioning for tooltips | Native browser API, no JS toggle logic, accessible by default | ✓ Good — Escape/focus handling free, @supports fallback for older browsers |
+| Tooltip text as Python dict on breakdown rows | Keeps content with data, templates just render conditionally | ✓ Good — single source of truth, easy to update |
+| formaction with hx-disable for Export button | Bypasses HTMX interception for file download | ✓ Good — clean separation of HTMX vs standard requests |
+| HTMX hx-include on detail tab buttons | Stateless detail endpoint — tabs POST current form data | ✓ Good — no server-side session state needed |
+| Per-period cost factor decomposition | Separate opportunity/inflation/tax per month alongside aggregates | ✓ Good — enables detailed breakdown without changing aggregate math |
+| Cumulative rounding tolerance widened to 0.05 | Per-period Decimal rounding over 36+ months accumulates | ✓ Good — pragmatic, documented in tests |
 
 ---
-*Last updated: 2026-03-13 after v1.1 milestone start*
+*Last updated: 2026-03-14 after v1.1 milestone*
