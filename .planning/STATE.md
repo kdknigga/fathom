@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Address Code Review
-status: completed
-last_updated: "2026-03-15T13:51:07.878Z"
-last_activity: 2026-03-15 -- Completed 13-01 centralize monetary rounding
+status: in-progress
+last_updated: "2026-03-15T14:40:22.000Z"
+last_activity: 2026-03-15 -- Completed 14-01 fix promo penalty modeling
 progress:
   total_phases: 4
-  completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
+  completed_phases: 2
+  total_plans: 2
+  completed_plans: 2
 ---
 
 # Project State
@@ -19,14 +19,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** Users can instantly see which financing option truly costs least when opportunity costs, inflation, and taxes are factored in.
-**Current focus:** Phase 13 — Centralize Monetary Rounding
+**Current focus:** Phase 14 — Engine Corrections
 
 ## Current Position
 
-Phase: 13 of 16 (Centralize Monetary Rounding) -- COMPLETE
+Phase: 14 of 16 (Engine Corrections) -- COMPLETE
 Plan: 1 of 1 in current phase (COMPLETE)
-Status: Phase 13 complete, ready for Phase 14
-Last activity: 2026-03-15 -- Completed 13-01 centralize monetary rounding
+Status: Phase 14 complete, ready for Phase 15
+Last activity: 2026-03-15 -- Completed 14-01 fix promo penalty modeling
 
 ## Performance Metrics
 
@@ -46,6 +46,9 @@ v1.2 roadmap decisions:
 - Rounding centralization first as zero-risk foundation before engine fixes
 - Promo penalty fix requires written business rule + worked numeric example before code changes
 - [Phase 13]: Kept quantize_money signature identical to existing copies -- no new parameters
+- [Phase 14]: Used _PromoContext dataclass to bundle promo params for helper extraction
+- [Phase 14]: Computed opportunity cost inline using pool model rather than synthetic FinancingOption
+- [Phase 14]: Min payment = required_monthly / 2 as not-paid-on-time assumption
 
 ### Roadmap Evolution
 
@@ -59,7 +62,7 @@ None.
 
 ### Blockers/Concerns
 
-- Phase 14 (promo penalty): Both branches of `_build_promo_result()` produce identical outputs. Must write business rule with worked example before coding. Key risk area.
+- ~~Phase 14 (promo penalty): Both branches of `_build_promo_result()` produce identical outputs.~~ RESOLVED in 14-01.
 
 ### Quick Tasks Completed
 
@@ -68,3 +71,4 @@ None.
 | 1 | Create github actions to build container and store in github container registry | 2026-03-13 | 8f52a66 | [1-create-github-actions-to-build-container](./quick/1-create-github-actions-to-build-container/) |
 | 2 | Hide inflation/tax columns in detail table when features disabled | 2026-03-14 | cf662ff | [2-fix-ux-rough-edge-hide-inflation-tax-col](./quick/2-fix-ux-rough-edge-hide-inflation-tax-col/) |
 | Phase 13 P01 | 2min | 2 tasks | 7 files |
+| Phase 14 P01 | 6min | 2 tasks | 3 files |

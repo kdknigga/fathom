@@ -110,6 +110,6 @@ Plans:
 | 11. Detailed Period Breakdown | v1.1 | 3/3 | Complete | 2026-03-14 |
 | 12. Python Linting Cleanup | v1.1 | 2/2 | Complete | 2026-03-14 |
 | 13. Centralize Monetary Rounding | 1/1 | Complete    | 2026-03-15 | - |
-| 14. Engine Corrections | v1.2 | 0/2 | Not started | - |
+| 14. Engine Corrections | 1/2 | In Progress|  | - |
 | 15. Validation and HTMX Guards | v1.2 | 0/? | Not started | - |
 | 16. Custom Option Cleanup | v1.2 | 0/? | Not started | - |

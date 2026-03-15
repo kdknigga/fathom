@@ -9,7 +9,7 @@ Requirements for code review defect fixes. Each maps to roadmap phases.
 
 ### Engine Correctness
 
-- [ ] **ENG-01**: Promo penalty modeling produces distinct costs for deferred-interest (retroactive) vs forward-only interest scenarios
+- [x] **ENG-01**: Promo penalty modeling produces distinct costs for deferred-interest (retroactive) vs forward-only interest scenarios
 - [ ] **ENG-02**: Line chart plots cumulative true cost (payments + opportunity cost - tax savings + inflation) per period, not cumulative payments
 - [x] **ENG-03**: Monetary rounding utility centralized into single `money.py` module, replacing 5 duplicate `quantize_money()` definitions
 
@@ -27,7 +27,7 @@ Requirements for code review defect fixes. Each maps to roadmap phases.
 
 ### Test Coverage
 
-- [ ] **TEST-01**: Tests prove deferred-interest flags materially change `not_paid_on_time` results
+- [x] **TEST-01**: Tests prove deferred-interest flags materially change `not_paid_on_time` results
 - [ ] **TEST-02**: Tests assert line chart data points match cumulative true cost metric
 - [ ] **TEST-03**: Tests verify HTMX add-at-4 and remove-at-2 are rejected server-side
 - [ ] **TEST-04**: Tests verify inflation/tax rate bounds reject impossible values
@@ -54,7 +54,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ENG-01 | Phase 14 | Pending |
+| ENG-01 | Phase 14 | Complete |
 | ENG-02 | Phase 14 | Pending |
 | ENG-03 | Phase 13 | Complete |
 | VAL-01 | Phase 15 | Pending |
@@ -63,7 +63,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | VAL-04 | Phase 15 | Pending |
 | CUST-01 | Phase 16 | Pending |
 | CUST-02 | Phase 16 | Pending |
-| TEST-01 | Phase 14 | Pending |
+| TEST-01 | Phase 14 | Complete |
 | TEST-02 | Phase 14 | Pending |
 | TEST-03 | Phase 15 | Pending |
 | TEST-04 | Phase 15 | Pending |
