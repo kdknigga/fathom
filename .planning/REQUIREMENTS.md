@@ -11,7 +11,7 @@ Requirements for code review defect fixes. Each maps to roadmap phases.
 
 - [ ] **ENG-01**: Promo penalty modeling produces distinct costs for deferred-interest (retroactive) vs forward-only interest scenarios
 - [ ] **ENG-02**: Line chart plots cumulative true cost (payments + opportunity cost - tax savings + inflation) per period, not cumulative payments
-- [ ] **ENG-03**: Monetary rounding utility centralized into single `money.py` module, replacing 5 duplicate `quantize_money()` definitions
+- [x] **ENG-03**: Monetary rounding utility centralized into single `money.py` module, replacing 5 duplicate `quantize_money()` definitions
 
 ### Input Validation
 
@@ -56,7 +56,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | ENG-01 | Phase 14 | Pending |
 | ENG-02 | Phase 14 | Pending |
-| ENG-03 | Phase 13 | Pending |
+| ENG-03 | Phase 13 | Complete |
 | VAL-01 | Phase 15 | Pending |
 | VAL-02 | Phase 15 | Pending |
 | VAL-03 | Phase 15 | Pending |
