@@ -117,4 +117,4 @@ Plans:
 | 13. Centralize Monetary Rounding | 1/1 | Complete    | 2026-03-15 | - |
 | 14. Engine Corrections | 2/2 | Complete    | 2026-03-15 | - |
 | 15. Validation and HTMX Guards | 2/2 | Complete    | 2026-03-15 | - |
-| 16. Custom Option Cleanup | v1.2 | 1/1 | Complete | 2026-03-15 |
+| 16. Custom Option Cleanup | v1.2 | Complete    | 2026-03-15 | 2026-03-15 |
