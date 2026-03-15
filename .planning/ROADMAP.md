@@ -79,7 +79,10 @@ Plans:
   3. Clicking "Add Option" when 4 options exist returns HTTP 200 with the form unchanged (no 5th option appears)
   4. Clicking "Remove Option" when 2 options exist returns HTTP 200 with the form unchanged (neither option is removed)
   5. Disabling the inflation toggle with an out-of-range value in the field does not trigger a validation error (disabled fields bypass bounds checking)
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 15-01-PLAN.md — Add inflation/tax rate bounds validation with toggle bypass and template error display
+- [ ] 15-02-PLAN.md — Add HTMX option count guards with warning banners
 
 ### Phase 16: Custom Option Cleanup
 **Goal**: Users who select the "Custom/Other" option type see their custom label in results and understand that upfront cash is optional
@@ -110,6 +113,6 @@ Plans:
 | 11. Detailed Period Breakdown | v1.1 | 3/3 | Complete | 2026-03-14 |
 | 12. Python Linting Cleanup | v1.1 | 2/2 | Complete | 2026-03-14 |
 | 13. Centralize Monetary Rounding | 1/1 | Complete    | 2026-03-15 | - |
-| 14. Engine Corrections | 2/2 | Complete   | 2026-03-15 | - |
-| 15. Validation and HTMX Guards | v1.2 | 0/? | Not started | - |
+| 14. Engine Corrections | 2/2 | Complete    | 2026-03-15 | - |
+| 15. Validation and HTMX Guards | v1.2 | 0/2 | Not started | - |
 | 16. Custom Option Cleanup | v1.2 | 0/? | Not started | - |
