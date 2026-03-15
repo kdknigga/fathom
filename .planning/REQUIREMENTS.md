@@ -54,26 +54,26 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ENG-01 | — | Pending |
-| ENG-02 | — | Pending |
-| ENG-03 | — | Pending |
-| VAL-01 | — | Pending |
-| VAL-02 | — | Pending |
-| VAL-03 | — | Pending |
-| VAL-04 | — | Pending |
-| CUST-01 | — | Pending |
-| CUST-02 | — | Pending |
-| TEST-01 | — | Pending |
-| TEST-02 | — | Pending |
-| TEST-03 | — | Pending |
-| TEST-04 | — | Pending |
-| TEST-05 | — | Pending |
+| ENG-01 | Phase 14 | Pending |
+| ENG-02 | Phase 14 | Pending |
+| ENG-03 | Phase 13 | Pending |
+| VAL-01 | Phase 15 | Pending |
+| VAL-02 | Phase 15 | Pending |
+| VAL-03 | Phase 15 | Pending |
+| VAL-04 | Phase 15 | Pending |
+| CUST-01 | Phase 16 | Pending |
+| CUST-02 | Phase 16 | Pending |
+| TEST-01 | Phase 14 | Pending |
+| TEST-02 | Phase 14 | Pending |
+| TEST-03 | Phase 15 | Pending |
+| TEST-04 | Phase 15 | Pending |
+| TEST-05 | Phase 16 | Pending |
 
 **Coverage:**
 - v1.2 requirements: 14 total
-- Mapped to phases: 0
-- Unmapped: 14
+- Mapped to phases: 14
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-15*
-*Last updated: 2026-03-15 after initial definition*
+*Last updated: 2026-03-15 after roadmap creation*

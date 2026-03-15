@@ -4,9 +4,9 @@ milestone: v1.2
 milestone_name: Address Code Review
 status: active
 last_updated: "2026-03-15T00:00:00.000Z"
-last_activity: 2026-03-15 — Milestone v1.2 started
+last_activity: 2026-03-15 — Roadmap created for v1.2
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** Users can instantly see which financing option truly costs least when opportunity costs, inflation, and taxes are factored in.
-**Current focus:** Defining requirements for v1.2
+**Current focus:** Phase 13 — Centralize Monetary Rounding
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-03-15 — Milestone v1.2 started
+Phase: 13 of 16 (Centralize Monetary Rounding)
+Plan: 0 of ? in current phase
+Status: Ready to plan
+Last activity: 2026-03-15 — Roadmap created for v1.2 milestone
 
 ## Performance Metrics
 
@@ -42,10 +42,16 @@ Last activity: 2026-03-15 — Milestone v1.2 started
 
 All v1.0 and v1.1 decisions archived in PROJECT.md Key Decisions table.
 
+v1.2 roadmap decisions:
+- Coarse granularity: 4 phases bundling fixes with their tests (no separate test backfill phase)
+- Rounding centralization first as zero-risk foundation before engine fixes
+- Promo penalty fix requires written business rule + worked numeric example before code changes
+
 ### Roadmap Evolution
 
 - v1.0: 6 phases, 16 plans shipped (2026-03-10 to 2026-03-13)
-- v1.1: 6 phases (7-12), 23 requirements, shipped (2026-03-13 to 2026-03-14)
+- v1.1: 6 phases (7-12), 13 plans shipped (2026-03-13 to 2026-03-14)
+- v1.2: 4 phases (13-16), plans TBD (started 2026-03-15)
 
 ### Pending Todos
 
@@ -53,7 +59,7 @@ None.
 
 ### Blockers/Concerns
 
-None.
+- Phase 14 (promo penalty): Both branches of `_build_promo_result()` produce identical outputs. Must write business rule with worked example before coding. Key risk area.
 
 ### Quick Tasks Completed
 
