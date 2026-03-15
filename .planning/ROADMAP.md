@@ -64,7 +64,10 @@ Plans:
   2. A written business rule with worked numeric example ($10K purchase, 24.99% APR, 12-month promo) exists as a code comment before implementation, and tests assert against those specific expected dollar amounts
   3. The line chart data points for each option match cumulative true cost (payments + opportunity cost - tax savings + inflation adjustment), not cumulative payments
   4. Tests assert the invariant: retroactive penalty cost > forward-only penalty cost > paid-on-time cost, using specific dollar amounts
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 14-01-PLAN.md — Fix promo penalty modeling with two-phase schedule construction
+- [ ] 14-02-PLAN.md — Fix cumulative cost metric and add dual promo chart lines
 
 ### Phase 15: Validation and HTMX Guards
 **Goal**: Users cannot submit impossible inflation/tax values or violate the 2-4 option contract through the UI
@@ -107,6 +110,6 @@ Plans:
 | 11. Detailed Period Breakdown | v1.1 | 3/3 | Complete | 2026-03-14 |
 | 12. Python Linting Cleanup | v1.1 | 2/2 | Complete | 2026-03-14 |
 | 13. Centralize Monetary Rounding | 1/1 | Complete    | 2026-03-15 | - |
-| 14. Engine Corrections | v1.2 | 0/? | Not started | - |
+| 14. Engine Corrections | v1.2 | 0/2 | Not started | - |
 | 15. Validation and HTMX Guards | v1.2 | 0/? | Not started | - |
 | 16. Custom Option Cleanup | v1.2 | 0/? | Not started | - |
