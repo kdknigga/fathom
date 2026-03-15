@@ -113,24 +113,32 @@ def _build_cash_result(
     # Build monthly data for cash -- single payment in month 1
     monthly_data: list[MonthlyDataPoint] = []
     if comparison_period > 0:
-        cumulative = total_payments
-        monthly_data.extend(
-            MonthlyDataPoint(
-                month=month,
-                payment=total_payments if month == 1 else Decimal(0),
-                interest_portion=Decimal(0),
-                principal_portion=total_payments if month == 1 else Decimal(0),
-                remaining_balance=Decimal(0),
-                investment_balance=Decimal(0),
-                cumulative_cost=cumulative,
-                opportunity_cost=opp_per_period[month - 1]
+        cumulative = Decimal(0)
+        for month in range(1, comparison_period + 1):
+            pmt = total_payments if month == 1 else Decimal(0)
+            opp = (
+                opp_per_period[month - 1]
                 if month - 1 < len(opp_per_period)
-                else Decimal(0),
-                inflation_adjustment=cash_infl_month1 if month == 1 else Decimal(0),
-                tax_savings=Decimal(0),
+                else Decimal(0)
             )
-            for month in range(1, comparison_period + 1)
-        )
+            infl = cash_infl_month1 if month == 1 else Decimal(0)
+            tax = Decimal(0)
+            net = pmt + opp - tax + infl
+            cumulative += net
+            monthly_data.append(
+                MonthlyDataPoint(
+                    month=month,
+                    payment=pmt,
+                    interest_portion=Decimal(0),
+                    principal_portion=total_payments if month == 1 else Decimal(0),
+                    remaining_balance=Decimal(0),
+                    investment_balance=Decimal(0),
+                    cumulative_cost=quantize_money(cumulative),
+                    opportunity_cost=opp,
+                    inflation_adjustment=infl,
+                    tax_savings=tax,
+                ),
+            )
 
     tax_savings = Decimal(0)
 
@@ -237,11 +245,12 @@ def _build_loan_result(
     else:
         tax_per_period = [Decimal(0)] * len(schedule)
 
-    # Build monthly data with cumulative cost and per-period factors
+    # Build monthly data with cumulative true cost and per-period factors
     monthly_data: list[MonthlyDataPoint] = []
-    cumulative = down
+    cumulative = Decimal(0)
     for i, dp in enumerate(schedule):
-        cumulative = cumulative + dp.payment
+        net = dp.payment + opp_per_period[i] - tax_per_period[i] + infl_per_period[i]
+        cumulative += net
         monthly_data.append(
             MonthlyDataPoint(
                 month=dp.month,
@@ -259,9 +268,13 @@ def _build_loan_result(
 
     # Pad monthly data to comparison period if loan is shorter
     if term < comparison_period:
-        final_cumulative = quantize_money(cumulative)
         for month in range(term + 1, comparison_period + 1):
             pad_idx = month - 1
+            pad_opp = (
+                opp_per_period[pad_idx] if pad_idx < len(opp_per_period) else Decimal(0)
+            )
+            pad_net = Decimal(0) + pad_opp - Decimal(0) + Decimal(0)
+            cumulative += pad_net
             monthly_data.append(
                 MonthlyDataPoint(
                     month=month,
@@ -270,10 +283,8 @@ def _build_loan_result(
                     principal_portion=Decimal(0),
                     remaining_balance=Decimal(0),
                     investment_balance=Decimal(0),
-                    cumulative_cost=final_cumulative,
-                    opportunity_cost=opp_per_period[pad_idx]
-                    if pad_idx < len(opp_per_period)
-                    else Decimal(0),
+                    cumulative_cost=quantize_money(cumulative),
+                    opportunity_cost=pad_opp,
                     inflation_adjustment=Decimal(0),
                     tax_savings=Decimal(0),
                 ),
@@ -506,32 +517,37 @@ def _build_not_paid_result(
     rebates = Decimal(0)
     true_total_cost = total_payments + opp_cost - rebates - tax_savings + inflation_adj
 
-    # Enrich with per-period cost factors
-    monthly_data: list[MonthlyDataPoint] = [
-        MonthlyDataPoint(
-            month=dp.month,
-            payment=dp.payment,
-            interest_portion=dp.interest_portion,
-            principal_portion=dp.principal_portion,
-            remaining_balance=dp.remaining_balance,
-            investment_balance=Decimal(0),
-            cumulative_cost=dp.cumulative_cost,
-            opportunity_cost=opp_per_period[i]
-            if i < len(opp_per_period)
-            else Decimal(0),
-            inflation_adjustment=infl_per_period[i],
-            tax_savings=tax_per_period[i],
+    # Enrich with per-period cost factors and compute cumulative true cost
+    monthly_data: list[MonthlyDataPoint] = []
+    cumulative = Decimal(0)
+    for i, dp in enumerate(all_data):
+        opp = opp_per_period[i] if i < len(opp_per_period) else Decimal(0)
+        net = dp.payment + opp - tax_per_period[i] + infl_per_period[i]
+        cumulative += net
+        monthly_data.append(
+            MonthlyDataPoint(
+                month=dp.month,
+                payment=dp.payment,
+                interest_portion=dp.interest_portion,
+                principal_portion=dp.principal_portion,
+                remaining_balance=dp.remaining_balance,
+                investment_balance=Decimal(0),
+                cumulative_cost=quantize_money(cumulative),
+                opportunity_cost=opp,
+                inflation_adjustment=infl_per_period[i],
+                tax_savings=tax_per_period[i],
+            ),
         )
-        for i, dp in enumerate(all_data)
-    ]
 
     # Pad to comparison period if needed
     if total_timeline < comparison_period:
-        final_cumulative = (
-            monthly_data[-1].cumulative_cost if monthly_data else ctx.down
-        )
         for month in range(total_timeline + 1, comparison_period + 1):
             pad_idx = month - 1
+            pad_opp = (
+                opp_per_period[pad_idx] if pad_idx < len(opp_per_period) else Decimal(0)
+            )
+            pad_net = Decimal(0) + pad_opp - Decimal(0) + Decimal(0)
+            cumulative += pad_net
             monthly_data.append(
                 MonthlyDataPoint(
                     month=month,
@@ -540,10 +556,8 @@ def _build_not_paid_result(
                     principal_portion=Decimal(0),
                     remaining_balance=Decimal(0),
                     investment_balance=Decimal(0),
-                    cumulative_cost=final_cumulative,
-                    opportunity_cost=opp_per_period[pad_idx]
-                    if pad_idx < len(opp_per_period)
-                    else Decimal(0),
+                    cumulative_cost=quantize_money(cumulative),
+                    opportunity_cost=pad_opp,
                     inflation_adjustment=Decimal(0),
                     tax_savings=Decimal(0),
                 ),
