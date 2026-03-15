@@ -69,6 +69,42 @@ def promo_zero_percent() -> FinancingOption:
 
 
 @pytest.fixture
+def promo_forward_only() -> FinancingOption:
+    """
+    Create a $10,000 zero-percent promo with forward-only interest.
+
+    12-month term, 24.99% post-promo APR, no deferred or retroactive interest.
+    """
+    return FinancingOption(
+        option_type=OptionType.PROMO_ZERO_PERCENT,
+        label="0% Promo Forward",
+        purchase_price=Decimal(10000),
+        term_months=12,
+        post_promo_apr=Decimal("0.2499"),
+        deferred_interest=False,
+        retroactive_interest=False,
+    )
+
+
+@pytest.fixture
+def promo_retroactive() -> FinancingOption:
+    """
+    Create a $10,000 zero-percent promo with retroactive interest.
+
+    12-month term, 24.99% post-promo APR, deferred and retroactive interest enabled.
+    """
+    return FinancingOption(
+        option_type=OptionType.PROMO_ZERO_PERCENT,
+        label="0% Promo Retro",
+        purchase_price=Decimal(10000),
+        term_months=12,
+        post_promo_apr=Decimal("0.2499"),
+        deferred_interest=True,
+        retroactive_interest=True,
+    )
+
+
+@pytest.fixture
 def default_settings() -> GlobalSettings:
     """Create default settings with 7% return, no inflation, no tax."""
     return GlobalSettings(

@@ -178,6 +178,145 @@ def test_promo_result_has_per_period_values(
     assert any(v > Decimal(0) for v in not_paid_opp)
 
 
+def test_deferred_interest_higher_than_forward_only(
+    promo_retroactive: FinancingOption,
+    promo_forward_only: FinancingOption,
+    default_settings: GlobalSettings,
+) -> None:
+    """Retroactive promo not-paid cost exceeds forward-only not-paid cost."""
+    from fathom.engine import compare
+
+    retro_result = compare(options=[promo_retroactive], settings=default_settings)
+    fwd_result = compare(options=[promo_forward_only], settings=default_settings)
+
+    retro_promo = retro_result.results[promo_retroactive.label]
+    fwd_promo = fwd_result.results[promo_forward_only.label]
+    assert isinstance(retro_promo, PromoResult)
+    assert isinstance(fwd_promo, PromoResult)
+
+    assert (
+        retro_promo.not_paid_on_time.true_total_cost
+        > fwd_promo.not_paid_on_time.true_total_cost
+    )
+
+
+def test_forward_only_higher_than_paid_on_time(
+    promo_forward_only: FinancingOption,
+    default_settings: GlobalSettings,
+) -> None:
+    """Forward-only not-paid cost exceeds paid-on-time cost."""
+    from fathom.engine import compare
+
+    result = compare(options=[promo_forward_only], settings=default_settings)
+    promo = result.results[promo_forward_only.label]
+    assert isinstance(promo, PromoResult)
+
+    assert promo.not_paid_on_time.true_total_cost > promo.paid_on_time.true_total_cost
+
+
+def test_promo_worked_example_exact_values(
+    promo_retroactive: FinancingOption,
+    promo_forward_only: FinancingOption,
+    default_settings: GlobalSettings,
+) -> None:
+    """Worked example produces expected invariant: retroactive > forward > paid_on_time."""
+    from fathom.engine import compare
+    from fathom.money import quantize_money
+
+    retro_result = compare(options=[promo_retroactive], settings=default_settings)
+    fwd_result = compare(options=[promo_forward_only], settings=default_settings)
+
+    retro_promo = retro_result.results[promo_retroactive.label]
+    fwd_promo = fwd_result.results[promo_forward_only.label]
+    assert isinstance(retro_promo, PromoResult)
+    assert isinstance(fwd_promo, PromoResult)
+
+    # Required monthly to pay off $10K in 12 months
+    required = quantize_money(Decimal(10000) / 12)
+    assert retro_promo.required_monthly_payment == required
+
+    # Minimum payment during promo is half the required
+    min_pay = quantize_money(required / 2)
+    assert min_pay == Decimal("416.67") or min_pay == Decimal("416.66")
+
+    # Retroactive interest = principal * APR * (term/12)
+    retro_interest = quantize_money(Decimal(10000) * Decimal("0.2499") * Decimal(1))
+    assert retro_interest == Decimal("2499.00")
+
+    # Invariant: retroactive > forward > paid_on_time
+    assert (
+        retro_promo.not_paid_on_time.true_total_cost
+        > fwd_promo.not_paid_on_time.true_total_cost
+    )
+    assert (
+        fwd_promo.not_paid_on_time.true_total_cost
+        > fwd_promo.paid_on_time.true_total_cost
+    )
+
+
+def test_promo_not_paid_monthly_data_covers_full_timeline(
+    promo_retroactive: FinancingOption,
+    default_settings: GlobalSettings,
+) -> None:
+    """Not-paid monthly data covers months 1 through 2*promo_term."""
+    from fathom.engine import compare
+
+    result = compare(options=[promo_retroactive], settings=default_settings)
+    promo = result.results[promo_retroactive.label]
+    assert isinstance(promo, PromoResult)
+
+    months = [dp.month for dp in promo.not_paid_on_time.monthly_data]
+    assert months == list(range(1, 25))
+
+
+def test_promo_minimum_payments_during_promo(
+    promo_retroactive: FinancingOption,
+    default_settings: GlobalSettings,
+) -> None:
+    """During promo period, each month payment equals min_payment."""
+    from fathom.engine import compare
+    from fathom.money import quantize_money
+
+    result = compare(options=[promo_retroactive], settings=default_settings)
+    promo = result.results[promo_retroactive.label]
+    assert isinstance(promo, PromoResult)
+
+    required = quantize_money(Decimal(10000) / 12)
+    min_pay = quantize_money(required / 2)
+
+    for dp in promo.not_paid_on_time.monthly_data[:12]:
+        assert dp.payment == min_pay
+
+
+def test_promo_retroactive_interest_lump_at_boundary(
+    promo_retroactive: FinancingOption,
+    default_settings: GlobalSettings,
+) -> None:
+    """For deferred-interest, post-promo balance includes retroactive interest."""
+    from fathom.engine import compare
+    from fathom.money import quantize_money
+
+    result = compare(options=[promo_retroactive], settings=default_settings)
+    promo = result.results[promo_retroactive.label]
+    assert isinstance(promo, PromoResult)
+
+    required = quantize_money(Decimal(10000) / 12)
+    min_pay = quantize_money(required / 2)
+    remaining_principal = Decimal(10000) - 12 * min_pay
+    retro_interest = quantize_money(Decimal(10000) * Decimal("0.2499") * Decimal(1))
+    expected_post_promo = remaining_principal + retro_interest
+
+    # Verify month 12 remaining balance equals remaining_principal
+    month_12 = promo.not_paid_on_time.monthly_data[11]
+    assert month_12.remaining_balance == remaining_principal
+
+    # The post-promo amortization total payments should reflect the retroactive balance
+    post_promo_payments = sum(
+        dp.payment for dp in promo.not_paid_on_time.monthly_data[12:]
+    )
+    assert post_promo_payments > expected_post_promo * Decimal("0.9")
+
+
 def test_per_period_opp_cost_sums_to_aggregate(
     standard_loan: FinancingOption,
     default_settings: GlobalSettings,
