@@ -22,8 +22,8 @@ Requirements for code review defect fixes. Each maps to roadmap phases.
 
 ### Custom Options
 
-- [ ] **CUST-01**: Custom option's `custom_label` field is displayed in results as the option name
-- [ ] **CUST-02**: Custom option's upfront cash field is clearly marked as optional in both UI and validation
+- [x] **CUST-01**: Custom option's `custom_label` field is displayed in results as the option name
+- [x] **CUST-02**: Custom option's upfront cash field is clearly marked as optional in both UI and validation
 
 ### Test Coverage
 
@@ -31,7 +31,7 @@ Requirements for code review defect fixes. Each maps to roadmap phases.
 - [x] **TEST-02**: Tests assert line chart data points match cumulative true cost metric
 - [x] **TEST-03**: Tests verify HTMX add-at-4 and remove-at-2 are rejected server-side
 - [x] **TEST-04**: Tests verify inflation/tax rate bounds reject impossible values
-- [ ] **TEST-05**: Tests verify custom_label appears in rendered results
+- [x] **TEST-05**: Tests verify custom_label appears in rendered results
 
 ## Future Requirements
 
@@ -61,13 +61,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | VAL-02 | Phase 15 | Complete |
 | VAL-03 | Phase 15 | Complete |
 | VAL-04 | Phase 15 | Complete |
-| CUST-01 | Phase 16 | Pending |
-| CUST-02 | Phase 16 | Pending |
+| CUST-01 | Phase 16 | Complete |
+| CUST-02 | Phase 16 | Complete |
 | TEST-01 | Phase 14 | Complete |
 | TEST-02 | Phase 14 | Complete |
 | TEST-03 | Phase 15 | Complete |
 | TEST-04 | Phase 15 | Complete |
-| TEST-05 | Phase 16 | Pending |
+| TEST-05 | Phase 16 | Complete |
 
 **Coverage:**
 - v1.2 requirements: 14 total

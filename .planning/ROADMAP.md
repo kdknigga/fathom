@@ -4,7 +4,7 @@
 
 - ✅ **v1.0 MVP** — Phases 1-6 (shipped 2026-03-13)
 - ✅ **v1.1 Deeper Insights** — Phases 7-12 (shipped 2026-03-14)
-- **v1.2 Address Code Review** — Phases 13-16 (in progress)
+- ✅ **v1.2 Address Code Review** — Phases 13-16 (shipped 2026-03-15)
 
 ## Phases
 
@@ -39,7 +39,7 @@
 - [x] **Phase 13: Centralize Monetary Rounding** - Extract single `money.py` module replacing 5 duplicate `quantize_money()` definitions (completed 2026-03-15)
 - [x] **Phase 14: Engine Corrections** - Fix promo penalty modeling and line chart metric with tests proving correctness (completed 2026-03-15)
 - [x] **Phase 15: Validation and HTMX Guards** - Bound inflation/tax rates and enforce 2-4 option limits with tests (completed 2026-03-15)
-- [ ] **Phase 16: Custom Option Cleanup** - Wire custom_label into results and clarify upfront cash with tests
+- [x] **Phase 16: Custom Option Cleanup** - Wire custom_label into results and clarify upfront cash with tests (completed 2026-03-15)
 
 ## Phase Details
 
@@ -94,7 +94,7 @@ Plans:
   3. Tests verify the custom label text appears in rendered HTML results
 **Plans**: 1 plan
 Plans:
-- [ ] 16-01-PLAN.md — Wire custom_label into results display and update custom option form labels
+- [x] 16-01-PLAN.md — Wire custom_label into results display and update custom option form labels
 
 ## Progress
 
@@ -117,4 +117,4 @@ Plans:
 | 13. Centralize Monetary Rounding | 1/1 | Complete    | 2026-03-15 | - |
 | 14. Engine Corrections | 2/2 | Complete    | 2026-03-15 | - |
 | 15. Validation and HTMX Guards | 2/2 | Complete    | 2026-03-15 | - |
-| 16. Custom Option Cleanup | v1.2 | 0/1 | Not started | - |
+| 16. Custom Option Cleanup | v1.2 | 1/1 | Complete | 2026-03-15 |
