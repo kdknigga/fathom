@@ -630,36 +630,54 @@ def build_domain_objects(
 
     """
     purchase_price = Decimal(form.purchase_price)
-    options: list[FinancingOption] = []
+
+    # First pass: collect labels and option kwargs (FinancingOption is frozen,
+    # so disambiguation must happen before construction).
+    labels: list[str] = []
+    option_kwargs_list: list[dict] = []
 
     for opt in form.options:
         option_type = OptionType(opt.type)
-        label = opt.label or option_type.value
 
-        apr = _to_rate(opt.apr)
-        term_months = _to_int(opt.term_months)
-        down_payment = _to_money(opt.down_payment)
-        post_promo_apr = _to_rate(opt.post_promo_apr)
-        deferred_interest = bool(opt.deferred_interest)
-        retroactive_interest = bool(opt.retroactive_interest) and deferred_interest
-        cash_back_amount = _to_money(opt.cash_back_amount)
-        discounted_price = _to_money(opt.discounted_price)
+        if option_type == OptionType.CUSTOM and opt.custom_label.strip():
+            label = opt.custom_label.strip()
+        elif option_type == OptionType.CUSTOM:
+            label = "Custom"
+        else:
+            label = opt.label or option_type.value
 
-        options.append(
-            FinancingOption(
-                option_type=option_type,
-                label=label,
-                purchase_price=purchase_price,
-                apr=apr,
-                term_months=term_months,
-                down_payment=down_payment,
-                post_promo_apr=post_promo_apr,
-                deferred_interest=deferred_interest,
-                retroactive_interest=retroactive_interest,
-                cash_back_amount=cash_back_amount,
-                discounted_price=discounted_price,
-            ),
+        labels.append(label)
+        option_kwargs_list.append(
+            {
+                "option_type": option_type,
+                "purchase_price": purchase_price,
+                "apr": _to_rate(opt.apr),
+                "term_months": _to_int(opt.term_months),
+                "down_payment": _to_money(opt.down_payment),
+                "post_promo_apr": _to_rate(opt.post_promo_apr),
+                "deferred_interest": bool(opt.deferred_interest),
+                "retroactive_interest": bool(opt.retroactive_interest)
+                and bool(opt.deferred_interest),
+                "cash_back_amount": _to_money(opt.cash_back_amount),
+                "discounted_price": _to_money(opt.discounted_price),
+            },
         )
+
+    # Disambiguate duplicate labels with numeric suffixes
+    final_labels: list[str] = []
+    seen: dict[str, int] = {}
+    for label in labels:
+        if label in seen:
+            seen[label] += 1
+            final_labels.append(f"{label} ({seen[label]})")
+        else:
+            seen[label] = 1
+            final_labels.append(label)
+
+    # Second pass: construct FinancingOption objects with final labels
+    options: list[FinancingOption] = []
+    for final_label, kwargs in zip(final_labels, option_kwargs_list, strict=True):
+        options.append(FinancingOption(label=final_label, **kwargs))
 
     # Resolve return rate: custom > preset > default 0.07
     settings = form.settings

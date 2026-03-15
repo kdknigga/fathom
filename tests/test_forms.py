@@ -472,6 +472,134 @@ class TestBuildDomainObjects:
         options, _settings = build_domain_objects(form_input)
         assert options[0].retroactive_interest is True
 
+    def test_custom_label_used_as_option_label(self):
+        """Custom option with custom_label produces FinancingOption with that label."""
+        data = {
+            **_valid_cash_loan_form(),
+            "options[1][type]": "custom",
+            "options[1][label]": "Custom/Other",
+            "options[1][custom_label]": "Store Credit Card",
+            "options[1][apr]": "18.99",
+            "options[1][term_months]": "24",
+            "options[1][down_payment]": "",
+        }
+        form = _make_form(data)
+        form_input = parse_form_data(form)
+        options, _settings = build_domain_objects(form_input)
+        assert options[1].label == "Store Credit Card"
+
+    def test_empty_custom_label_falls_back_to_custom(self):
+        """Custom option with empty custom_label produces label 'Custom'."""
+        data = {
+            **_valid_cash_loan_form(),
+            "options[1][type]": "custom",
+            "options[1][label]": "Custom/Other",
+            "options[1][custom_label]": "",
+            "options[1][apr]": "18.99",
+            "options[1][term_months]": "24",
+            "options[1][down_payment]": "",
+        }
+        form = _make_form(data)
+        form_input = parse_form_data(form)
+        options, _settings = build_domain_objects(form_input)
+        assert options[1].label == "Custom"
+
+    def test_whitespace_custom_label_falls_back(self):
+        """Custom option with whitespace-only custom_label produces label 'Custom'."""
+        data = {
+            **_valid_cash_loan_form(),
+            "options[1][type]": "custom",
+            "options[1][label]": "Custom/Other",
+            "options[1][custom_label]": "   ",
+            "options[1][apr]": "18.99",
+            "options[1][term_months]": "24",
+            "options[1][down_payment]": "",
+        }
+        form = _make_form(data)
+        form_input = parse_form_data(form)
+        options, _settings = build_domain_objects(form_input)
+        assert options[1].label == "Custom"
+
+    def test_duplicate_custom_labels_disambiguated(self):
+        """Two custom options with same label get numeric suffix on second."""
+        data = {
+            "purchase_price": "25000",
+            "options[0][type]": "custom",
+            "options[0][label]": "Custom/Other",
+            "options[0][custom_label]": "My Plan",
+            "options[0][apr]": "10",
+            "options[0][term_months]": "24",
+            "options[1][type]": "custom",
+            "options[1][label]": "Custom/Other",
+            "options[1][custom_label]": "My Plan",
+            "options[1][apr]": "15",
+            "options[1][term_months]": "36",
+            "return_preset": "0.07",
+            "return_rate_custom": "",
+            "inflation_rate": "3",
+            "tax_rate": "22",
+        }
+        form = _make_form(data)
+        form_input = parse_form_data(form)
+        options, _settings = build_domain_objects(form_input)
+        assert options[0].label == "My Plan"
+        assert options[1].label == "My Plan (2)"
+
+    def test_custom_label_collides_with_default_label(self):
+        """Custom label matching another option's label gets disambiguated."""
+        data = {
+            "purchase_price": "25000",
+            "options[0][type]": "cash",
+            "options[0][label]": "Pay in Full",
+            "options[1][type]": "custom",
+            "options[1][label]": "Custom/Other",
+            "options[1][custom_label]": "Pay in Full",
+            "options[1][apr]": "10",
+            "options[1][term_months]": "24",
+            "return_preset": "0.07",
+            "return_rate_custom": "",
+            "inflation_rate": "3",
+            "tax_rate": "22",
+        }
+        form = _make_form(data)
+        form_input = parse_form_data(form)
+        options, _settings = build_domain_objects(form_input)
+        assert options[0].label == "Pay in Full"
+        assert options[1].label == "Pay in Full (2)"
+
+    def test_two_empty_custom_labels_disambiguated(self):
+        """Two custom options with empty labels produce 'Custom' and 'Custom (2)'."""
+        data = {
+            "purchase_price": "25000",
+            "options[0][type]": "custom",
+            "options[0][label]": "Custom/Other",
+            "options[0][custom_label]": "",
+            "options[0][apr]": "10",
+            "options[0][term_months]": "24",
+            "options[1][type]": "custom",
+            "options[1][label]": "Custom/Other",
+            "options[1][custom_label]": "",
+            "options[1][apr]": "15",
+            "options[1][term_months]": "36",
+            "return_preset": "0.07",
+            "return_rate_custom": "",
+            "inflation_rate": "3",
+            "tax_rate": "22",
+        }
+        form = _make_form(data)
+        form_input = parse_form_data(form)
+        options, _settings = build_domain_objects(form_input)
+        assert options[0].label == "Custom"
+        assert options[1].label == "Custom (2)"
+
+    def test_non_custom_options_unaffected(self):
+        """Traditional loan and cash options still use opt.label or option_type.value."""
+        form = _make_form(_valid_cash_loan_form())
+        form_input = parse_form_data(form)
+        options, _settings = build_domain_objects(form_input)
+        assert options[0].label == "Pay in Full"
+        assert options[1].label == "Bank Loan"
+
     def test_retroactive_interest_false_when_deferred_unchecked(self):
         """build_domain_objects passes retroactive_interest=False when deferred_interest unchecked."""
         form = _make_form(
