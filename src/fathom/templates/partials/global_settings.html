@@ -39,12 +39,15 @@
     <label for="return-rate-custom">Custom Rate</label>
     <fieldset role="group">
       <input
-        type="text"
+        type="number"
         inputmode="decimal"
         id="return-rate-custom"
         name="return_rate_custom"
         value="{{ settings.return_rate_custom|default('') }}"
         placeholder="e.g., 8.5"
+        min="0"
+        max="30"
+        step="0.01"
       >
       <span class="suffix">%</span>
     </fieldset>
@@ -57,6 +60,7 @@
         name="inflation_enabled"
         value="1"
         {% if settings.inflation_enabled %}checked{% endif %}
+        onchange="document.getElementById('inflation-rate').disabled = !this.checked"
       >
       Adjust for inflation
     </label>
@@ -69,15 +73,23 @@
     </div>
     <fieldset role="group">
       <input
-        type="text"
+        type="number"
         inputmode="decimal"
         id="inflation-rate"
         name="inflation_rate"
         value="{{ settings.inflation_rate|default('3') }}"
         placeholder="3"
+        min="0"
+        max="20"
+        step="0.1"
+        {% if not settings.inflation_enabled %}disabled{% endif %}
+        {% if errors.get('settings.inflation_rate') %}aria-invalid="true"{% endif %}
       >
       <span class="suffix">%</span>
     </fieldset>
+    {% if errors.get('settings.inflation_rate') %}
+    <small class="field-error">{{ errors['settings.inflation_rate'] }}</small>
+    {% endif %}
   </fieldset>
 
   <fieldset>
@@ -87,6 +99,7 @@
         name="tax_enabled"
         value="1"
         {% if settings.tax_enabled %}checked{% endif %}
+        onchange="document.getElementById('tax-rate').disabled = !this.checked"
       >
       Include tax implications
     </label>
@@ -99,15 +112,23 @@
     </div>
     <fieldset role="group">
       <input
-        type="text"
+        type="number"
         inputmode="decimal"
         id="tax-rate"
         name="tax_rate"
         value="{{ settings.tax_rate|default('22') }}"
         placeholder="22"
+        min="0"
+        max="60"
+        step="1"
+        {% if not settings.tax_enabled %}disabled{% endif %}
+        {% if errors.get('settings.tax_rate') %}aria-invalid="true"{% endif %}
       >
       <span class="suffix">%</span>
     </fieldset>
+    {% if errors.get('settings.tax_rate') %}
+    <small class="field-error">{{ errors['settings.tax_rate'] }}</small>
+    {% endif %}
     <details class="tax-bracket-ref">
       <summary>What's my bracket?</summary>
       <table class="bracket-table">
