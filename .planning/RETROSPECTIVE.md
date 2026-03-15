@@ -98,6 +98,52 @@
 
 ---
 
+## Milestone: v1.2 — Address Code Review
+
+**Shipped:** 2026-03-15
+**Phases:** 4 (13-16) | **Plans:** 6 | **Commits:** 40
+
+### What Was Built
+- Canonical `money.py` module replacing 5 duplicate `quantize_money()` definitions across calculation modules
+- Two-phase promo schedule construction producing materially different costs for deferred-interest vs forward-only
+- Cumulative true cost metric in line chart with dual promo lines (solid paid-on-time, dashed not-paid)
+- Server-side inflation/tax rate bounds validators with toggle-bypass and HTML5 input hints
+- HTMX option count guards enforcing 2-4 option contract with accessible warning banners
+- Custom label wiring end-to-end from form input through engine to results display with disambiguation
+
+### What Worked
+- Rounding centralization first (Phase 13) as zero-risk foundation enabled clean imports in all subsequent phases
+- Written business rule with worked numeric example before promo penalty code change — tests asserted exact dollar amounts
+- Audit-driven milestone (code review → requirements → phases) kept scope precisely targeted — zero scope creep
+- All 6 plans executed in 1 day with zero rollbacks — fastest milestone yet
+- Nyquist validation compliant across all 4 phases — validation strategy pattern fully established
+
+### What Was Inefficient
+- SUMMARY.md files still lack `one_liner` field, requiring manual extraction during milestone completion
+- ROADMAP.md progress table had inconsistent column alignment for v1.2 phase rows (milestone column missing for phases 13-15)
+- Phase 14 VERIFICATION.md was created post-execution rather than during execution wave
+
+### Patterns Established
+- Toggle-bypass validation: disabled inputs skip bounds checking, following existing `validate_return_rate` pattern
+- `_PromoContext` dataclass for bundling promo calculation state — enables helper extraction without parameter explosion
+- Early guard pattern for HTMX endpoints: count before extract, return unchanged form with warning on violation
+- Two-pass domain object construction for frozen Pydantic models requiring post-creation disambiguation
+- Counter-based label disambiguation: first occurrence keeps original, subsequent get `(2)`, `(3)` suffixes
+
+### Key Lessons
+1. Audit-driven milestones (code review → fix phases) are the fastest turnaround — clear scope, no ambiguity
+2. Business rules as worked numeric examples before coding prevent regressions — tests assert exact dollar amounts
+3. Centralizing shared utilities (money.py) before dependent fixes eliminates merge conflicts and import confusion
+4. Toggle-bypass validation is a recurring pattern — disabled UI controls should never trigger server-side errors
+5. 1 cosmetic tech debt item (chart title string mismatch) is acceptable to ship — fix in next milestone if needed
+
+### Cost Observations
+- Model mix: quality profile (opus-heavy)
+- Sessions: ~2 sessions in 1 day
+- Notable: Plans averaged 3.7 min each — fastest velocity yet, likely due to focused fix-only scope
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -106,6 +152,7 @@
 |-----------|--------|-------|------------|
 | v1.0 | 6 | 16 | Baseline: audit-driven gap closure pattern established |
 | v1.1 | 6 | 13 | Linting cleanup as dedicated phase; HTML Popover API adoption; event delegation pattern |
+| v1.2 | 4 | 6 | Audit-driven fix milestone; Nyquist validation fully compliant; toggle-bypass validation pattern |
 
 ### Cumulative Quality
 
@@ -113,9 +160,20 @@
 |-----------|-------|-------------|------------------|
 | v1.0 | 179 | All clean | 0 noqa, 0 type:ignore |
 | v1.1 | 241 | All clean | 0 noqa, 0 type:ignore |
+| v1.2 | 324 | All clean | 0 noqa, 0 type:ignore |
+
+### Velocity
+
+| Milestone | Plans | Days | Avg min/plan |
+|-----------|-------|------|-------------|
+| v1.0 | 16 | 4 | ~4.4 |
+| v1.1 | 13 | 2 | ~4.6 |
+| v1.2 | 6 | 1 | ~3.7 |
 
 ### Top Lessons (Verified Across Milestones)
 
-1. Milestone audits catch real bugs in "complete" code — always run before shipping
+1. Milestone audits catch real bugs in "complete" code — always run before shipping (v1.0, v1.2)
 2. Event delegation is essential for HTMX apps — verified across formatting (v1.0), tooltips, and detail toggles (v1.1)
-3. Consistent plan velocity (~4.5 min/plan) across both milestones suggests planning quality is stable
+3. Plan velocity is accelerating (4.4 → 4.6 → 3.7 min/plan) as patterns stabilize and scope gets more focused
+4. Centralize shared utilities before dependent fixes — eliminates merge conflicts (money.py in v1.2)
+5. Business rules as worked numeric examples prevent regressions — exact dollar assertions (v1.2)
