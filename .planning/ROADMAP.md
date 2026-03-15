@@ -51,7 +51,9 @@
   1. A single `quantize_money()` function exists in `src/fathom/money.py` and no other module defines its own rounding helper
   2. All existing tests pass with zero behavior change — this is a pure refactor
   3. Quality gates (ruff, ty, pyrefly) pass clean with no new inline suppressions
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 13-01-PLAN.md — Create money.py and centralize all quantize_money imports
 
 ### Phase 14: Engine Corrections
 **Goal**: Users comparing promo financing options see materially different costs for deferred-interest vs forward-only scenarios, and the line chart accurately plots cumulative true cost
@@ -104,7 +106,7 @@
 | 10. JSON Export/Import | v1.1 | 2/2 | Complete | 2026-03-14 |
 | 11. Detailed Period Breakdown | v1.1 | 3/3 | Complete | 2026-03-14 |
 | 12. Python Linting Cleanup | v1.1 | 2/2 | Complete | 2026-03-14 |
-| 13. Centralize Monetary Rounding | v1.2 | 0/? | Not started | - |
+| 13. Centralize Monetary Rounding | v1.2 | 0/1 | Not started | - |
 | 14. Engine Corrections | v1.2 | 0/? | Not started | - |
 | 15. Validation and HTMX Guards | v1.2 | 0/? | Not started | - |
 | 16. Custom Option Cleanup | v1.2 | 0/? | Not started | - |
