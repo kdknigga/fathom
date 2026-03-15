@@ -2,11 +2,12 @@
 
 from decimal import Decimal
 
-from fathom.charts import prepare_bar_chart, prepare_line_chart
+from fathom.charts import NOT_PAID_DASH, prepare_bar_chart, prepare_line_chart
 from fathom.models import (
     ComparisonResult,
     MonthlyDataPoint,
     OptionResult,
+    PromoResult,
 )
 
 
@@ -208,3 +209,110 @@ class TestLineChart:
         assert "end_value" in line
         assert isinstance(line["end_x"], float)
         assert isinstance(line["end_y"], float)
+
+
+# --- Cumulative True Cost & Promo Dual Lines ---
+
+
+def _make_promo_comparison(
+    paid_costs: list[int],
+    not_paid_costs: list[int],
+) -> tuple[ComparisonResult, dict]:
+    """Create a ComparisonResult with a PromoResult for testing dual lines."""
+    months = list(range(1, len(paid_costs) + 1))
+    paid_data = _make_monthly_data(months, paid_costs)
+    not_paid_data = _make_monthly_data(
+        list(range(1, len(not_paid_costs) + 1)),
+        not_paid_costs,
+    )
+
+    paid_result = _make_option_result(paid_costs[-1], paid_data)
+    not_paid_result = _make_option_result(not_paid_costs[-1], not_paid_data)
+
+    promo = PromoResult(
+        paid_on_time=paid_result,
+        not_paid_on_time=not_paid_result,
+        required_monthly_payment=Decimal(500),
+        break_even_month=12,
+    )
+
+    comparison = ComparisonResult(
+        results={"Promo": promo},
+        comparison_period_months=len(not_paid_costs),
+        caveats=[],
+    )
+
+    display = {
+        "sorted_options": [
+            ("Promo", Decimal(str(paid_costs[-1]))),
+            ("Promo (not paid on time)", Decimal(str(not_paid_costs[-1]))),
+        ],
+    }
+
+    return comparison, display
+
+
+class TestLineTrueCost:
+    """Tests for cumulative true cost chart data."""
+
+    def test_line_chart_uses_true_cost(self):
+        """Chart data points match cumulative_cost from MonthlyDataPoint."""
+        # Create monthly data with known cumulative true cost values
+        true_costs = [550, 1120, 1710, 2320, 2950]
+        monthly = _make_monthly_data(range(1, 6), true_costs)
+        comparison = ComparisonResult(
+            results={"Loan": _make_option_result(2950, monthly)},
+            comparison_period_months=5,
+            caveats=[],
+        )
+        display = {"sorted_options": [("Loan", Decimal(2950))]}
+        result = prepare_line_chart(comparison, display)
+        line_pts = result["lines"][0]["points"]
+        for pt, expected in zip(line_pts, true_costs, strict=True):
+            assert pt["cost"] == f"{expected:,.0f}"
+
+    def test_line_chart_promo_dual_lines(self):
+        """Promo options produce two line datasets (paid and not-paid)."""
+        paid_costs = list(range(500, 6500, 500))
+        not_paid_costs = list(range(300, 7500, 300))
+        comparison, display = _make_promo_comparison(paid_costs, not_paid_costs)
+        result = prepare_line_chart(comparison, display)
+        assert len(result["lines"]) == 2
+        names = [line["name"] for line in result["lines"]]
+        assert "Promo" in names
+        assert "Promo (not paid on time)" in names
+
+    def test_line_chart_not_paid_is_dashed(self):
+        """Not-paid-on-time line uses a dashed stroke pattern."""
+        paid_costs = list(range(500, 6500, 500))
+        not_paid_costs = list(range(300, 7500, 300))
+        comparison, display = _make_promo_comparison(paid_costs, not_paid_costs)
+        result = prepare_line_chart(comparison, display)
+        not_paid_line = next(
+            ln for ln in result["lines"] if "(not paid on time)" in ln["name"]
+        )
+        assert not_paid_line["dash_pattern"] == NOT_PAID_DASH
+
+    def test_line_chart_not_paid_same_color_as_paid(self):
+        """Not-paid line uses the same color as its paid counterpart."""
+        paid_costs = list(range(500, 6500, 500))
+        not_paid_costs = list(range(300, 7500, 300))
+        comparison, display = _make_promo_comparison(paid_costs, not_paid_costs)
+        result = prepare_line_chart(comparison, display)
+        paid_line = next(ln for ln in result["lines"] if ln["name"] == "Promo")
+        not_paid_line = next(
+            ln for ln in result["lines"] if "(not paid on time)" in ln["name"]
+        )
+        assert paid_line["color"] == not_paid_line["color"]
+
+    def test_line_chart_title(self):
+        """Chart title is 'Cumulative True Cost Over Time'."""
+        monthly = _make_monthly_data(range(1, 6), range(500, 3000, 500))
+        comparison = ComparisonResult(
+            results={"Loan": _make_option_result(2500, monthly)},
+            comparison_period_months=5,
+            caveats=[],
+        )
+        display = {"sorted_options": [("Loan", Decimal(2500))]}
+        result = prepare_line_chart(comparison, display)
+        assert result["title"] == "Cumulative True Cost Over Time"

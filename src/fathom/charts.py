@@ -42,6 +42,9 @@ LINE_PATTERNS = [
 
 DASH_PATTERNS = ["none", "8,4", "3,3", "12,4,3,4"]
 
+NOT_PAID_SUFFIX = " (not paid on time)"
+NOT_PAID_DASH = "6,4"
+
 
 def _to_float(value: Decimal | float | int) -> float:
     """Convert a numeric value to float."""
@@ -170,12 +173,19 @@ def _collect_option_points(
     all_points: list[list[tuple[int, float]]] = []
 
     for name, _cost in sorted_options:
-        result = comparison.results.get(name)
+        # Handle not-paid-on-time entries by looking up base name
+        is_not_paid = name.endswith(NOT_PAID_SUFFIX)
+        base_name = name[: -len(NOT_PAID_SUFFIX)] if is_not_paid else name
+
+        result = comparison.results.get(base_name)
         if result is None:
             all_points.append([])
             continue
 
-        option_result = _get_option_result(result)
+        if is_not_paid and isinstance(result, PromoResult):
+            option_result = result.not_paid_on_time
+        else:
+            option_result = _get_option_result(result)
         monthly_data = option_result.monthly_data
 
         if len(monthly_data) <= 1:
@@ -197,7 +207,7 @@ def _collect_option_points(
 
 def _build_line_dataset(
     name: str,
-    index: int,
+    color_index: int,
     pts: list[tuple[int, float]],
     scale_x: _ScaleFn,
     scale_y: _ScaleFn,
@@ -206,11 +216,12 @@ def _build_line_dataset(
     Build a single line dataset dict for SVG rendering.
 
     Constructs the SVG path string, endpoint coordinates, and interactive
-    point data for one financing option's line.
+    point data for one financing option's line. Not-paid-on-time lines
+    (detected by name suffix) use a dashed stroke pattern.
 
     Args:
         name: The option display name.
-        index: The option index (for color/pattern assignment).
+        color_index: The color index (for color assignment).
         pts: The (month, cost) data points for this option.
         scale_x: Function mapping month to x coordinate.
         scale_y: Function mapping cost to y coordinate.
@@ -219,6 +230,8 @@ def _build_line_dataset(
         A dict with path_d, color, dash_pattern, endpoint data, and points.
 
     """
+    is_not_paid = name.endswith(NOT_PAID_SUFFIX)
+
     path_parts = [f"M {scale_x(pts[0][0]):.1f} {scale_y(pts[0][1]):.1f}"]
     for month, cost_val in pts[1:]:
         path_parts.append(f"L {scale_x(month):.1f} {scale_y(cost_val):.1f}")
@@ -227,12 +240,18 @@ def _build_line_dataset(
     end_x = scale_x(end_month)
     end_y = scale_y(end_cost)
 
+    dash = (
+        NOT_PAID_DASH
+        if is_not_paid
+        else DASH_PATTERNS[color_index % len(DASH_PATTERNS)]
+    )
+
     return {
         "name": name,
         "path_d": " ".join(path_parts),
-        "color": COLORS[index % len(COLORS)],
-        "dash_pattern": DASH_PATTERNS[index % len(DASH_PATTERNS)],
-        "pattern_id": LINE_PATTERNS[index % len(LINE_PATTERNS)],
+        "color": COLORS[color_index % len(COLORS)],
+        "dash_pattern": dash,
+        "pattern_id": LINE_PATTERNS[color_index % len(LINE_PATTERNS)],
         "end_x": _to_float(end_x),
         "end_y": _to_float(end_y),
         "end_value": _format_cost(end_cost),
@@ -341,17 +360,29 @@ def prepare_line_chart(
         """Scale cost value to y coordinate (inverted)."""
         return height - PADDING - (cost_val / max_cost) * (height - 2 * PADDING)
 
-    lines = [
-        _build_line_dataset(name, i, all_points[i], scale_x, scale_y)
-        for i, (name, _cost) in enumerate(sorted_options)
-        if all_points[i]
-    ]
+    # Build line datasets with proper color indexing for not-paid lines
+    lines = []
+    color_index = 0
+    for i, (name, _cost) in enumerate(sorted_options):
+        if not all_points[i]:
+            if not name.endswith(NOT_PAID_SUFFIX):
+                color_index += 1
+            continue
+        is_not_paid = name.endswith(NOT_PAID_SUFFIX)
+        # Not-paid lines share their paid counterpart's color index
+        ci = color_index - 1 if is_not_paid else color_index
+        lines.append(
+            _build_line_dataset(name, ci, all_points[i], scale_x, scale_y),
+        )
+        if not is_not_paid:
+            color_index += 1
 
     x_labels, y_labels = _build_axis_labels(max_months, max_cost, scale_x, scale_y)
 
     return {
         "width": width,
         "height": height,
+        "title": "Cumulative True Cost Over Time",
         "lines": lines,
         "x_labels": x_labels,
         "y_labels": y_labels,

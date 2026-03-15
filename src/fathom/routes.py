@@ -346,11 +346,20 @@ def compare_options() -> str:
     ctx = _build_template_context(parsed, errors={}, results=results)
     display_data = analyze_results(results, financing_options)
     # Charts expect sorted_options as (name, cost) tuples
+    # Include not-paid-on-time entries for promo options (inserted after paid entry)
     chart_display = dict(display_data)
-    chart_display["sorted_options"] = [
-        (opt["name"], opt["result"].true_total_cost)
-        for opt in display_data["options_data"]
-    ]
+    chart_sorted: list[tuple[str, object]] = []
+    for opt in display_data["options_data"]:
+        chart_sorted.append((opt["name"], opt["result"].true_total_cost))
+        if opt["is_promo"] and "not_paid_result" in opt:
+            not_paid_result = opt["not_paid_result"]
+            chart_sorted.append(
+                (
+                    f"{opt['name']} (not paid on time)",
+                    not_paid_result.true_total_cost,
+                ),
+            )
+    chart_display["sorted_options"] = chart_sorted
     chart_data = prepare_charts(results, chart_display)
     ctx["display"] = display_data
     ctx["charts"] = chart_data
