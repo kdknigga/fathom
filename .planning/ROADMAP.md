@@ -37,7 +37,7 @@
 **Milestone Goal:** Fix all confirmed defects and test coverage gaps from the 2026-03-15 production-readiness code review.
 
 - [x] **Phase 13: Centralize Monetary Rounding** - Extract single `money.py` module replacing 5 duplicate `quantize_money()` definitions (completed 2026-03-15)
-- [ ] **Phase 14: Engine Corrections** - Fix promo penalty modeling and line chart metric with tests proving correctness
+- [x] **Phase 14: Engine Corrections** - Fix promo penalty modeling and line chart metric with tests proving correctness (completed 2026-03-15)
 - [ ] **Phase 15: Validation and HTMX Guards** - Bound inflation/tax rates and enforce 2-4 option limits with tests
 - [ ] **Phase 16: Custom Option Cleanup** - Wire custom_label into results and clarify upfront cash with tests
 
@@ -110,6 +110,6 @@ Plans:
 | 11. Detailed Period Breakdown | v1.1 | 3/3 | Complete | 2026-03-14 |
 | 12. Python Linting Cleanup | v1.1 | 2/2 | Complete | 2026-03-14 |
 | 13. Centralize Monetary Rounding | 1/1 | Complete    | 2026-03-15 | - |
-| 14. Engine Corrections | 1/2 | In Progress|  | - |
+| 14. Engine Corrections | 2/2 | Complete   | 2026-03-15 | - |
 | 15. Validation and HTMX Guards | v1.2 | 0/? | Not started | - |
 | 16. Custom Option Cleanup | v1.2 | 0/? | Not started | - |

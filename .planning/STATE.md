@@ -4,12 +4,12 @@ milestone: v1.2
 milestone_name: Address Code Review
 status: in-progress
 last_updated: "2026-03-15T14:40:22.000Z"
-last_activity: 2026-03-15 -- Completed 14-01 fix promo penalty modeling
+last_activity: 2026-03-15 -- Completed 14-02 cumulative true cost and dual promo lines
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 3
+  completed_plans: 3
 ---
 
 # Project State
@@ -24,9 +24,9 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 ## Current Position
 
 Phase: 14 of 16 (Engine Corrections) -- COMPLETE
-Plan: 1 of 1 in current phase (COMPLETE)
+Plan: 2 of 2 in current phase (COMPLETE)
 Status: Phase 14 complete, ready for Phase 15
-Last activity: 2026-03-15 -- Completed 14-01 fix promo penalty modeling
+Last activity: 2026-03-15 -- Completed 14-02 cumulative true cost and dual promo lines
 
 ## Performance Metrics
 
@@ -49,6 +49,8 @@ v1.2 roadmap decisions:
 - [Phase 14]: Used _PromoContext dataclass to bundle promo params for helper extraction
 - [Phase 14]: Computed opportunity cost inline using pool model rather than synthetic FinancingOption
 - [Phase 14]: Min payment = required_monthly / 2 as not-paid-on-time assumption
+- [Phase 14]: Cumulative cost starts at 0 (not down payment) to match results.py formula
+- [Phase 14]: Padded months continue accumulating opportunity cost rather than freezing
 
 ### Roadmap Evolution
 
@@ -72,3 +74,4 @@ None.
 | 2 | Hide inflation/tax columns in detail table when features disabled | 2026-03-14 | cf662ff | [2-fix-ux-rough-edge-hide-inflation-tax-col](./quick/2-fix-ux-rough-edge-hide-inflation-tax-col/) |
 | Phase 13 P01 | 2min | 2 tasks | 7 files |
 | Phase 14 P01 | 6min | 2 tasks | 3 files |
+| Phase 14 P02 | 5min | 2 tasks | 5 files |
