@@ -9,13 +9,7 @@ floating-point precision errors.
 from decimal import Decimal
 
 from fathom.models import MonthlyDataPoint
-
-CENTS = Decimal("0.01")
-
-
-def quantize_money(value: Decimal) -> Decimal:
-    """Round a Decimal value to the nearest cent (two decimal places)."""
-    return value.quantize(CENTS)
+from fathom.money import quantize_money
 
 
 def monthly_payment(

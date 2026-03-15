@@ -11,13 +11,7 @@ from decimal import Decimal
 
 from fathom.amortization import monthly_payment
 from fathom.models import FinancingOption, GlobalSettings, OptionType
-
-CENTS = Decimal("0.01")
-
-
-def quantize_money(value: Decimal) -> Decimal:
-    """Round a Decimal value to the nearest cent (two decimal places)."""
-    return value.quantize(CENTS)
+from fathom.money import quantize_money
 
 
 def _compute_pool_series(

@@ -18,14 +18,8 @@ from fathom.models import (
     PromoResult,
     Severity,
 )
+from fathom.money import quantize_money
 from fathom.opportunity import compute_opportunity_cost
-
-CENTS = Decimal("0.01")
-
-
-def quantize_money(value: Decimal) -> Decimal:
-    """Round a Decimal value to the nearest cent (two decimal places)."""
-    return value.quantize(CENTS)
 
 
 def generate_caveats(

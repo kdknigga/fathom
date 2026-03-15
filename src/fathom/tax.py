@@ -7,12 +7,7 @@ marginal tax rate. All calculations use Decimal arithmetic.
 
 from decimal import Decimal
 
-CENTS = Decimal("0.01")
-
-
-def quantize_money(value: Decimal) -> Decimal:
-    """Round a Decimal value to the nearest cent (two decimal places)."""
-    return value.quantize(CENTS)
+from fathom.money import quantize_money
 
 
 def compute_tax_savings(

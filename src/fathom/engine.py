@@ -8,7 +8,7 @@ that Phase 2 (web layer) will call.
 
 from decimal import Decimal
 
-from fathom.amortization import amortization_schedule, quantize_money
+from fathom.amortization import amortization_schedule
 from fathom.caveats import generate_all_caveats
 from fathom.inflation import compute_inflation_adjustment, discount_cash_flows
 from fathom.models import (
@@ -20,6 +20,7 @@ from fathom.models import (
     OptionType,
     PromoResult,
 )
+from fathom.money import quantize_money
 from fathom.opportunity import (
     compute_opportunity_cost,
     compute_opportunity_cost_per_period,
