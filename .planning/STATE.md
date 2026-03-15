@@ -1,31 +1,33 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Deeper Insights
-status: shipped
-last_updated: "2026-03-14T20:00:00.000Z"
-last_activity: 2026-03-14 — Milestone v1.1 shipped
+milestone: v1.2
+milestone_name: Address Code Review
+status: active
+last_updated: "2026-03-15T00:00:00.000Z"
+last_activity: 2026-03-15 — Milestone v1.2 started
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 13
-  completed_plans: 13
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-14)
+See: .planning/PROJECT.md (updated 2026-03-15)
 
 **Core value:** Users can instantly see which financing option truly costs least when opportunity costs, inflation, and taxes are factored in.
-**Current focus:** Planning next milestone
+**Current focus:** Defining requirements for v1.2
 
 ## Current Position
 
-Milestone: v1.1 "Deeper Insights" — SHIPPED 2026-03-14
-Next: `/gsd:new-milestone` to define v1.2 or v2.0
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-15 — Milestone v1.2 started
 
 ## Performance Metrics
 

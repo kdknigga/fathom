@@ -38,10 +38,21 @@ Users can instantly see which financing option truly costs least when opportunit
 
 ### Active
 
-(None — next milestone requirements TBD via `/gsd:new-milestone`)
+<!-- v1.2 Address Code Review -->
+- [ ] Fix promo penalty modeling so deferred-interest settings change the calculation path
+- [ ] Add server-side validation bounds for inflation and tax rates
+- [ ] Correct line chart to plot cumulative true cost, not cumulative payments
+- [ ] Enforce 2-4 option contract in HTMX add/remove endpoints
+- [ ] Reconcile custom-option validation with UI contract for upfront cash
+- [ ] Wire custom_label into results display
+- [ ] Toggle-control inflation/tax field visibility
+- [ ] Centralize duplicated monetary rounding helpers
+- [ ] Backfill test coverage for all fixed defects
 
 ### Out of Scope
 
+- Live result updates as user types — submit-driven HTMX is the design (PRD updated v1.2)
+- Risk-weighted promo ranking — optimistic paid-on-time ranking is intentional; caveat handles risk
 - User accounts or cloud-synced history — conflicts with privacy-first design
 - Live interest rate data or bank API integrations — external dependency risk
 - More than 4 simultaneous options — UI complexity
@@ -51,6 +62,20 @@ Users can instantly see which financing option truly costs least when opportunit
 - Multi-currency support — adds complexity for minimal user base; math is currency-agnostic
 - Wizard/multi-step form — hides context; single-page comparison needs all options visible
 - Client-side calculation logic — creates divergence bugs; server is source of truth
+
+## Current Milestone: v1.2 Address Code Review
+
+**Goal:** Fix all confirmed defects and test coverage gaps identified in the 2026-03-15 production-readiness code review.
+
+**Target features:**
+- Fix promo penalty modeling (deferred-interest flags must change calculation)
+- Add validation bounds for inflation/tax rates
+- Correct line chart metric to cumulative true cost
+- Enforce 2-4 option boundaries in HTMX endpoints
+- Reconcile custom-option validation and wire custom_label into display
+- Toggle-controlled inflation/tax field visibility
+- Centralize monetary rounding helpers
+- Backfill test coverage for all fixed defects
 
 ## Context
 
@@ -111,4 +136,4 @@ All code must pass with zero errors/warnings:
 | Cumulative rounding tolerance widened to 0.05 | Per-period Decimal rounding over 36+ months accumulates | ✓ Good — pragmatic, documented in tests |
 
 ---
-*Last updated: 2026-03-14 after v1.1 milestone*
+*Last updated: 2026-03-15 after v1.2 milestone start*
