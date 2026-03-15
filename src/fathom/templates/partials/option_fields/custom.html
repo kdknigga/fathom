@@ -41,11 +41,11 @@
 {% endif %}
 
 <div class="label-with-tip">
-  <label for="option-{{ opt.idx }}-down-payment">Upfront Cash Required</label>
-  <button type="button" class="tip" popovertarget="tip-down-{{ opt.idx }}" aria-label="What is Upfront Cash?">?</button>
+  <label for="option-{{ opt.idx }}-down-payment">Down Payment (optional)</label>
+  <button type="button" class="tip" popovertarget="tip-down-{{ opt.idx }}" aria-label="What is Down Payment?">?</button>
 </div>
 <div id="tip-down-{{ opt.idx }}" popover class="tooltip-content">
-  <p>Total cash required at the time of purchase, including down payments, fees, or deposits.</p>
+  <p>Optional upfront payment toward the purchase price. Leave blank if none.</p>
 </div>
 <fieldset role="group">
   <span class="prefix">$</span>
@@ -64,11 +64,12 @@
 <small class="field-error">{{ errors['options.' ~ opt.idx|string ~ '.down_payment'] }}</small>
 {% endif %}
 
-<label for="option-{{ opt.idx }}-custom-label">Description (optional)</label>
+<label for="option-{{ opt.idx }}-custom-label">Option Name (optional)</label>
 <input
   type="text"
   id="option-{{ opt.idx }}-custom-label"
   name="options[{{ opt.idx }}][custom_label]"
   value="{{ opt.fields.custom_label|default('') }}"
-  placeholder="Notes about this option"
+  placeholder="e.g., Store Credit Card"
+  maxlength="40"
 >

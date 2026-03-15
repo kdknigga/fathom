@@ -762,6 +762,53 @@ class TestRemoveOptionGuard:
         assert "Minimum 2 options required" not in html
 
 
+class TestCustomOptionDisplay:
+    """Tests for custom option label flow and template field labels."""
+
+    def test_custom_label_in_rendered_results(self, client: FlaskClient):
+        """POST /compare with custom option shows custom_label in results HTML."""
+        response = client.post(
+            "/compare",
+            data={
+                "purchase_price": "10000",
+                "options[0][type]": "cash",
+                "options[0][label]": "Pay in Full",
+                "options[1][type]": "custom",
+                "options[1][label]": "Custom/Other",
+                "options[1][custom_label]": "Store Credit Card",
+                "options[1][apr]": "18.99",
+                "options[1][term_months]": "24",
+                "return_preset": "0.07",
+                "return_rate_custom": "",
+                "inflation_rate": "3",
+                "tax_rate": "22",
+            },
+        )
+        assert response.status_code == 200
+        html = response.data.decode()
+        assert "Store Credit Card" in html
+
+    def test_custom_option_down_payment_optional_label(self, client: FlaskClient):
+        """Custom option form shows 'Down Payment (optional)' label."""
+        response = client.get(
+            "/partials/option-fields/0?options[0][type]=custom",
+        )
+        assert response.status_code == 200
+        html = response.data.decode()
+        assert "Down Payment (optional)" in html
+        assert "Upfront Cash Required" not in html
+
+    def test_custom_option_name_field_label(self, client: FlaskClient):
+        """Custom option form shows 'Option Name (optional)' label."""
+        response = client.get(
+            "/partials/option-fields/0?options[0][type]=custom",
+        )
+        assert response.status_code == 200
+        html = response.data.decode()
+        assert "Option Name (optional)" in html
+        assert "Description (optional)" not in html
+
+
 class TestImportRoundTrip:
     """Tests for export-then-import round-trip fidelity."""
 
