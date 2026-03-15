@@ -1,5 +1,23 @@
 # Milestones
 
+## v1.2 Address Code Review (Shipped: 2026-03-15)
+
+**Phases:** 4 (13-16) | **Plans:** 6 | **LOC:** 4,385 Python + 6,621 test | **Timeline:** 1 day (2026-03-15)
+**Git range:** `003e065..6fee869` | **Commits:** 40 | **Files changed:** 18 (+1,552/-180) | **Tests:** 324 passing | **Requirements:** 14/14
+
+**Key accomplishments:**
+1. Centralized monetary rounding into canonical `money.py` module replacing 5 duplicate `quantize_money()` definitions
+2. Rewrote promo penalty modeling with two-phase schedule producing materially different costs for deferred-interest vs forward-only scenarios
+3. Corrected line chart to plot cumulative true cost with dual promo lines (solid paid-on-time, dashed not-paid)
+4. Added server-side inflation (0-20%) and tax rate (0-60%) bounds validation with toggle bypass
+5. Enforced 2-4 option contract in HTMX add/remove endpoints with accessible warning banners
+6. Wired custom_label end-to-end from form through engine to results display with label disambiguation
+
+**Tech debt remaining (1 cosmetic, 0 blockers):**
+- SVG `<title>` and `<h3>` in `line_chart.html` hardcode "Cumulative Cost Over Time" vs `charts.py` returning "Cumulative True Cost Over Time"
+
+---
+
 ## v1.1 Deeper Insights (Shipped: 2026-03-14)
 
 **Phases:** 6 (7-12) | **Plans:** 13 | **LOC:** 3,944 Python + 5,700 test | **Timeline:** 2 days (2026-03-13 → 2026-03-14)

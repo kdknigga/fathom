@@ -32,73 +32,17 @@
 
 </details>
 
-### v1.2 Address Code Review (In Progress)
+<details>
+<summary>✅ v1.2 Address Code Review (Phases 13-16) — SHIPPED 2026-03-15</summary>
 
-**Milestone Goal:** Fix all confirmed defects and test coverage gaps from the 2026-03-15 production-readiness code review.
+- [x] Phase 13: Centralize Monetary Rounding (1/1 plans) — completed 2026-03-15
+- [x] Phase 14: Engine Corrections (2/2 plans) — completed 2026-03-15
+- [x] Phase 15: Validation and HTMX Guards (2/2 plans) — completed 2026-03-15
+- [x] Phase 16: Custom Option Cleanup (1/1 plan) — completed 2026-03-15
 
-- [x] **Phase 13: Centralize Monetary Rounding** - Extract single `money.py` module replacing 5 duplicate `quantize_money()` definitions (completed 2026-03-15)
-- [x] **Phase 14: Engine Corrections** - Fix promo penalty modeling and line chart metric with tests proving correctness (completed 2026-03-15)
-- [x] **Phase 15: Validation and HTMX Guards** - Bound inflation/tax rates and enforce 2-4 option limits with tests (completed 2026-03-15)
-- [x] **Phase 16: Custom Option Cleanup** - Wire custom_label into results and clarify upfront cash with tests (completed 2026-03-15)
-
-## Phase Details
-
-### Phase 13: Centralize Monetary Rounding
-**Goal**: All monetary rounding flows through a single canonical utility, eliminating drift risk across calculation modules
-**Depends on**: Phase 12 (v1.1 complete)
-**Requirements**: ENG-03
-**Success Criteria** (what must be TRUE):
-  1. A single `quantize_money()` function exists in `src/fathom/money.py` and no other module defines its own rounding helper
-  2. All existing tests pass with zero behavior change — this is a pure refactor
-  3. Quality gates (ruff, ty, pyrefly) pass clean with no new inline suppressions
-**Plans**: 1 plan
-Plans:
-- [ ] 13-01-PLAN.md — Create money.py and centralize all quantize_money imports
-
-### Phase 14: Engine Corrections
-**Goal**: Users comparing promo financing options see materially different costs for deferred-interest vs forward-only scenarios, and the line chart accurately plots cumulative true cost
-**Depends on**: Phase 13 (rounding centralized so engine fixes import from canonical module)
-**Requirements**: ENG-01, ENG-02, TEST-01, TEST-02
-**Success Criteria** (what must be TRUE):
-  1. Submitting a promo option with deferred-interest enabled produces a visibly different (higher) "not paid on time" cost than the same option with forward-only interest
-  2. A written business rule with worked numeric example ($10K purchase, 24.99% APR, 12-month promo) exists as a code comment before implementation, and tests assert against those specific expected dollar amounts
-  3. The line chart data points for each option match cumulative true cost (payments + opportunity cost - tax savings + inflation adjustment), not cumulative payments
-  4. Tests assert the invariant: retroactive penalty cost > forward-only penalty cost > paid-on-time cost, using specific dollar amounts
-**Plans**: 2 plans
-Plans:
-- [ ] 14-01-PLAN.md — Fix promo penalty modeling with two-phase schedule construction
-- [ ] 14-02-PLAN.md — Fix cumulative cost metric and add dual promo chart lines
-
-### Phase 15: Validation and HTMX Guards
-**Goal**: Users cannot submit impossible inflation/tax values or violate the 2-4 option contract through the UI
-**Depends on**: Phase 13 (no dependency on engine fixes; ordered by severity after Phase 14)
-**Requirements**: VAL-01, VAL-02, VAL-03, VAL-04, TEST-03, TEST-04
-**Success Criteria** (what must be TRUE):
-  1. Submitting an inflation rate outside 0-20% returns a clear error message and does not reach the calculation engine
-  2. Submitting a tax rate outside 0-60% returns a clear error message and does not reach the calculation engine
-  3. Clicking "Add Option" when 4 options exist returns HTTP 200 with the form unchanged (no 5th option appears)
-  4. Clicking "Remove Option" when 2 options exist returns HTTP 200 with the form unchanged (neither option is removed)
-  5. Disabling the inflation toggle with an out-of-range value in the field does not trigger a validation error (disabled fields bypass bounds checking)
-**Plans**: 2 plans
-Plans:
-- [ ] 15-01-PLAN.md — Add inflation/tax rate bounds validation with toggle bypass and template error display
-- [ ] 15-02-PLAN.md — Add HTMX option count guards with warning banners
-
-### Phase 16: Custom Option Cleanup
-**Goal**: Users who select the "Custom/Other" option type see their custom label in results and understand that upfront cash is optional
-**Depends on**: Phase 13 (no dependency on engine or validation fixes)
-**Requirements**: CUST-01, CUST-02, TEST-05
-**Success Criteria** (what must be TRUE):
-  1. A custom option's user-provided label appears as the option name in the recommendation card, breakdown table, and charts
-  2. The custom option form clearly indicates that the upfront cash field is optional (not required)
-  3. Tests verify the custom label text appears in rendered HTML results
-**Plans**: 1 plan
-Plans:
-- [x] 16-01-PLAN.md — Wire custom_label into results display and update custom option form labels
+</details>
 
 ## Progress
-
-**Execution Order:** Phases 13 > 14 > 15 > 16
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -114,7 +58,7 @@ Plans:
 | 10. JSON Export/Import | v1.1 | 2/2 | Complete | 2026-03-14 |
 | 11. Detailed Period Breakdown | v1.1 | 3/3 | Complete | 2026-03-14 |
 | 12. Python Linting Cleanup | v1.1 | 2/2 | Complete | 2026-03-14 |
-| 13. Centralize Monetary Rounding | 1/1 | Complete    | 2026-03-15 | - |
-| 14. Engine Corrections | 2/2 | Complete    | 2026-03-15 | - |
-| 15. Validation and HTMX Guards | 2/2 | Complete    | 2026-03-15 | - |
-| 16. Custom Option Cleanup | v1.2 | Complete    | 2026-03-15 | 2026-03-15 |
+| 13. Centralize Monetary Rounding | v1.2 | 1/1 | Complete | 2026-03-15 |
+| 14. Engine Corrections | v1.2 | 2/2 | Complete | 2026-03-15 |
+| 15. Validation and HTMX Guards | v1.2 | 2/2 | Complete | 2026-03-15 |
+| 16. Custom Option Cleanup | v1.2 | 1/1 | Complete | 2026-03-15 |

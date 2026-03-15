@@ -35,19 +35,18 @@ Users can instantly see which financing option truly costs least when opportunit
 - ✓ JSON export/import — download current inputs as JSON file, upload to restore — v1.1
 - ✓ Expanded ruff lint coverage (PL, PT, DTZ, T20) with zero violations — v1.1
 - ✓ Complex function refactoring below default complexity thresholds — v1.1
+- ✓ Centralized monetary rounding into single `money.py` module — v1.2
+- ✓ Promo penalty modeling produces distinct costs for deferred-interest vs forward-only — v1.2
+- ✓ Line chart plots cumulative true cost, not cumulative payments — v1.2
+- ✓ Server-side validation bounds for inflation (0-20%) and tax rates (0-60%) — v1.2
+- ✓ HTMX add/remove enforces 2-4 option contract — v1.2
+- ✓ Custom_label wired into results display with label disambiguation — v1.2
+- ✓ Upfront cash field marked optional in custom option form — v1.2
+- ✓ Full test coverage for all v1.2 defect fixes (324 tests passing) — v1.2
 
 ### Active
 
-<!-- v1.2 Address Code Review -->
-- [ ] Fix promo penalty modeling so deferred-interest settings change the calculation path
-- [ ] Add server-side validation bounds for inflation and tax rates
-- [ ] Correct line chart to plot cumulative true cost, not cumulative payments
-- [ ] Enforce 2-4 option contract in HTMX add/remove endpoints
-- [ ] Reconcile custom-option validation with UI contract for upfront cash
-- [ ] Wire custom_label into results display
-- [ ] Toggle-control inflation/tax field visibility
-- [ ] Centralize duplicated monetary rounding helpers
-- [ ] Backfill test coverage for all fixed defects
+(None — planning next milestone)
 
 ### Out of Scope
 
@@ -63,27 +62,18 @@ Users can instantly see which financing option truly costs least when opportunit
 - Wizard/multi-step form — hides context; single-page comparison needs all options visible
 - Client-side calculation logic — creates divergence bugs; server is source of truth
 
-## Current Milestone: v1.2 Address Code Review
+## Current State
 
-**Goal:** Fix all confirmed defects and test coverage gaps identified in the 2026-03-15 production-readiness code review.
-
-**Target features:**
-- Fix promo penalty modeling (deferred-interest flags must change calculation)
-- Add validation bounds for inflation/tax rates
-- Correct line chart metric to cumulative true cost
-- Enforce 2-4 option boundaries in HTMX endpoints
-- Reconcile custom-option validation and wire custom_label into display
-- Toggle-controlled inflation/tax field visibility
-- Centralize monetary rounding helpers
-- Backfill test coverage for all fixed defects
+**Latest shipped:** v1.2 Address Code Review (2026-03-15)
+**Next milestone:** Not yet planned — run `/gsd:new-milestone` to start
 
 ## Context
 
-Shipped v1.1 with 3,944 LOC Python, 5,700 LOC tests, 1,310 LOC templates across 12 phases (29 plans total).
+Shipped v1.2 with 4,385 LOC Python, 6,621 LOC tests across 16 phases (35 plans total).
 Tech stack: Python 3.14, Flask, Pydantic, HTMX, Pico CSS, server-rendered SVG charts.
-241 tests passing. All quality gates clean (ruff, ty, pyrefly, prek). Zero inline suppressions.
+324 tests passing. All quality gates clean (ruff, ty, pyrefly, prek). Zero inline suppressions.
 
-v1.1 added: dark mode, comma-formatted inputs, tooltip popovers on all form/result fields, IRS tax bracket reference, JSON export/import, detailed per-period cost breakdown with tabs and compare view, and full linting/complexity cleanup.
+v1.2 addressed all defects from the 2026-03-15 production-readiness code review: centralized monetary rounding, fixed promo penalty modeling, corrected line chart metric, added input validation bounds, enforced option count limits, and wired custom labels end-to-end.
 
 ### Development Tools (MCP Servers)
 
@@ -134,6 +124,11 @@ All code must pass with zero errors/warnings:
 | HTMX hx-include on detail tab buttons | Stateless detail endpoint — tabs POST current form data | ✓ Good — no server-side session state needed |
 | Per-period cost factor decomposition | Separate opportunity/inflation/tax per month alongside aggregates | ✓ Good — enables detailed breakdown without changing aggregate math |
 | Cumulative rounding tolerance widened to 0.05 | Per-period Decimal rounding over 36+ months accumulates | ✓ Good — pragmatic, documented in tests |
+| Canonical money.py for all rounding | Eliminate 5 duplicate quantize_money() definitions | ✓ Good — single source of truth, zero drift risk |
+| Two-phase promo schedule construction | Separate min-payment promo period from post-promo amortization | ✓ Good — retroactive vs forward-only costs now materially different |
+| _PromoContext dataclass for promo state | Bundle promo params for helper extraction | ✓ Good — clean separation of concerns |
+| Toggle-bypass validation pattern | Disabled inputs skip bounds checking | ✓ Good — matches existing validate_return_rate pattern |
+| Counter-based label disambiguation | First keeps original, subsequent get (2), (3) suffixes | ✓ Good — clear, predictable naming |
 
 ---
-*Last updated: 2026-03-15 after v1.2 milestone start*
+*Last updated: 2026-03-15 after v1.2 milestone complete*
