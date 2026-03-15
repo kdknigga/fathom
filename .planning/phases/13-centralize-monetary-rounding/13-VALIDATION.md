@@ -1,9 +1,9 @@
 ---
 phase: 13
 slug: centralize-monetary-rounding
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: complete
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-03-15
 ---
 
@@ -38,9 +38,11 @@ created: 2026-03-15
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 13-01-01 | 01 | 1 | ENG-03 | existing regression | `uv run pytest tests/ -x -q` | ✅ | ⬜ pending |
-| 13-01-02 | 01 | 1 | ENG-03 | grep verification | `grep -rn "def quantize_money" src/fathom/` | ✅ | ⬜ pending |
-| 13-01-03 | 01 | 1 | ENG-03 | quality gates | `uv run ruff check . && uv run ruff format --check . && uv run ty check && uv run pyrefly check` | ✅ | ⬜ pending |
+| 13-01-01 | 01 | 1 | ENG-03 | existing regression | `uv run pytest tests/ -x -q` | ✅ | ✅ green |
+| 13-01-02 | 01 | 1 | ENG-03 | grep verification | `grep -rn "def quantize_money" src/fathom/` | ✅ | ✅ green |
+| 13-01-03 | 01 | 1 | ENG-03 | quality gates | `uv run ruff check . && uv run ruff format --check . && uv run ty check && uv run pyrefly check` | ✅ | ✅ green |
+| 13-01-04 | 01 | 1 | ENG-03 | unit: quantize_money edge cases + CENTS | `uv run pytest tests/test_money.py -v` | ✅ | ✅ green |
+| 13-01-05 | 01 | 1 | ENG-03 | unit: import centralization assertion | `uv run pytest tests/test_money.py -v` | ✅ | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -48,9 +50,9 @@ created: 2026-03-15
 
 ## Wave 0 Requirements
 
-*Existing infrastructure covers all phase requirements.*
-
-No new test files needed — the 283 existing tests serve as the regression suite for this pure refactor.
+New dedicated test file added: `tests/test_money.py` (11 tests).
+- 8 unit tests for `quantize_money()` edge cases and `CENTS` constant
+- 3 structural integrity tests verifying no consumer module defines its own copy
 
 ---
 
@@ -62,11 +64,21 @@ No new test files needed — the 283 existing tests serve as the regression suit
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 10s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 10s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** 2026-03-15 — gaps filled by gsd-nyquist-auditor (335 tests passing, all quality gates clean)
+
+---
+
+## Validation Audit 2026-03-15
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 2 |
+| Resolved | 2 |
+| Escalated | 0 |
