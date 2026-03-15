@@ -1,218 +1,370 @@
-# Feature Research
+# Feature Landscape
 
-**Domain:** Financing comparison calculator — v1.1 enhancements (tooltips, cost breakdown tables, JSON export/import, number formatting, tax guidance, dark mode)
-**Researched:** 2026-03-13
-**Confidence:** HIGH (native browser APIs, well-established patterns, Pico CSS dark mode confirmed via official docs)
+**Domain:** Code review defect fixes for financing options analyzer (v1.2)
+**Researched:** 2026-03-15
+**Confidence:** HIGH (defects confirmed by code inspection; domain behavior verified with CFPB, Synchrony, Bankrate)
 
 ## Context
 
-This is a subsequent milestone research file. v1.0 already ships: single-page input form, 6 option types, True Total Cost engine, summary recommendation, cost breakdown table, SVG charts, HTMX live updates, WCAG 2.1 AA, responsive layout.
-
-The seven v1.1 features are not "should we build these" questions — they are scoped and committed in PROJECT.md. This file answers: **what does each feature expect, what is table stakes vs differentiator, how complex, and what depends on what.**
+This is a subsequent milestone. v1.1 is shipped and working. A production-readiness code review (2026-03-15, `docs/code-review-2026-03-15.md`) identified 15 findings across logic defects, validation gaps, product-contract mismatches, and test coverage holes. This file covers how the FIXED versions of these features should behave, not whether to build them.
 
 ---
 
-## Feature Landscape
+## Table Stakes
 
-### Table Stakes (Users Expect These)
+Fixes that must land for the product to be trustworthy. These are existing features with confirmed defects -- not new capabilities.
 
-Features that users of financial tools assume exist. Missing these makes v1.1 feel incomplete.
+| Feature | Why Expected | Complexity | Dependencies | Notes |
+|---------|--------------|------------|--------------|-------|
+| Correct deferred-interest penalty modeling | Users comparing promo options get materially wrong cost estimates. Both code branches produce identical results. Core product trust issue. | High | engine.py `_build_promo_result()` | Review finding #1. Both branches construct identical `FinancingOption`. Must differentiate retroactive vs forward-only interest paths. |
+| Server-side inflation rate validation | Negative inflation or extreme values (e.g., -5%) produce meaningless recommendations that look credible. | Low | forms.py `SettingsInput` | Review finding #2. Currently no bounds check at all. |
+| Server-side tax rate validation | Tax rates above 100% (e.g., 150%) produce nonsensical results. | Low | forms.py `SettingsInput` | Review finding #2. Currently no bounds check at all. |
+| Correct cumulative cost line chart metric | Chart title says "Cumulative Cost Over Time" but plots cumulative payments only, ignoring opportunity cost, tax savings, and inflation. Contradicts the recommendation. | Medium | engine.py monthly data, charts.py `_collect_option_points()` | Review finding #6. `results.py` already computes the correct metric in `_monthly_data_to_rows()`. |
+| 2-4 option count enforcement in HTMX endpoints | Server allows 5th option add and removal down to 1 option, violating the 2-4 product contract. | Low | routes.py add/remove handlers | Review finding #3. Guard clauses at boundaries. |
+| Custom option upfront cash validation | UI shows "Upfront Cash Required" as first-class but validation ignores it. | Low | forms.py, custom.html | Review finding #4. Make explicitly optional in UI. |
+| Wire custom_label into results display | Users enter a custom description that is silently discarded. Dead product surface. | Low | forms.py, models.py, result templates | Review finding #5. |
+| Toggle-controlled inflation/tax visibility | Fields always visible despite PRD requiring progressive disclosure. | Low | global_settings.html | Review finding #8. CSS or HTMX toggle. |
+| Centralized monetary rounding | `quantize_money()` duplicated in 5 modules. Drift risk. | Low | amortization.py, opportunity.py, inflation.py, tax.py, caveats.py | Review finding #10. |
+| Test backfill for all fixed defects | Every fix above shipped without failure-mode test coverage. | Medium | All test modules | Review findings #11-15. |
 
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Input tooltips (`?` icon popovers) | Any financial form with jargon (APR, opportunity cost, marginal rate) must explain its terms inline. Users abandon forms when confused by unfamiliar fields. Intuit, Bankrate, and SmartAsset all do this. | LOW | Static content, no server round-trip needed. Pico CSS + native Popover API (Baseline Widely Available since April 2025). One `?` button per field, `popover` attribute on `<div>`. Pure HTML/CSS, no JS required. |
-| Output tooltips (result term explanations) | "Opportunity cost" and "True Total Cost" are novel terms. Without inline explanations, users distrust the numbers. The recommendation card and breakdown table are meaningless if terms are opaque. | LOW | Same mechanism as input tooltips. Each row label in the breakdown table and each metric in the summary card gets a `?` trigger. Static content, inline in Jinja templates. |
-| Comma-normalized number inputs | Entering "18000" instead of "18,000" is error-prone at amounts like $18,000 or $245,000. Users expect to type or paste formatted numbers. Type `<input type="number">` rejects commas — must use `type="text"` with stripping before submission. | MEDIUM | `type="text"` with `inputmode="numeric"` and `pattern`. Format on blur via minimal JS. Strip commas server-side in Pydantic validators before parsing to Decimal. Active area of form UX concern (see sources). |
-| Dark mode (`prefers-color-scheme`) | Dark mode is now a baseline user expectation (2025+ web). Using a system that doesn't respect OS dark mode preference feels dated. Pico CSS ships with built-in dark mode support out of the box — this is essentially free. | LOW | Pico CSS auto-activates dark mode via `prefers-color-scheme: dark` with no JS required. Custom CSS vars declared twice (media query + `[data-theme="dark"]`). SVG chart colors need explicit dark-mode overrides. No manual toggle required for v1.1 — OS preference is sufficient. |
+---
 
-### Differentiators (Competitive Advantage)
+## Feature Detail: Deferred-Interest Promo Penalty Modeling
 
-Features that make v1.1 more useful than generic calculators.
+**Confidence: HIGH** (CFPB, Synchrony, Bankrate, Discover all describe consistent mechanics)
+
+### How deferred-interest works in consumer financing
+
+Consumer deferred-interest promotions have two distinct penalty scenarios that the engine must model differently.
+
+**Scenario A: Deferred interest with retroactive interest (common retail model)**
+
+This is the typical store credit card offer ("No interest if paid in full within 12 months"). The mechanics:
+
+1. During promo period: interest accrues invisibly at the standard APR but is NOT billed.
+2. If paid in full before deadline: all accrued interest is forgiven. Effective cost = 0% interest.
+3. If ANY balance remains at deadline (even $1): ALL accrued interest from day 1 is charged retroactively on the ORIGINAL purchase amount, not the remaining balance.
+4. Post-promo: remaining balance PLUS retroactive interest continues accruing at standard APR.
+
+Critical detail from CFPB: A $400 purchase with $25/month payments leaves $100 unpaid after 12 months. The penalty is NOT interest on $100 -- it is $65 in retroactive interest computed on the full $400 from the purchase date. The consumer then owes $165, not $100.
+
+**Scenario B: True 0% APR (no deferred interest)**
+
+This is the credit card intro APR offer ("0% intro APR on purchases for 12 months"). The mechanics:
+
+1. During promo period: no interest accrues at all.
+2. If balance remains after promo expires: interest begins on the REMAINING balance only, going forward only, at the post-promo APR.
+3. No retroactive component. Only forward-looking interest on unpaid portion.
+
+### What the current code does wrong
+
+In `_build_promo_result()` (engine.py lines 279-357):
+- The `if option.deferred_interest and option.retroactive_interest` branch and the `else` branch construct **identical** `FinancingOption` objects.
+- Both use `purchase_price` as principal and `post_apr` as rate.
+- The flags change caveat warnings but NOT the cost calculation.
+- The inline comment says "assume half the balance remains" but the implementation uses full purchase price in both paths.
+
+### What the fix must do
+
+**Retroactive interest path** (`deferred_interest=True, retroactive_interest=True`):
+
+1. Compute retroactive interest: `full_principal * monthly_rate * promo_term_months`. This represents the interest that accrued invisibly during the promo period on the entire original balance.
+2. Estimate remaining balance at promo expiry. Two approaches, in order of preference:
+   - **Simple (recommended for v1.2):** Assume minimum payments during promo period do not reduce principal (interest-only equivalent). Remaining balance = full principal. This is conservative and matches the worst-case CFPB scenario.
+   - **Complex (defer to future):** Model actual minimum payment schedules (2% of balance, issuer-specific). Excessive complexity for marginal accuracy.
+3. Total penalty balance = remaining principal + retroactive interest.
+4. Amortize the penalty balance at post-promo APR for the remaining term.
+
+**Forward-only path** (`deferred_interest=False`):
+
+1. No retroactive interest.
+2. Estimate remaining balance at promo expiry (same approach as above).
+3. Amortize remaining balance at post-promo APR for the remaining term.
+
+**Key difference in outcome:** For a $10,000 purchase, 12-month promo, 24.99% post-promo APR:
+- Forward-only: remaining $10,000 amortized at 24.99% for remaining term.
+- Retroactive: remaining $10,000 PLUS ~$2,499 retroactive interest ($12,499 total) amortized at 24.99%.
+
+The retroactive penalty should produce a materially higher `not_paid_on_time.true_total_cost` than the forward-only path. The current code produces identical values, which is the confirmed defect.
+
+### Code/comment reconciliation
+
+The comment on line 323 says "assume half the balance remains after promo term" but the code uses `purchase_price` (full balance) on both branches. Decision: use full remaining balance (conservative), update the comment, and document the assumption in a caveat. The "half balance" comment was aspirational, never implemented.
+
+### Sources
+
+- [CFPB: How to understand special promotional financing offers](https://www.consumerfinance.gov/about-us/blog/how-understand-special-promotional-financing-offers-credit-cards/)
+- [Synchrony: Understanding Deferred Interest](https://www.synchrony.com/consumer-resources/deferred-interest)
+- [Bankrate: Dangers of Deferred Interest Promotions](https://www.bankrate.com/credit-cards/zero-interest/deferred-interest-promotion-dangers/)
+- [Discover: What is Deferred Interest?](https://www.discover.com/credit-cards/card-smarts/what-is-deferred-interest/)
+
+---
+
+## Feature Detail: Validation Bounds for Inflation and Tax Rates
+
+**Confidence: HIGH** (BLS historical data, IRS brackets, Fed targets)
+
+### Inflation Rate Bounds
+
+| Constraint | Value | Rationale |
+|------------|-------|-----------|
+| Minimum | 0% | Deflation is real but confuses consumer-facing tools. The toggle already allows disabling inflation entirely, which covers the "no inflation" case. |
+| Maximum | 20% | US historical peak was ~20% (1917, 1947). Anything above is implausible for financial planning. Covers hyperinflationary edge cases. |
+| Default | 3% | Historical US arithmetic mean is 3.2% (1914-2025, per Minneapolis Fed). Fed target is 2%. 3% is a reasonable conservative default. |
+| UI hint | "Typical range: 2-4%" | Guides without restricting. |
+
+### Tax Rate Bounds (Marginal)
+
+| Constraint | Value | Rationale |
+|------------|-------|-----------|
+| Minimum | 0% | Valid for non-deductible interest or zero-income scenarios. |
+| Maximum | 50% | Highest US federal bracket is 37%. State income taxes add up to ~13% (CA, NY). 50% covers all plausible combined US scenarios. |
+| Default | 22% | Middle federal bracket, most common for median-income filers. Already the current default. |
+| UI hint | IRS bracket reference table already exists (v1.1 feature). |
+
+### Validation behavior
+
+- Only validate bounds when the toggle is enabled. When `inflation_enabled=False`, the inflation rate value is irrelevant and should not trigger validation errors.
+- When enabled and value is blank, use the default (3% inflation, 22% tax).
+- When enabled and value is out of bounds, return a field-specific error matching the existing error pattern (`"inflation_rate:Inflation rate must be between 0% and 20%."`).
+- HTML `min`/`max` attributes on inputs for browser-level UX hints, but server-side Pydantic validation is the enforcement layer. No client-side JS validation.
+
+### Sources
+
+- [BLS CPI Inflation Calculator](https://www.bls.gov/data/inflation_calculator.htm)
+- [Minneapolis Fed Inflation Calculator](https://www.minneapolisfed.org/about-us/monetary-policy/inflation-calculator)
+- [Federal Reserve 2% inflation target](https://www.stlouisfed.org/publications/page-one-economics/2023/01/03/adjusting-for-inflation)
+
+---
+
+## Feature Detail: Cumulative Cost Line Chart Metric
+
+**Confidence: HIGH** (code inspection confirms the discrepancy; the correct formula exists in results.py)
+
+### What the chart currently plots (wrong)
+
+The y-axis uses `MonthlyDataPoint.cumulative_cost`, which is computed in the engine builders as a running sum of payments only:
+
+```python
+# In _build_loan_result(), line 229:
+cumulative = cumulative + dp.payment
+```
+
+This excludes opportunity cost, tax savings, and inflation adjustment -- the very factors that make this tool's recommendation different from a naive payment comparison.
+
+### What the chart must plot (correct)
+
+The y-axis at month M should be the running sum of per-period net true cost:
+
+```
+cumulative_true_cost[M] = sum(month 1..M) of:
+    payment[m] + opportunity_cost[m] - tax_savings[m] + inflation_adjustment[m]
+```
+
+This is exactly what `_monthly_data_to_rows()` in results.py already computes as `cumulative_true_total_cost` for the detailed breakdown tables. The formula exists and is tested in the detailed table context.
+
+### Why this matters
+
+Without this fix:
+- Cash appears as a flat line at purchase price from month 1.
+- Loans show a steadily rising payment line.
+- The crossover point between lines is meaningless because it ignores the factors that drive the recommendation.
+- Users see a chart labeled "Cumulative Cost Over Time" that tells a different story than the "True Total Cost" bar chart and recommendation card.
+
+Evidence from code review: for a loan vs cash comparison, `true_total_cost` values were $29,734 (loan) vs $30,885 (cash), but chart endpoints showed $26,904 (loan) vs $25,000 (cash) -- the chart showed the wrong winner.
+
+### Implementation approach
+
+**Option A (recommended): Compute in engine, store in MonthlyDataPoint**
+
+Repurpose `cumulative_cost` in `MonthlyDataPoint` to mean cumulative true cost (not just cumulative payments). Update the engine builders to compute it using the same net-cost formula. Charts read the field directly.
+
+Pros: Single source of truth. Charts, detailed tables, and any future consumer all get the correct metric.
+Cons: Changes the semantic meaning of an existing field. Must update engine builders and verify detailed table still works.
+
+**Option B (not recommended): Compute in chart preparation**
+
+Leave `MonthlyDataPoint.cumulative_cost` as payments-only. Have `_collect_option_points()` recompute cumulative true cost from the per-period factors.
+
+Pros: No model changes.
+Cons: Duplicates the formula from `_monthly_data_to_rows()`. Two places to maintain.
+
+Recommendation: Option A. The field name `cumulative_cost` should mean the true cost, not just payments. If backward compatibility matters, rename to `cumulative_true_cost` and remove the old field.
+
+---
+
+## Feature Detail: Toggle-Controlled Progressive Disclosure
+
+**Confidence: HIGH** (standard HTML/CSS pattern)
+
+### Expected behavior
+
+1. "Include Inflation" checkbox unchecked: inflation rate input is hidden.
+2. "Include Inflation" checkbox checked: inflation rate input appears.
+3. Same for "Include Tax Deduction" and tax rate input.
+4. When hidden, field value is preserved (not cleared) so toggling back restores previous entry.
+5. No server round-trip needed -- this is a pure display concern.
+
+### Implementation
+
+CSS sibling selector approach (if DOM structure allows):
+
+```css
+.toggle-target { display: none; }
+.toggle-checkbox:checked ~ .toggle-target { display: block; }
+```
+
+If checkbox and target are not DOM siblings (likely given form layout), use minimal inline JS (`onchange`) or restructure the template to make them siblings. Given the project uses HTMX, an `hx-trigger="change"` swap is also viable but adds unnecessary server load for a display toggle.
+
+Recommendation: Restructure the template slightly so the checkbox and its controlled field are siblings, then use pure CSS. No JS, no HTMX round-trip.
+
+---
+
+## Feature Detail: Custom Label Wiring
+
+**Confidence: HIGH** (code inspection)
+
+### Current state
+
+- `custom_label` is parsed from form data and stored in `OptionInput.custom_label`.
+- It is NOT passed to `FinancingOption` (domain model has no such field).
+- It is NOT used anywhere in results, charts, or recommendations.
+
+### Expected behavior
+
+When a user selects "Custom/Other" and enters a label like "Store Credit Card" or "Family Loan", that text should appear as the option name everywhere: results cards, chart labels, breakdown tables, recommendation text, JSON export.
+
+### Implementation (simplest approach)
+
+In `build_domain_objects()`, when building a custom option, use `custom_label` as the `label` if it is non-empty:
+
+```python
+if option_type == OptionType.CUSTOM and opt.custom_label.strip():
+    label = opt.custom_label.strip()
+else:
+    label = opt.label or option_type.value
+```
+
+No model changes needed. The `label` field on `FinancingOption` already propagates through the entire result chain.
+
+---
+
+## Feature Detail: 2-4 Option Enforcement in HTMX Endpoints
+
+**Confidence: HIGH** (code inspection)
+
+### Expected behavior
+
+- `/partials/option/add`: If 4 options already exist, return the current form state unchanged (HTTP 200, no new option card added). Optionally disable the "Add Option" button when at 4.
+- `/partials/option/<idx>/remove`: If only 2 options exist, return the current form state unchanged (HTTP 200, no option removed). Optionally disable "Remove" buttons when at 2.
+
+### Implementation
+
+Guard clauses at the top of each route handler:
+
+```python
+if len(options) >= 4:
+    # Return current form state without adding
+    return render_template(...)
+
+if len(options) <= 2:
+    # Return current form state without removing
+    return render_template(...)
+```
+
+The UI should also reflect the constraint: hide or disable the add button when at max, hide or disable remove buttons when at min. This can be done in the Jinja template with a simple conditional.
+
+---
+
+## Feature Detail: Centralized Monetary Rounding
+
+**Confidence: HIGH** (code inspection)
+
+### Current state
+
+Five modules each define their own `quantize_money()`:
+- `amortization.py`
+- `opportunity.py`
+- `inflation.py`
+- `tax.py`
+- `caveats.py`
+
+All do the same thing: `Decimal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)`.
+
+### Implementation
+
+Create `src/fathom/money.py` (or add to an existing utils module) with the single canonical implementation. Update all five modules to import from the central location. This is a pure refactor with no behavior change.
+
+---
+
+## Differentiators
+
+Features beyond defect fixes. NOT in scope for v1.2.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Detailed cost breakdown table (period-by-period, tabs, column toggles, compare view) | No mainstream consumer financing calculator shows period-by-period True Total Cost decomposition across multiple options. This is uniquely transparent — "show your work" for complex financial comparisons. The existing v1.0 summary table is one row per cost factor; this is one row per period. | HIGH | Per-period rows: each month/year shows payments, opportunity cost, running total, inflation adjustment, tax savings. Tabs: per-option detail + side-by-side compare. Column toggles: show/hide individual cost factors. Server-rendered HTML table from Python. HTMX can lazy-load detailed table on demand. Must remain accessible (proper `<thead>`, `scope` attributes, `aria-label`). |
-| JSON export/import | Lets users save and restore scenarios. Critical for "what if I renegotiated to 3.9%?" iteration. No competitor supports this. Supports self-hosted users who want auditability. | MEDIUM | Export: server endpoint returns JSON of current form state; browser downloads via `Content-Disposition: attachment`. Import: `<input type="file" accept=".json">`, POST to parse endpoint, server re-populates form via HTMX swap. Server validates uploaded JSON through same Pydantic models as form submission. No client-side state management needed. |
-| US-centric tax rate guidance | Marginal tax rate is the single most confusing input for non-accountant users. Displaying the 2025 IRS brackets (10%, 12%, 22%, 24%, 32%, 35%, 37%) with income ranges inline turns an opaque field into a self-service lookup. SmartAsset and TurboTax do this as dedicated tools; embedding it inline is a UX win. | LOW-MEDIUM | Static data (2025 brackets from IRS). Expandable helper panel below the tax rate field, toggled by a "What's my bracket?" link/button. Shows filing status × income bracket table. No calculation — pure reference. Content lives in a Jinja partial, updated annually. |
+| Minimum payment modeling for promo remaining balance | More accurate penalty estimation instead of assuming full balance remains | Medium | Would require modeling minimum payment schedules during promo period. Issuer-specific rules make this complex. |
+| Sensitivity analysis | Show how results change as return rate, inflation, or tax varies | High | New feature, significant UI work |
+| Promo risk-weighted ranking | Show recommendation under pessimistic scenario | Medium | Explicitly out of scope per PROJECT.md |
 
-### Anti-Features (Commonly Requested, Often Problematic)
+## Anti-Features
 
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| Manual dark/light mode toggle button | Users want explicit control; some prefer manual override over OS-level setting | Adds localStorage state, JavaScript toggle logic, and icon/button UI. For a utility tool used briefly, OS preference is sufficient. Toggle is deferred complexity for marginal UX gain. | Respect `prefers-color-scheme` only in v1.1. Add manual toggle in v1.2 if users request it. Use `[data-theme]` attribute pattern so toggle can be added without refactoring CSS. |
-| Real-time comma formatting while typing | Feels polished; users see "18,000" as they type each digit | Reformatting on `keydown` creates cursor position bugs, breaks copy-paste, and breaks mobile numeric keyboards. Complex to implement correctly across browsers. | Format on `blur` only (when user leaves the field). This is the correct UX pattern — confirmed by form UX sources. Strip commas on server-side; display formatted value in repopulated form after HTMX swap. |
-| Downloadable amortization schedule CSV/Excel | Power users ask for this; it's a feature every bank's loan page has | Out of scope per PROJECT.md. Full amortization schedule is "noise for a comparison tool." The period-by-period breakdown table in v1.1 covers the substantive need. CSV export adds format complexity. | The JSON export provides data portability. The detailed breakdown table provides period-level transparency. Both together satisfy the underlying need. |
-| Client-side JSON parse/restore | Avoids server round-trip on import; feels more responsive | Creates two code paths for form validation (JS + Python). Violates Fathom's architecture constraint: all validation is server-side Python. State divergence bugs are worse than a small latency. | POST the uploaded JSON to a server endpoint, validate via Pydantic, return repopulated form HTML via HTMX swap. One code path. |
-| Tax bracket auto-calculation from income | Users want to enter income and have the rate computed automatically | Tax calculation is complex (filing status, deductions, state taxes, AMT). Wrong auto-computed rate creates false confidence in results. IRS bracket tables change annually, requiring maintenance. | Show the bracket reference table and let the user pick their rate. One accurate manual selection beats one imprecise automatic calculation. |
+Features to explicitly NOT build in v1.2.
+
+| Anti-Feature | Why Avoid | What to Do Instead |
+|--------------|-----------|-------------------|
+| Live-as-you-type result updates | Code review finding #7 flagged this as a PRD mismatch, but PROJECT.md explicitly moved it to Out of Scope. Submit-driven HTMX is the intentional design. | Keep Calculate button. PRD updated to match. |
+| Complex minimum payment modeling during promo | Adds complexity for marginal accuracy. Minimum payment rules vary by issuer (2% of balance, $25 minimum, interest-only, etc.). | Assume full principal remains at promo expiry (conservative). Document the assumption in a caveat. |
+| Risk-weighted promo ranking | Changing winner selection based on penalty risk adds cognitive complexity and second-guessing. | Keep optimistic (paid-on-time) ranking with clear caveats. Explicit product decision. |
+| Client-side validation JS | Would duplicate server bounds in JS, creating divergence risk. Violates architecture constraint. | Server-side Pydantic validation only. HTML `min`/`max` attributes for UX hints but not enforcement. |
 
 ---
 
 ## Feature Dependencies
 
 ```
-[Comma-normalized inputs]
-    └──requires──> [Pydantic validators strip commas before Decimal parse]
-    └──enhances──> [All numeric inputs (purchase price, loan amount, rates)]
-
-[Input tooltips]
-    └──requires──> [Native Popover API] (Baseline Widely Available April 2025, no polyfill needed)
-    └──enhances──> [All form fields with jargon]
-
-[Output tooltips]
-    └──requires──> [Same Popover API mechanism as input tooltips]
-    └──enhances──> [Summary recommendation card] (already built)
-    └──enhances──> [Cost breakdown table v1.0] (already built)
-    └──enhances──> [Detailed breakdown table v1.1]
-
-[Detailed cost breakdown table]
-    └──requires──> [True Total Cost calculation engine] (already built)
-    └──requires──> [Per-period cash flow series] (amortization.py already exists)
-    └──enhances──> [Output tooltips] (column header tooltips explain cost factors)
-    └──conflicts──> [Must not duplicate v1.0 summary breakdown table — tabs separate them]
-
-[JSON export]
-    └──requires──> [Pydantic models serialize cleanly to JSON] (Pydantic v2 .model_dump() works)
-    └──independent of──> [JSON import] (can ship export without import)
-
-[JSON import]
-    └──requires──> [JSON export] (same schema must round-trip)
-    └──requires──> [Pydantic model validation] (uploaded JSON validated through same models as form POST)
-    └──requires──> [HTMX form repopulation endpoint]
-
-[US tax rate guidance]
-    └──enhances──> [Tax rate input field] (already built in global settings)
-    └──requires──> [Static 2025 IRS bracket data] (hardcoded in template or Python constant)
-    └──independent of──> [Inflation guidance, investment return rate guidance]
-
-[Dark mode]
-    └──requires──> [Pico CSS CSS variables audit] (identify all custom color vars overriding Pico defaults)
-    └──requires──> [SVG chart color overrides] (chart.py colors must be dark-mode-aware)
-    └──independent of──> [All other v1.1 features]
+Centralize quantize_money() ← independent, no deps (do first as foundation)
+Toggle visibility (inflation/tax) ← independent, no deps
+Validation bounds (inflation/tax) ← independent, no deps
+Custom label wiring ← independent, no deps
+Custom option validation reconciliation ← independent, no deps
+2-4 option enforcement ← independent, no deps
+Deferred-interest penalty fix ← benefits from centralized rounding (minor dep)
+Cumulative cost chart fix ← touches engine monthly data (same area as deferred-interest fix)
+Test backfill ← depends on ALL fixes above being complete
 ```
 
-### Dependency Notes
-
-- **Comma inputs require server-side stripping:** `type="text"` inputs with commas will break existing Pydantic `Decimal` field parsing. The comma-stripping must land before any feature that increases the chance of users pasting formatted numbers.
-- **Detailed breakdown table requires per-period data:** `amortization.py` already calculates monthly cash flows (used for line chart). The per-period breakdown table reuses this data — it is not new calculation logic, just new rendering.
-- **JSON import requires HTMX repopulation endpoint:** A new route is needed that accepts JSON, validates it, and returns the populated form HTML. This is a new server endpoint but follows the existing pattern.
-- **Dark mode requires SVG color review:** The existing `charts.py` uses hardcoded hex colors. These need to either use CSS variables (if SVG supports them — they do for `fill` and `stroke`) or emit different colors when dark mode is detected server-side via `Sec-CH-Prefers-Color-Scheme` header (not universally supported). The safest approach is CSS variables in SVG `fill`/`stroke` attributes.
-- **Output tooltips enhance, not replace:** The existing summary card and v1.0 breakdown table gain tooltip triggers. This is additive — no existing rendering logic changes.
-
 ---
 
-## v1.1 Feature Prioritization Matrix
+## Implementation Order Recommendation
 
-| Feature | User Value | Implementation Cost | Priority | Phase Suggestion |
-|---------|------------|---------------------|----------|-----------------|
-| Input tooltips | HIGH | LOW | P1 | Phase 1 — pure HTML/CSS, no risk |
-| Output tooltips | HIGH | LOW | P1 | Phase 1 — same mechanism |
-| Comma-normalized inputs | MEDIUM | MEDIUM | P1 | Phase 1 — unblocks accurate input for all users |
-| US tax rate guidance | MEDIUM | LOW | P1 | Phase 1 — static content, simple toggle |
-| Dark mode | MEDIUM | LOW-MEDIUM | P2 | Phase 2 — CSS audit required, SVG colors tricky |
-| JSON export | MEDIUM | MEDIUM | P2 | Phase 2 — new endpoint, clean Pydantic serialization |
-| JSON import | MEDIUM | MEDIUM | P2 | Phase 2 — depends on export schema being stable |
-| Detailed breakdown table | HIGH | HIGH | P2 | Phase 3 — most complex, depends on data model clarity |
+Based on dependency analysis, severity, and complexity:
 
-**Priority key:**
-- P1: Must have for v1.1 launch — directly improves existing usability friction
-- P2: Should have — adds new capability with moderate complexity
-
----
-
-## Expected Behavior Detail
-
-### Tooltips (Input + Output)
-
-- Trigger: `?` icon button adjacent to field label or metric label
-- Mechanism: HTML Popover API (`popover` attribute on `<div>`, `popovertarget` on `<button>`)
-- Content: 1-3 sentences maximum. Explains the concept, not just restates the label.
-- Positioning: Auto-positioned by browser; `popover` elements use the top layer
-- Accessibility: `aria-label="Help for [field name]"` on trigger button; popover has `role` managed by Popover API
-- Mobile: Tap to open, tap anywhere else to close (native Popover API behavior)
-- No JS required for basic functionality; CSS-only show/hide via `:popover-open` pseudo-class
-- Content lives in Jinja templates — easy to update without touching Python
-
-### Comma-Normalized Inputs
-
-- Input type: `type="text"` with `inputmode="numeric"` (shows numeric keyboard on mobile)
-- Display: Show formatted value with commas (e.g., "18,000") after server repopulation
-- On blur: JS formats display value with commas (minimal JS, ~10 lines)
-- On server receipt: Pydantic pre-validator strips commas and non-numeric chars before Decimal parse
-- Pattern attribute: `pattern="[\d,]*\.?\d*"` for browser-level hint
-- What not to do: Do not use `type="number"` — browsers reject comma-formatted values
-
-### Detailed Cost Breakdown Table
-
-- Structure: Rows = periods (monthly or annually, user-selectable); Columns = cost factors per option
-- Default view: Annual summary rows (less overwhelming than 60 monthly rows for a 5-year loan)
-- Tab 1: Per-option detail (one table per option, with all cost factors as columns)
-- Tab 2: Side-by-side compare (one column per option, rows = key cost factors summed by period)
-- Column toggles: Checkboxes to show/hide individual cost factors (opportunity cost, inflation, tax savings, etc.)
-- Row expansion: Click a year to expand to monthly detail (progressive disclosure)
-- Server-rendered: Python generates HTML table; HTMX can lazy-load when user clicks "Detailed View" tab
-- Accessibility: `<thead>` with `scope="col"`, row headers with `scope="row"`, `aria-label` on the section
-
-### JSON Export
-
-- Trigger: "Export JSON" button in form area
-- Mechanism: GET or POST to `/export` endpoint; server serializes current form state via Pydantic `.model_dump()`; returns `Content-Disposition: attachment; filename="fathom-scenario.json"` with `application/json`
-- Schema: Same Pydantic models used for form validation — no separate serialization format
-- File name: `fathom-<timestamp>.json` for uniqueness
-
-### JSON Import
-
-- Trigger: File input `<input type="file" accept=".json">` + "Import" button
-- Mechanism: POST to `/import` endpoint with multipart form; server reads file, validates JSON through Pydantic models, returns repopulated form HTML via HTMX `hx-swap="outerHTML"` on the form
-- Error handling: Invalid JSON or schema mismatch returns inline error message (no page reload)
-- Security: Validate file size limit (e.g., 64KB max); reject non-JSON MIME types
-
-### US Tax Rate Guidance
-
-- Trigger: "What's my bracket?" link/button below the marginal tax rate input
-- Mechanism: Toggles a hidden `<details>`/`<summary>` or Popover containing the bracket table
-- Content: 2025 IRS brackets table (10%–37%) for single and married filing jointly
-- Interaction: User reads table, manually enters their rate — no auto-population
-- Updates: Static data in a Jinja partial; update annually with new IRS brackets
-- No external API, no dynamic calculation
-
-### Dark Mode
-
-- Mechanism: `@media (prefers-color-scheme: dark)` — OS preference only for v1.1
-- Pico CSS: Auto-activates dark theme with built-in variables. Custom overrides follow Pico's `[data-theme="dark"]` pattern declared inside media query
-- SVG charts: Use CSS custom properties (`--chart-color-1`, etc.) in `fill`/`stroke` attributes; define light and dark values in CSS
-- Testing: Playwright MCP can emulate `prefers-color-scheme: dark` via `page.emulate_media()`
-
----
-
-## Competitor Feature Analysis (v1.1 Scope)
-
-| Feature | Bankrate/NerdWallet | TurboTax Tax Bracket Calc | Fathom v1.1 Approach |
-|---------|---------------------|--------------------------|----------------------|
-| Field tooltips | Yes — on most fields | Yes — inline help text | Yes — Popover API, static content in templates |
-| Number formatting | Yes — commas displayed | Yes | Yes — text input + blur formatting + server stripping |
-| Dark mode | Bankrate: No. NerdWallet: Yes | Yes | Yes — `prefers-color-scheme` via Pico CSS |
-| JSON export/import | No | No | Yes — unique to Fathom |
-| Tax bracket lookup | No (separate tools) | Yes — dedicated calculator | Yes — inline reference table (lighter than TurboTax) |
-| Detailed amortization | Yes — full schedule per option | N/A | Yes — per-period breakdown with cost factor decomposition (unique: includes opportunity cost + inflation) |
+| Order | Feature | Severity | Complexity | Rationale |
+|-------|---------|----------|------------|-----------|
+| 1 | Centralize `quantize_money()` | Low | Low | Foundation refactor. No behavior change. Enables clean fixes elsewhere. |
+| 2 | Fix deferred-interest penalty modeling | High | High | Highest severity, most complex, core to product trust. |
+| 3 | Fix cumulative cost chart metric | High | Medium | Connected to engine data; benefits from deferred-interest changes landing first. |
+| 4 | Add inflation/tax validation bounds | High | Low | High severity, low complexity, independent. Quick win. |
+| 5 | Enforce 2-4 option boundaries | Medium | Low | Server contract enforcement. Quick win. |
+| 6 | Reconcile custom option validation + wire custom_label | Medium+Low | Low | Grouped because they touch the same form/model area. |
+| 7 | Toggle-controlled field visibility | Low | Low | Pure template/CSS change. |
+| 8 | Test backfill | High | Medium | Must come last. Each test targets a specific fix above. Should include regression tests that FAIL before the fix and PASS after. |
 
 ---
 
 ## Sources
 
-- [Tooltip and popover guidelines — Balsamiq](https://balsamiq.com/learn/ui-control-guidelines/tooltips-popovers/)
-- [Tooltips — Intuit Content Design](https://contentdesign.intuit.com/product-and-ui/tooltips/)
-- [Using the Popover API for HTML Tooltips — Frontend Masters](https://frontendmasters.com/blog/using-the-popover-api-for-html-tooltips/)
-- [prefers-color-scheme — MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-color-scheme)
-- [Color schemes — Pico CSS official docs](https://picocss.com/docs/color-schemes)
-- [CSS variables — Pico CSS official docs](https://picocss.com/docs/css-variables)
-- [Dark Mode best practices 2025 — Medium/Bootcamp](https://medium.com/design-bootcamp/the-ultimate-guide-to-implementing-dark-mode-in-2025-bbf2938d2526)
-- [Thousands separator UX — crio.do](https://www.crio.do/blog/format-numbers-with-commas-as-thousands-separators-2025-javascript-criodo/)
-- [HTML5 number input localization — ctrl.blog](https://www.ctrl.blog/entry/html5-input-number-localization.html)
-- [Data Table UX patterns — Pencil & Paper](https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-data-tables)
-- [2025 Federal Tax Brackets — IRS](https://www.irs.gov/filing/federal-income-tax-rates-and-brackets)
-- [Tax Bracket Calculator 2025-2026 — TurboTax](https://turbotax.intuit.com/tax-tools/calculators/tax-bracket/)
-- [Fintech UX Best Practices 2026 — Eleken](https://www.eleken.co/blog-posts/fintech-ux-best-practices)
+- [CFPB: How to understand special promotional financing offers](https://www.consumerfinance.gov/about-us/blog/how-understand-special-promotional-financing-offers-credit-cards/)
+- [Synchrony: Understanding Deferred Interest](https://www.synchrony.com/consumer-resources/deferred-interest)
+- [Bankrate: Dangers of Deferred Interest Promotions](https://www.bankrate.com/credit-cards/zero-interest/deferred-interest-promotion-dangers/)
+- [Discover: What is Deferred Interest?](https://www.discover.com/credit-cards/card-smarts/what-is-deferred-interest/)
+- [BLS CPI Inflation Calculator](https://www.bls.gov/data/inflation_calculator.htm)
+- [Minneapolis Fed Inflation Calculator](https://www.minneapolisfed.org/about-us/monetary-policy/inflation-calculator)
+- [St. Louis Fed: Adjusting for Inflation](https://www.stlouisfed.org/publications/page-one-economics/2023/01/03/adjusting-for-inflation)
+- Code inspection: `src/fathom/engine.py`, `src/fathom/forms.py`, `src/fathom/charts.py`, `src/fathom/results.py`, `src/fathom/models.py`
+- Code review: `docs/code-review-2026-03-15.md`
 
 ---
-*Feature research for: Fathom v1.1 — financing analyzer enhancements*
-*Researched: 2026-03-13*
+*Feature research for: Fathom v1.2 -- code review defect fixes*
+*Researched: 2026-03-15*
