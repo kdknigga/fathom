@@ -1,3 +1,6 @@
+{% if warning_message is defined and warning_message %}
+<div role="alert" class="option-warning">{{ warning_message }}</div>
+{% endif %}
 {% for opt in options %}
 {% include "partials/option_card.html" %}
 {% endfor %}

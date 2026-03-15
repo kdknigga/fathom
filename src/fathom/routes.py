@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 from fathom.forms import (
     FormInput,
     build_domain_objects,
+    count_form_options,
     extract_form_data,
     form_data_to_export_dict,
     parse_form_data,
@@ -92,6 +93,40 @@ def _build_default_options() -> list[dict[str, object]]:
             "template": OPTION_FIELD_TEMPLATES[OptionType.TRADITIONAL_LOAN.value],
         },
     ]
+
+
+def _build_options_list(raw_options: list[dict]) -> list[dict]:
+    """
+    Convert raw parsed options into template-ready option dicts.
+
+    Each option gets an ``idx``, ``type``, ``label``, ``fields``, and
+    ``template`` key suitable for rendering in option_list.html.
+
+    Args:
+        raw_options: List of option dicts from extract_form_data.
+
+    Returns:
+        A list of template-ready option dicts.
+
+    """
+    options: list[dict] = []
+    for i, opt in enumerate(raw_options):
+        opt_type = opt.get("type", OptionType.CASH.value)
+        template = OPTION_FIELD_TEMPLATES.get(
+            opt_type,
+            OPTION_FIELD_TEMPLATES[OptionType.CASH.value],
+        )
+        fields = {k: v for k, v in opt.items() if k not in ("type", "label")}
+        options.append(
+            {
+                "idx": i,
+                "type": opt_type,
+                "label": opt.get("label", ""),
+                "fields": fields,
+                "template": template,
+            },
+        )
+    return options
 
 
 def _build_template_context(
@@ -219,8 +254,19 @@ def add_option() -> str:
         Rendered HTML for the full option list with the new option appended.
 
     """
+    option_count = count_form_options(request.form)
     parsed = extract_form_data(request.form)
-    next_idx = len(parsed["options"])
+
+    # Guard: reject adding beyond 4 options
+    if option_count >= 4:
+        options = _build_options_list(parsed["options"])
+        return render_template(
+            "partials/option_list.html",
+            options=options,
+            option_types=_build_option_types(),
+            errors={},
+            warning_message="Maximum 4 options allowed",
+        )
 
     parsed["options"].append(
         {
@@ -237,25 +283,7 @@ def add_option() -> str:
         },
     )
 
-    options = []
-    for i, opt in enumerate(parsed["options"]):
-        opt_type = opt.get("type", OptionType.CASH.value)
-        template = OPTION_FIELD_TEMPLATES.get(
-            opt_type,
-            OPTION_FIELD_TEMPLATES[OptionType.CASH.value],
-        )
-        fields = {k: v for k, v in opt.items() if k not in ("type", "label")}
-        options.append(
-            {
-                "idx": i,
-                "type": opt_type,
-                "label": opt.get("label", ""),
-                "fields": fields,
-                "template": template,
-            },
-        )
-
-    _ = next_idx  # used implicitly via append
+    options = _build_options_list(parsed["options"])
     return render_template(
         "partials/option_list.html",
         options=options,
@@ -280,30 +308,25 @@ def remove_option(idx: int) -> str:
         Rendered HTML for the full option list without the removed option.
 
     """
+    option_count = count_form_options(request.form)
     parsed = extract_form_data(request.form)
+
+    # Guard: reject removing below 2 options
+    if option_count <= 2:
+        options = _build_options_list(parsed["options"])
+        return render_template(
+            "partials/option_list.html",
+            options=options,
+            option_types=_build_option_types(),
+            errors={},
+            warning_message="Minimum 2 options required",
+        )
 
     # Remove the option at the given index (idx maps to parsed list position)
     if 0 <= idx < len(parsed["options"]):
         parsed["options"].pop(idx)
 
-    options = []
-    for i, opt in enumerate(parsed["options"]):
-        opt_type = opt.get("type", OptionType.CASH.value)
-        template = OPTION_FIELD_TEMPLATES.get(
-            opt_type,
-            OPTION_FIELD_TEMPLATES[OptionType.CASH.value],
-        )
-        fields = {k: v for k, v in opt.items() if k not in ("type", "label")}
-        options.append(
-            {
-                "idx": i,
-                "type": opt_type,
-                "label": opt.get("label", ""),
-                "fields": fields,
-                "template": template,
-            },
-        )
-
+    options = _build_options_list(parsed["options"])
     return render_template(
         "partials/option_list.html",
         options=options,
