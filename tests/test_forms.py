@@ -813,3 +813,105 @@ class TestExportDict:
         assert result["settings"]["tax_enabled"] is True
         assert isinstance(result["options"][1]["deferred_interest"], bool)
         assert result["options"][1]["deferred_interest"] is True
+
+
+# --- Inflation rate validation tests ---
+
+
+class TestInflationRateValidation:
+    """Tests for inflation rate bounds validation on SettingsInput."""
+
+    def test_valid_inflation_rate(self):
+        """SettingsInput with inflation_enabled=True, inflation_rate='3' validates without error."""
+        from fathom.forms import SettingsInput
+
+        s = SettingsInput(inflation_enabled=True, inflation_rate="3")
+        assert s.inflation_rate == "3"
+
+    def test_inflation_rate_at_bounds(self):
+        """inflation_rate='0' and '20' both pass validation."""
+        from fathom.forms import SettingsInput
+
+        s0 = SettingsInput(inflation_enabled=True, inflation_rate="0")
+        assert s0.inflation_rate == "0"
+        s20 = SettingsInput(inflation_enabled=True, inflation_rate="20")
+        assert s20.inflation_rate == "20"
+
+    def test_inflation_rate_below_zero(self):
+        """inflation_rate='-1' raises ValueError with bounds message."""
+        from fathom.forms import SettingsInput
+
+        with pytest.raises(ValidationError, match="between 0% and 20%"):
+            SettingsInput(inflation_enabled=True, inflation_rate="-1")
+
+    def test_inflation_rate_above_twenty(self):
+        """inflation_rate='21' raises ValueError with bounds message."""
+        from fathom.forms import SettingsInput
+
+        with pytest.raises(ValidationError, match="between 0% and 20%"):
+            SettingsInput(inflation_enabled=True, inflation_rate="21")
+
+    def test_inflation_rate_non_numeric(self):
+        """inflation_rate='abc' raises ValueError with 'Must be a number'."""
+        from fathom.forms import SettingsInput
+
+        with pytest.raises(ValidationError, match="Must be a number"):
+            SettingsInput(inflation_enabled=True, inflation_rate="abc")
+
+    def test_inflation_rate_skipped_when_disabled(self):
+        """inflation_enabled=False, inflation_rate='999' validates without error."""
+        from fathom.forms import SettingsInput
+
+        s = SettingsInput(inflation_enabled=False, inflation_rate="999")
+        assert s.inflation_rate == "999"
+
+
+# --- Tax rate validation tests ---
+
+
+class TestTaxRateValidation:
+    """Tests for tax rate bounds validation on SettingsInput."""
+
+    def test_valid_tax_rate(self):
+        """SettingsInput with tax_enabled=True, tax_rate='22' validates without error."""
+        from fathom.forms import SettingsInput
+
+        s = SettingsInput(tax_enabled=True, tax_rate="22")
+        assert s.tax_rate == "22"
+
+    def test_tax_rate_at_bounds(self):
+        """tax_rate='0' and '60' both pass validation."""
+        from fathom.forms import SettingsInput
+
+        s0 = SettingsInput(tax_enabled=True, tax_rate="0")
+        assert s0.tax_rate == "0"
+        s60 = SettingsInput(tax_enabled=True, tax_rate="60")
+        assert s60.tax_rate == "60"
+
+    def test_tax_rate_below_zero(self):
+        """tax_rate='-1' raises ValueError with bounds message."""
+        from fathom.forms import SettingsInput
+
+        with pytest.raises(ValidationError, match="between 0% and 60%"):
+            SettingsInput(tax_enabled=True, tax_rate="-1")
+
+    def test_tax_rate_above_sixty(self):
+        """tax_rate='61' raises ValueError with bounds message."""
+        from fathom.forms import SettingsInput
+
+        with pytest.raises(ValidationError, match="between 0% and 60%"):
+            SettingsInput(tax_enabled=True, tax_rate="61")
+
+    def test_tax_rate_non_numeric(self):
+        """tax_rate='abc' raises ValueError with 'Must be a number'."""
+        from fathom.forms import SettingsInput
+
+        with pytest.raises(ValidationError, match="Must be a number"):
+            SettingsInput(tax_enabled=True, tax_rate="abc")
+
+    def test_tax_rate_skipped_when_disabled(self):
+        """tax_enabled=False, tax_rate='999' validates without error."""
+        from fathom.forms import SettingsInput
+
+        s = SettingsInput(tax_enabled=False, tax_rate="999")
+        assert s.tax_rate == "999"

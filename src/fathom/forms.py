@@ -41,6 +41,28 @@ _OPTION_FIELDS = (
 _OPTION_INDEX_RE = re.compile(r"options\[(\d+)\]")
 
 
+def count_form_options(form_data: ImmutableMultiDict) -> int:
+    """
+    Count unique option indices present in form data.
+
+    Uses the option index regex to find all ``options[N]`` keys and
+    returns the number of distinct indices.
+
+    Args:
+        form_data: The ImmutableMultiDict from request.form.
+
+    Returns:
+        The number of unique option indices found.
+
+    """
+    indices: set[int] = set()
+    for key in form_data:
+        match = _OPTION_INDEX_RE.match(key)
+        if match:
+            indices.add(int(match.group(1)))
+    return len(indices)
+
+
 def _try_decimal(value: str) -> Decimal | None:
     """
     Attempt to convert a string to Decimal.
@@ -113,6 +135,34 @@ class SettingsInput(BaseModel):
             if preset not in {"0.04", "0.07", "0.10"}:
                 msg = "return_rate:Please select a return rate."
                 raise ValueError(msg)
+        return self
+
+    @model_validator(mode="after")
+    def validate_inflation_rate(self) -> Self:
+        """Validate the inflation rate when inflation is enabled."""
+        if not self.inflation_enabled:
+            return self
+        val = _try_decimal(self.inflation_rate)
+        if val is None:
+            msg = "inflation_rate:Must be a number."
+            raise ValueError(msg)
+        if val < 0 or val > 20:
+            msg = "inflation_rate:Inflation rate must be between 0% and 20%."
+            raise ValueError(msg)
+        return self
+
+    @model_validator(mode="after")
+    def validate_tax_rate(self) -> Self:
+        """Validate the tax rate when tax implications are enabled."""
+        if not self.tax_enabled:
+            return self
+        val = _try_decimal(self.tax_rate)
+        if val is None:
+            msg = "tax_rate:Must be a number."
+            raise ValueError(msg)
+        if val < 0 or val > 60:
+            msg = "tax_rate:Tax rate must be between 0% and 60%."
+            raise ValueError(msg)
         return self
 
 
