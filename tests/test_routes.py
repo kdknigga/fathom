@@ -667,6 +667,101 @@ class TestDetailCompare:
         assert "Bank Loan" in html
 
 
+class TestAddOptionGuard:
+    """Tests for add option guard when at maximum 4 options."""
+
+    def test_add_option_at_4_returns_unchanged(self, client: FlaskClient):
+        """POST /partials/option/add with 4 options returns unchanged form with warning."""
+        response = client.post(
+            "/partials/option/add",
+            data={
+                "purchase_price": "25000",
+                "options[0][type]": "cash",
+                "options[0][label]": "A",
+                "options[1][type]": "cash",
+                "options[1][label]": "B",
+                "options[2][type]": "cash",
+                "options[2][label]": "C",
+                "options[3][type]": "cash",
+                "options[3][label]": "D",
+            },
+        )
+        assert response.status_code == 200
+        html = response.data.decode()
+        # Still exactly 4 option cards (not 5)
+        assert 'id="option-0"' in html
+        assert 'id="option-1"' in html
+        assert 'id="option-2"' in html
+        assert 'id="option-3"' in html
+        assert 'id="option-4"' not in html
+        # Warning message present
+        assert "Maximum 4 options allowed" in html
+
+    def test_add_option_at_3_succeeds(self, client: FlaskClient):
+        """POST /partials/option/add with 3 options returns 4 options (normal behavior)."""
+        response = client.post(
+            "/partials/option/add",
+            data={
+                "purchase_price": "25000",
+                "options[0][type]": "cash",
+                "options[0][label]": "A",
+                "options[1][type]": "cash",
+                "options[1][label]": "B",
+                "options[2][type]": "cash",
+                "options[2][label]": "C",
+            },
+        )
+        assert response.status_code == 200
+        html = response.data.decode()
+        assert 'id="option-3"' in html
+        assert "Maximum 4 options allowed" not in html
+
+
+class TestRemoveOptionGuard:
+    """Tests for remove option guard when at minimum 2 options."""
+
+    def test_remove_option_at_2_returns_unchanged(self, client: FlaskClient):
+        """POST /partials/option/0/remove with 2 options returns unchanged form with warning."""
+        response = client.post(
+            "/partials/option/0/remove",
+            data={
+                "purchase_price": "25000",
+                "options[0][type]": "cash",
+                "options[0][label]": "A",
+                "options[1][type]": "cash",
+                "options[1][label]": "B",
+            },
+        )
+        assert response.status_code == 200
+        html = response.data.decode()
+        # Still exactly 2 option cards (not 1)
+        assert 'id="option-0"' in html
+        assert 'id="option-1"' in html
+        # Warning message present
+        assert "Minimum 2 options required" in html
+
+    def test_remove_option_at_3_succeeds(self, client: FlaskClient):
+        """POST /partials/option/0/remove with 3 options returns 2 options (normal behavior)."""
+        response = client.post(
+            "/partials/option/0/remove",
+            data={
+                "purchase_price": "25000",
+                "options[0][type]": "cash",
+                "options[0][label]": "A",
+                "options[1][type]": "cash",
+                "options[1][label]": "B",
+                "options[2][type]": "cash",
+                "options[2][label]": "C",
+            },
+        )
+        assert response.status_code == 200
+        html = response.data.decode()
+        assert 'id="option-0"' in html
+        assert 'id="option-1"' in html
+        assert 'id="option-2"' not in html
+        assert "Minimum 2 options required" not in html
+
+
 class TestImportRoundTrip:
     """Tests for export-then-import round-trip fidelity."""
 
