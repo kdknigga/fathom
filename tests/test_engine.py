@@ -353,6 +353,124 @@ def test_per_period_inflation_sums_to_aggregate(
     assert abs(per_period_sum - result.inflation_adjustment) <= Decimal("0.05")
 
 
+def test_cumulative_cost_is_true_cost(
+    standard_loan: FinancingOption,
+) -> None:
+    """Cumulative cost tracks true cost (payment + opp - tax + inflation), not just payments."""
+    from fathom.engine import _build_loan_result
+    from fathom.money import quantize_money
+
+    settings = GlobalSettings(
+        return_rate=Decimal("0.07"),
+        inflation_enabled=True,
+        inflation_rate=Decimal("0.03"),
+        tax_enabled=True,
+        tax_rate=Decimal("0.22"),
+    )
+    result = _build_loan_result(standard_loan, settings, 36)
+    expected_cumulative = Decimal(0)
+    for dp in result.monthly_data:
+        net = (
+            dp.payment + dp.opportunity_cost - dp.tax_savings + dp.inflation_adjustment
+        )
+        expected_cumulative += net
+        assert dp.cumulative_cost == quantize_money(expected_cumulative), (
+            f"Month {dp.month}: expected {quantize_money(expected_cumulative)}, "
+            f"got {dp.cumulative_cost}"
+        )
+
+
+def test_cash_cumulative_cost_is_true_cost(
+    cash_option: FinancingOption,
+) -> None:
+    """Cash cumulative cost tracks true cost, not just the payment amount."""
+    from fathom.engine import _build_cash_result
+    from fathom.money import quantize_money
+
+    settings = GlobalSettings(
+        return_rate=Decimal("0.07"),
+        inflation_enabled=True,
+        inflation_rate=Decimal("0.03"),
+        tax_enabled=True,
+        tax_rate=Decimal("0.22"),
+    )
+    result = _build_cash_result(cash_option, settings, 36)
+    expected_cumulative = Decimal(0)
+    for dp in result.monthly_data:
+        net = (
+            dp.payment + dp.opportunity_cost - dp.tax_savings + dp.inflation_adjustment
+        )
+        expected_cumulative += net
+        assert dp.cumulative_cost == quantize_money(expected_cumulative), (
+            f"Month {dp.month}: expected {quantize_money(expected_cumulative)}, "
+            f"got {dp.cumulative_cost}"
+        )
+
+
+def test_promo_cumulative_cost_is_true_cost(
+    promo_retroactive: FinancingOption,
+) -> None:
+    """Promo cumulative cost tracks true cost for both paid and not-paid outcomes."""
+    from fathom.engine import _build_promo_result
+    from fathom.money import quantize_money
+
+    settings = GlobalSettings(
+        return_rate=Decimal("0.07"),
+        inflation_enabled=True,
+        inflation_rate=Decimal("0.03"),
+        tax_enabled=True,
+        tax_rate=Decimal("0.22"),
+    )
+    result = _build_promo_result(promo_retroactive, settings, 24)
+
+    # Check paid-on-time
+    expected_cumulative = Decimal(0)
+    for dp in result.paid_on_time.monthly_data:
+        net = (
+            dp.payment + dp.opportunity_cost - dp.tax_savings + dp.inflation_adjustment
+        )
+        expected_cumulative += net
+        assert dp.cumulative_cost == quantize_money(expected_cumulative), (
+            f"Paid month {dp.month}: expected {quantize_money(expected_cumulative)}, "
+            f"got {dp.cumulative_cost}"
+        )
+
+    # Check not-paid-on-time
+    expected_cumulative = Decimal(0)
+    for dp in result.not_paid_on_time.monthly_data:
+        net = (
+            dp.payment + dp.opportunity_cost - dp.tax_savings + dp.inflation_adjustment
+        )
+        expected_cumulative += net
+        assert dp.cumulative_cost == quantize_money(expected_cumulative), (
+            f"Not-paid month {dp.month}: expected {quantize_money(expected_cumulative)}, "
+            f"got {dp.cumulative_cost}"
+        )
+
+
+def test_cumulative_cost_matches_results_module(
+    standard_loan: FinancingOption,
+) -> None:
+    """Engine's cumulative_cost matches what results._monthly_data_to_rows computes."""
+    from fathom.engine import _build_loan_result
+    from fathom.results import _monthly_data_to_rows
+
+    settings = GlobalSettings(
+        return_rate=Decimal("0.07"),
+        inflation_enabled=True,
+        inflation_rate=Decimal("0.03"),
+        tax_enabled=True,
+        tax_rate=Decimal("0.22"),
+    )
+    result = _build_loan_result(standard_loan, settings, 36)
+    rows = _monthly_data_to_rows(result.monthly_data)
+    for dp, row in zip(result.monthly_data, rows, strict=True):
+        assert dp.cumulative_cost == row["cumulative_true_total_cost"], (
+            f"Month {dp.month}: engine {dp.cumulative_cost} != "
+            f"results {row['cumulative_true_total_cost']}"
+        )
+
+
 def test_padded_months_have_zero_inflation_and_tax() -> None:
     """MonthlyDataPoint entries padded beyond loan term have Decimal(0) for inflation/tax."""
     from fathom.engine import _build_loan_result
