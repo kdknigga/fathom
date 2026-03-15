@@ -92,7 +92,9 @@ Plans:
   1. A custom option's user-provided label appears as the option name in the recommendation card, breakdown table, and charts
   2. The custom option form clearly indicates that the upfront cash field is optional (not required)
   3. Tests verify the custom label text appears in rendered HTML results
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 16-01-PLAN.md — Wire custom_label into results display and update custom option form labels
 
 ## Progress
 
@@ -115,4 +117,4 @@ Plans:
 | 13. Centralize Monetary Rounding | 1/1 | Complete    | 2026-03-15 | - |
 | 14. Engine Corrections | 2/2 | Complete    | 2026-03-15 | - |
 | 15. Validation and HTMX Guards | 2/2 | Complete    | 2026-03-15 | - |
-| 16. Custom Option Cleanup | v1.2 | 0/? | Not started | - |
+| 16. Custom Option Cleanup | v1.2 | 0/1 | Not started | - |
