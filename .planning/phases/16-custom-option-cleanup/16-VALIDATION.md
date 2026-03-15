@@ -1,9 +1,9 @@
 ---
 phase: 16
 slug: custom-option-cleanup
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: complete
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-03-15
 ---
 
@@ -38,12 +38,12 @@ created: 2026-03-15
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 16-01-01 | 01 | 1 | CUST-01 | unit | `uv run pytest tests/test_forms.py -x -k "custom_label"` | ❌ W0 | ⬜ pending |
-| 16-01-02 | 01 | 1 | CUST-01 | unit | `uv run pytest tests/test_forms.py -x -k "disambigu"` | ❌ W0 | ⬜ pending |
-| 16-01-03 | 01 | 1 | CUST-01 | unit | `uv run pytest tests/test_forms.py -x -k "fallback"` | ❌ W0 | ⬜ pending |
-| 16-01-04 | 01 | 1 | CUST-02 | integration | `uv run pytest tests/test_routes.py -x -k "down_payment_optional"` | ❌ W0 | ⬜ pending |
-| 16-01-05 | 01 | 1 | TEST-05 | integration | `uv run pytest tests/test_routes.py -x -k "custom_label_in_results"` | ❌ W0 | ⬜ pending |
-| 16-01-06 | 01 | 1 | CUST-01 | integration | `uv run pytest tests/test_routes.py -x -k "custom_label"` | ❌ W0 | ⬜ pending |
+| 16-01-01 | 01 | 1 | CUST-01 | unit | `uv run pytest tests/test_forms.py -x -k "custom_label"` | ✅ | ✅ green |
+| 16-01-02 | 01 | 1 | CUST-01 | unit | `uv run pytest tests/test_forms.py -x -k "disambigu"` | ✅ | ✅ green |
+| 16-01-03 | 01 | 1 | CUST-01 | unit | `uv run pytest tests/test_forms.py -x -k "fallback"` | ✅ | ✅ green |
+| 16-01-04 | 01 | 1 | CUST-02 | integration | `uv run pytest tests/test_routes.py -x -k "down_payment_optional"` | ✅ | ✅ green |
+| 16-01-05 | 01 | 1 | TEST-05 | integration | `uv run pytest tests/test_routes.py -x -k "custom_label_in_results"` | ✅ | ✅ green |
+| 16-01-06 | 01 | 1 | CUST-01 | integration | `uv run pytest tests/test_routes.py -x -k "custom_label"` | ✅ | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -51,8 +51,8 @@ created: 2026-03-15
 
 ## Wave 0 Requirements
 
-- [ ] `tests/test_forms.py` — new tests for custom_label -> label flow, disambiguation, fallback
-- [ ] `tests/test_routes.py` — new tests for custom label in rendered HTML, down payment optional indicator
+- [x] `tests/test_forms.py` — new tests for custom_label -> label flow, disambiguation, fallback
+- [x] `tests/test_routes.py` — new tests for custom label in rendered HTML, down payment optional indicator
 
 *Existing infrastructure covers framework needs — pytest already configured.*
 
@@ -66,11 +66,21 @@ created: 2026-03-15
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 5s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 5s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** complete
+
+---
+
+## Validation Audit 2026-03-15
+
+| Metric | Count |
+|--------|-------|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
