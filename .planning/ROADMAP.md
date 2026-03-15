@@ -38,7 +38,7 @@
 
 - [x] **Phase 13: Centralize Monetary Rounding** - Extract single `money.py` module replacing 5 duplicate `quantize_money()` definitions (completed 2026-03-15)
 - [x] **Phase 14: Engine Corrections** - Fix promo penalty modeling and line chart metric with tests proving correctness (completed 2026-03-15)
-- [ ] **Phase 15: Validation and HTMX Guards** - Bound inflation/tax rates and enforce 2-4 option limits with tests
+- [x] **Phase 15: Validation and HTMX Guards** - Bound inflation/tax rates and enforce 2-4 option limits with tests (completed 2026-03-15)
 - [ ] **Phase 16: Custom Option Cleanup** - Wire custom_label into results and clarify upfront cash with tests
 
 ## Phase Details
@@ -114,5 +114,5 @@ Plans:
 | 12. Python Linting Cleanup | v1.1 | 2/2 | Complete | 2026-03-14 |
 | 13. Centralize Monetary Rounding | 1/1 | Complete    | 2026-03-15 | - |
 | 14. Engine Corrections | 2/2 | Complete    | 2026-03-15 | - |
-| 15. Validation and HTMX Guards | 1/2 | In Progress|  | - |
+| 15. Validation and HTMX Guards | 2/2 | Complete   | 2026-03-15 | - |
 | 16. Custom Option Cleanup | v1.2 | 0/? | Not started | - |

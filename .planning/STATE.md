@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Address Code Review
 status: in_progress
-last_updated: "2026-03-15T15:20:21.000Z"
-last_activity: 2026-03-15 -- Completed 15-01 input validation for inflation and tax rates
+last_updated: "2026-03-15T15:21:37.000Z"
+last_activity: 2026-03-15 -- Completed 15-02 HTMX option count guards
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State
@@ -23,10 +23,10 @@ See: .planning/PROJECT.md (updated 2026-03-15)
 
 ## Current Position
 
-Phase: 15 of 16 (Validation and HTMX Guards)
-Plan: 1 of 2 in current phase (COMPLETE)
-Status: 15-01 complete, ready for 15-02
-Last activity: 2026-03-15 -- Completed 15-01 input validation for inflation and tax rates
+Phase: 15 of 16 (Validation and HTMX Guards) -- COMPLETE
+Plan: 2 of 2 in current phase (COMPLETE)
+Status: Phase 15 complete, ready for Phase 16
+Last activity: 2026-03-15 -- Completed 15-02 HTMX option count guards
 
 ## Performance Metrics
 
@@ -53,6 +53,8 @@ v1.2 roadmap decisions:
 - [Phase 14]: Padded months continue accumulating opportunity cost rather than freezing
 - [Phase 15]: Followed existing validate_return_rate pattern for inflation/tax validators
 - [Phase 15]: Disabled inputs when toggle is OFF to prevent stale validation
+- [Phase 15]: Created count_form_options() public helper rather than exposing _OPTION_INDEX_RE
+- [Phase 15]: Extracted _build_options_list() helper to reduce duplicated option-building loops
 
 ### Roadmap Evolution
 
@@ -78,3 +80,4 @@ None.
 | Phase 14 P01 | 6min | 2 tasks | 3 files |
 | Phase 14 P02 | 5min | 2 tasks | 5 files |
 | Phase 15 P01 | 2min | 2 tasks | 3 files |
+| Phase 15 P02 | 4min | 1 task | 4 files |
